@@ -1,0 +1,9 @@
+test-carotid:
+  variables:
+    CI_DEBUG_TRACE: "true"
+  image: python:3.9.7
+  before_script:
+    - pip install numpy==1.22.4
+    - pip install -e ./src
+  script:
+    - pytest ./tests/test_cli.py

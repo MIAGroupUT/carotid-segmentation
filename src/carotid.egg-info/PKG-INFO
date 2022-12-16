@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: carotid
+Version: 0.1.0
+Summary: Utilitaries for carotid segmentation explainbility project
+Author: Elina Thibeau-Sutre
+Author-email: elina.ts@free.fr
+License: MIT
+Keywords: carotid segmentation deep learning explainability

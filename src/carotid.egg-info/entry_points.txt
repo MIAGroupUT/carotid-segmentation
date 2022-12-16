@@ -1,0 +1,2 @@
+[console_scripts]
+carotid = carotid.cli:cli
