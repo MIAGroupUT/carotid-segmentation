@@ -2,7 +2,9 @@ import click
 
 
 @click.command(
-    "centerline_transform", no_args_is_help=True, context_settings={"show_default": True}
+    "centerline_transform",
+    no_args_is_help=True,
+    context_settings={"show_default": True},
 )
 @click.argument(
     "raw_dir",
@@ -20,12 +22,8 @@ import click
     "output_dir",
     type=click.Path(exists=True, writable=True),
 )
-@click.option(
-    "--participant", "-p", type=str, default=None, multiple=True
-)
-@click.option(
-    "--device", "-d", type=click.Choice(["cpu", "cuda"]), default="cuda"
-)
+@click.option("--participant", "-p", type=str, default=None, multiple=True)
+@click.option("--device", "-d", type=click.Choice(["cpu", "cuda"]), default="cuda")
 def cli(
     raw_dir,
     model_dir,

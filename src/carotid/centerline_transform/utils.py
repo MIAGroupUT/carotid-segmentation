@@ -25,8 +25,14 @@ class UNetPredictor:
         spacing: whether the images should be resampled to the U-Net pixdim.
         device: device used for computations.
     """
+
     def __init__(
-        self, model_dir: str, roi_size: Tuple[int, int, int], flip_z: bool, spacing: bool, device: str = "cuda",
+        self,
+        model_dir: str,
+        roi_size: Tuple[int, int, int],
+        flip_z: bool,
+        spacing: bool,
+        device: str = "cuda",
     ):
 
         # Remember all args
@@ -37,7 +43,9 @@ class UNetPredictor:
 
         # Create useful objects
         self.model_paths_list = [
-            path.join(model_dir, filename) for filename in listdir(model_dir) if filename.endswith(".pt")
+            path.join(model_dir, filename)
+            for filename in listdir(model_dir)
+            if filename.endswith(".pt")
         ]
         self.model = UNet(
             dimensions=3,
@@ -55,7 +63,9 @@ class UNetPredictor:
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         # Put the sample in the working space of the U-Net
         unet_sample = self.transforms(sample)
-        pred_dict = {side: torch.zeros_like(unet_sample[f"{side}_label"]) for side in side_list}
+        pred_dict = {
+            side: torch.zeros_like(unet_sample[f"{side}_label"]) for side in side_list
+        }
 
         # Compute sum of heatmaps for both sides
         for index, model_path in tqdm(
@@ -66,7 +76,9 @@ class UNetPredictor:
 
             for side in side_list:
                 with torch.no_grad():
-                    pred_dict[side] += self.inferer(sample[f"{side}_img"].to(self.device), self.model)
+                    pred_dict[side] += self.inferer(
+                        sample[f"{side}_img"].to(self.device), self.model
+                    )
 
         # Replace current label by model output
         for side in side_list:
@@ -87,17 +99,11 @@ class UNetPredictor:
         key_list = ["img", "left_label", "right_label"]
         transforms = list()
         if flip_z:
-            transforms.append(
-                Flipd(keys=key_list)
-            )
+            transforms.append(Flipd(keys=key_list))
         if spacing:
-            transforms.append(
-                Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5])
-            )
+            transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
 
-        transforms.append(
-            ExtractLeftAndRightd(split_keys=["label"], keys=key_list)
-        )
+        transforms.append(ExtractLeftAndRightd(split_keys=["label"], keys=key_list))
         transforms.append(ToTensord(keys=key_list))
 
         return Compose(transforms)
@@ -109,7 +115,9 @@ def get_centerline_extractor(method: str, **kwargs) -> CenterlineExtractor:
     elif method == "marching":
         centerline_extractor = MarchingExtractor(**kwargs)
     else:
-        raise NotImplementedError(f"Method {method} for centerline extractor do not exist.")
+        raise NotImplementedError(
+            f"Method {method} for centerline extractor do not exist."
+        )
 
     return centerline_extractor
 
@@ -149,9 +157,7 @@ def save_mevislab_markerfile(markers, targetfile):
 def save_heatmaps(sample: Dict[str, Any], output_dir: str, side: str, label: str):
     label_idx_dict = {"internal": 0, "external": 1}
 
-    img_sitk = sitk.GetImageFromArray(
-        sample[f"{side}_label"][label_idx_dict[label]]
-    )
+    img_sitk = sitk.GetImageFromArray(sample[f"{side}_label"][label_idx_dict[label]])
     img_sitk.SetSpacing(sample[f"{side}_label_meta_dict"]["spacing"])
     sitk.WriteImage(
         img_sitk,

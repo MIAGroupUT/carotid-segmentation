@@ -9,16 +9,15 @@ side_list = ["left", "right"]
 
 
 class MarchingExtractor(CenterlineExtractor):
-
     def __init__(
-            self,
-            max_intensity_threshold: float,
-            step_size: int = 10,
-            spatial_threshold: int = 5,
-            cost_rule: str = "mix",
-            cut_common: bool = True,
-            epsilon: float = 1e-6,
-            **kwargs,
+        self,
+        max_intensity_threshold: float,
+        step_size: int = 10,
+        spatial_threshold: int = 5,
+        cost_rule: str = "mix",
+        cut_common: bool = True,
+        epsilon: float = 1e-6,
+        **kwargs,
     ):
         super().__init__()
         self.max_intensity_threshold = max_intensity_threshold
@@ -31,13 +30,16 @@ class MarchingExtractor(CenterlineExtractor):
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Dict[str, np.ndarray]]:
 
         return {
-            side: self.process_image_heatmap_pair(sample[f"{side}_img"], sample[f"{side}_label"]) for side in side_list
+            side: self.process_image_heatmap_pair(
+                sample[f"{side}_img"], sample[f"{side}_label"]
+            )
+            for side in side_list
         }
 
     def process_image_heatmap_pair(
-            self,
-            image_np: np.ndarray,
-            heatmap_np: np.ndarray,
+        self,
+        image_np: np.ndarray,
+        heatmap_np: np.ndarray,
     ) -> Dict[str, np.ndarray]:
 
         intensity_threshold_list = np.array([0.1, 0.1])
@@ -60,9 +62,9 @@ class MarchingExtractor(CenterlineExtractor):
 
         # Normalize image and heatmap
         heatmap_np = np.clip(heatmap_np, a_min=0, a_max=None)
-        heatmap_np /= (
-                              np.max(heatmap_np, axis=(2, 3)) + self.epsilon
-                      )[:, :, np.newaxis, np.newaxis]
+        heatmap_np /= (np.max(heatmap_np, axis=(2, 3)) + self.epsilon)[
+            :, :, np.newaxis, np.newaxis
+        ]
 
         print("Computing path to the end of the common carotid...")
         total_common_np = self.compute_lowest_slices_path(
@@ -125,7 +127,7 @@ class MarchingExtractor(CenterlineExtractor):
                             ]
                             # Next time start to look for seed further
                             slice_idx_list[label_idx] = (
-                                    label_coords[label_idx][0] - self.step_size
+                                label_coords[label_idx][0] - self.step_size
                             )
                             # Next time start drawing from root again
                             label_coords[label_idx] = root_coords
@@ -133,7 +135,9 @@ class MarchingExtractor(CenterlineExtractor):
                             if latest_valid_slice[label_idx] is None:
                                 total_label_path_list[label_idx] = empty_array
                             else:
-                                total_label_path_list[label_idx] = self.remove_above_slice(
+                                total_label_path_list[
+                                    label_idx
+                                ] = self.remove_above_slice(
                                     total_label_path_list[label_idx],
                                     latest_valid_slice[label_idx],
                                 )
@@ -147,17 +151,21 @@ class MarchingExtractor(CenterlineExtractor):
                     intensity_threshold_list[label_idx] += 0.1
 
         return {
-            "internal": self.resample_path(np.concatenate([total_label_path_list[0][::-1], total_common_np])),
-            "external": self.resample_path(np.concatenate([total_label_path_list[1][::-1], total_common_np])),
+            "internal": self.resample_path(
+                np.concatenate([total_label_path_list[0][::-1], total_common_np])
+            ),
+            "external": self.resample_path(
+                np.concatenate([total_label_path_list[1][::-1], total_common_np])
+            ),
         }
 
     @staticmethod
     def concatenate_uncertainty(
-            path_np: np.ndarray,
-            image_np: np.ndarray,
-            heatmap_np: np.ndarray,
-            label_idx: int = None,
-            starting_image_intensity: float = 0,
+        path_np: np.ndarray,
+        image_np: np.ndarray,
+        heatmap_np: np.ndarray,
+        label_idx: int = None,
+        starting_image_intensity: float = 0,
     ) -> np.ndarray:
 
         # Add two columns to path (image and heatmap uncertainties).
@@ -179,8 +187,8 @@ class MarchingExtractor(CenterlineExtractor):
         return uncertainty_np
 
     def find_root(
-            self,
-            heatmap_np: np.ndarray,
+        self,
+        heatmap_np: np.ndarray,
     ) -> np.ndarray:
         """Find root seed in the common carotid artery to start centerline tracking"""
         sum_np = np.sum(heatmap_np, axis=0)
@@ -194,8 +202,8 @@ class MarchingExtractor(CenterlineExtractor):
             label_x, label_y = label_seed
 
             if (
-                    np.linalg.norm(np.array((initial_x - label_x, initial_y - label_y)))
-                    > self.spatial_threshold
+                np.linalg.norm(np.array((initial_x - label_x, initial_y - label_y)))
+                > self.spatial_threshold
             ):
                 warnings.warn("The starting seed found may not be reliable.")
 
@@ -212,10 +220,10 @@ class MarchingExtractor(CenterlineExtractor):
         assert n_labels == 2
 
     def compute_lowest_slices_path(
-            self,
-            image_np: np.ndarray,
-            heatmap_np: np.ndarray,
-            root_coords: np.ndarray,
+        self,
+        image_np: np.ndarray,
+        heatmap_np: np.ndarray,
+        root_coords: np.ndarray,
     ) -> np.ndarray:
         """
         From a point found in the common carotid, go down in the common carotid artery as far as possible.
@@ -249,7 +257,9 @@ class MarchingExtractor(CenterlineExtractor):
         else:
             cost_np = image_np[0].numpy().copy()
 
-        cost_np[root_slice:] = np.max(cost_np)  # Prevents from looking above the root slice
+        cost_np[root_slice:] = np.max(
+            cost_np
+        )  # Prevents from looking above the root slice
 
         # Results container 3 coordinates + 2 uncertainty columns
         total_path_np = np.zeros((0, 5))
@@ -273,7 +283,7 @@ class MarchingExtractor(CenterlineExtractor):
 
                 slice_cost_np = cost_np.copy()
                 # Prevents from looking below current slice
-                slice_cost_np[slice_idx + 1::] = cost_np.max()
+                slice_cost_np[slice_idx + 1 : :] = cost_np.max()
 
                 new_coords = np.insert(new_seed, 0, slice_idx)
                 path_np = dijkstra(
@@ -297,13 +307,13 @@ class MarchingExtractor(CenterlineExtractor):
         return total_path_np
 
     def compute_highest_paths(
-            self,
-            image_np: np.ndarray,
-            heatmap_np: np.ndarray,
-            label_idx: int,
-            root_coords: np.ndarray,
-            intensity_threshold: float,
-            slice_idx: Optional[int] = None,
+        self,
+        image_np: np.ndarray,
+        heatmap_np: np.ndarray,
+        label_idx: int,
+        root_coords: np.ndarray,
+        intensity_threshold: float,
+        slice_idx: Optional[int] = None,
     ) -> np.ndarray:
         """
         From a point found in the common carotid, go up in the internal and external carotid arteries as far as possible.
@@ -350,7 +360,9 @@ class MarchingExtractor(CenterlineExtractor):
             tmp_cost_np = cost_np.copy()
             tmp_cost_np[:slice_idx:] = 1
 
-            seed = np.unravel_index(np.argmax(prod_np[label_idx, slice_idx]), slice_shape)
+            seed = np.unravel_index(
+                np.argmax(prod_np[label_idx, slice_idx]), slice_shape
+            )
 
             # Look for link with root seed
             new_coords = np.insert(seed, 0, slice_idx)
@@ -385,12 +397,14 @@ class MarchingExtractor(CenterlineExtractor):
             np.ceil(np.min(point_cloud[:, 0])), np.floor(np.max(point_cloud[:, 0])) + 1
         )
         interpolated_pc = interpolator(slices).transpose()
-        point_cloud = np.concatenate([np.expand_dims(slices, 1), interpolated_pc], axis=1)
+        point_cloud = np.concatenate(
+            [np.expand_dims(slices, 1), interpolated_pc], axis=1
+        )
         return point_cloud
 
     @staticmethod
     def concatenate_and_replace(
-            total_path: np.ndarray, addition_path: np.ndarray
+        total_path: np.ndarray, addition_path: np.ndarray
     ) -> np.ndarray:
         """
         Remove slices already present in total_path and concatenate addition_path

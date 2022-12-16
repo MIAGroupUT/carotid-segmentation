@@ -1,4 +1,10 @@
-from utils import UNetPredictor, get_centerline_extractor, save_mevislab_markerfile, side_list, save_heatmaps
+from utils import (
+    UNetPredictor,
+    get_centerline_extractor,
+    save_mevislab_markerfile,
+    side_list,
+    save_heatmaps,
+)
 from os import path, makedirs
 import toml
 from carotid.utils import read_json, build_dataset
@@ -23,11 +29,9 @@ def apply_transform(
         roi_size=pipeline_parameters["roi_size"],
         flip_z=raw_parameters["z_orientation"] != model_parameters["z_orientation"],
         spacing=raw_parameters["spacing_required"],
-        device=device
+        device=device,
     )
-    centerline_extractor = get_centerline_extractor(
-        **pipeline_parameters
-    )
+    centerline_extractor = get_centerline_extractor(**pipeline_parameters)
 
     dataset = build_dataset(
         raw_dir,
@@ -54,6 +58,5 @@ def apply_transform(
             for label in ["internal", "external"]:
                 save_mevislab_markerfile(
                     centerline_dict[side][label],
-                    path.join(participant_path, f"{side}_{label}.xml")
+                    path.join(participant_path, f"{side}_{label}.xml"),
                 )
-

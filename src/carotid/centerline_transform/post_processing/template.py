@@ -8,5 +8,7 @@ class CenterlineExtractor:
         pass
 
     @abc.abstractmethod
-    def __call__(self, sample: Dict[str, np.ndarray]) -> Dict[str, Dict[str, np.ndarray]]:
+    def __call__(
+        self, sample: Dict[str, np.ndarray]
+    ) -> Dict[str, Dict[str, np.ndarray]]:
         pass

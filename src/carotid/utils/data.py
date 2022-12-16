@@ -2,7 +2,7 @@ from monai.transforms import (
     ScaleIntensityRangePercentilesd,
     LoadImaged,
     Transform,
-    AddChanneld
+    AddChanneld,
 )
 from os import path, listdir
 from monai.data.image_reader import ITKReader
@@ -30,7 +30,9 @@ def get_loader_transforms(
             keys=["img"],
             lower=lower_percentile_rescaler,
             upper=upper_percentile_rescaler,
-            b_min=0, b_max=1, clip=True,
+            b_min=0,
+            b_max=1,
+            clip=True,
         ),
         AddChanneld(keys=["img"]),
         BuildEmptyLabelsd(image_key="img"),
@@ -46,7 +48,9 @@ def build_dataset(
 
     if participant_list is None:
         participant_list = [
-            participant_id for participant_id in listdir(raw_dir) if path.isdir(path.join(raw_dir, participant_id))
+            participant_id
+            for participant_id in listdir(raw_dir)
+            if path.isdir(path.join(raw_dir, participant_id))
         ]
 
     sample_list = [
@@ -55,5 +59,7 @@ def build_dataset(
     ]
     return CacheDataset(
         sample_list,
-        transform=get_loader_transforms(lower_percentile_rescaler, upper_percentile_rescaler)
+        transform=get_loader_transforms(
+            lower_percentile_rescaler, upper_percentile_rescaler
+        ),
     )

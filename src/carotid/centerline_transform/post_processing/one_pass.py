@@ -12,8 +12,12 @@ class OnePassExtractor(CenterlineExtractor):
     """
     Extracts centerline from heatmaps by seeding them once.
     """
+
     def __init__(
-        self, step_size: int = 25, threshold: float = 75, **kwargs,
+        self,
+        step_size: int = 25,
+        threshold: float = 75,
+        **kwargs,
     ):
         super().__init__()
         self.step_size = step_size
@@ -22,13 +26,10 @@ class OnePassExtractor(CenterlineExtractor):
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Dict[str, np.ndarray]]:
 
         seedpoints = {
-            side: self.get_seedpoints(sample[f"{side}_label"])
-            for side in side_list
+            side: self.get_seedpoints(sample[f"{side}_label"]) for side in side_list
         }
         paths = {
-            side: self.get_centerline(
-                seedpoints[side], sample[f"{side}_label"]
-            )
+            side: self.get_centerline(seedpoints[side], sample[f"{side}_label"])
             for side in side_list
         }
 
@@ -58,7 +59,7 @@ class OnePassExtractor(CenterlineExtractor):
             )
             seeds[carotid].append(np.array([min_slice, first_seed[0], first_seed[1]]))
             for i in range(len(steps) - 1):
-                heatmap_section = heatmap[index, steps[i]: steps[i + 1], :, :]
+                heatmap_section = heatmap[index, steps[i] : steps[i + 1], :, :]
                 seed = self.unravel_index(
                     torch.argmax(heatmap_section), heatmap_section.shape
                 )
