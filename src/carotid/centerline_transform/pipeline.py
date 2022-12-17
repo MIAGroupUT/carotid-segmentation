@@ -1,4 +1,4 @@
-from utils import (
+from .utils import (
     UNetPredictor,
     get_centerline_extractor,
     save_mevislab_markerfile,
@@ -6,9 +6,15 @@ from utils import (
     save_heatmaps,
 )
 from os import path, makedirs
-import toml
-from carotid.utils import read_json, build_dataset
+from carotid.utils import (
+    read_json,
+    write_json,
+    read_and_fill_default_toml,
+    build_dataset,
+)
 from typing import List
+
+pipeline_dir = path.dirname(path.realpath(__file__))
 
 
 def apply_transform(
@@ -19,30 +25,51 @@ def apply_transform(
     participant_list: List[str] = None,
     device: str = "cuda",
 ):
+    # Read parameters
     raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
     model_parameters = read_json(path.join(model_dir, "parameters.json"))
-    pipeline_parameters = toml.load(config_path)
+
+    # Read global default args
+    pipeline_parameters = read_and_fill_default_toml(
+        config_path, path.join(pipeline_dir, "default_args.toml")
+    )
+    # Read post-processing default args
+    method = pipeline_parameters["post_processing"]["method"]
+    pipeline_parameters = read_and_fill_default_toml(
+        pipeline_parameters,
+        path.join(pipeline_dir, "post_processing", f"{method}.toml"),
+    )
+
+    # Write parameters
     makedirs(output_dir, exist_ok=True)
+    pipeline_parameters["raw_dir"] = raw_dir
+    pipeline_parameters["centerline_transform"]["model_dir"] = model_dir
+    write_json(pipeline_parameters, path.join(output_dir, "parameters.json"))
+
+    centerline_parameters = pipeline_parameters["centerline_transform"]
 
     unet_predictor = UNetPredictor(
         model_dir=model_dir,
-        roi_size=pipeline_parameters["roi_size"],
-        flip_z=raw_parameters["z_orientation"] != model_parameters["z_orientation"],
+        roi_size=centerline_parameters["roi_size"],
+        flip_z=model_parameters["z_orientation"] != "down",
         spacing=raw_parameters["spacing_required"],
         device=device,
     )
-    centerline_extractor = get_centerline_extractor(**pipeline_parameters)
+    centerline_extractor = get_centerline_extractor(
+        **pipeline_parameters["post_processing"]
+    )
 
     dataset = build_dataset(
         raw_dir,
         participant_list=participant_list,
-        lower_percentile_rescaler=pipeline_parameters["lower_percentile_rescaler"],
-        upper_percentile_rescaler=pipeline_parameters["upper_percentile_rescaler"],
+        lower_percentile_rescaler=centerline_parameters["lower_percentile_rescaler"],
+        upper_percentile_rescaler=centerline_parameters["upper_percentile_rescaler"],
+        z_flip=raw_parameters["z_orientation"] != "down",
     )
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Transform {participant_id}...")
+        print(f"Centerline transform {participant_id}...")
         participant_path = path.join(output_dir, participant_id, "centerline_transform")
         makedirs(participant_path, exist_ok=True)
 
@@ -50,7 +77,7 @@ def apply_transform(
 
         for side in side_list:
             for label in ["internal", "external"]:
-                save_heatmaps(predicted_sample, output_dir, side, label)
+                save_heatmaps(predicted_sample, participant_path, side, label)
 
         centerline_dict = centerline_extractor(predicted_sample)
 
@@ -58,5 +85,5 @@ def apply_transform(
             for label in ["internal", "external"]:
                 save_mevislab_markerfile(
                     centerline_dict[side][label],
-                    path.join(participant_path, f"{side}_{label}.xml"),
+                    path.join(participant_path, f"{side}_{label}_markers.xml"),
                 )

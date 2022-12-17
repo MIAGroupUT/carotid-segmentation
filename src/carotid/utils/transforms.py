@@ -87,11 +87,12 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                 d[f"{key}_{self.meta_key_postfix}"] = deepcopy(
                     d[f"left_{key}_{self.meta_key_postfix}"]
                 )
+
                 # After combination forget the previous separated versions
                 for side in ["left", "right"]:
                     del d[f"{side}_{key}"]
                     del d[f"{side}_{key}_{self.meta_key_postfix}"]
-                    del d[self.trace_key(f"{side}_key")]
+                    del d[self.trace_key(f"{side}_{key}")]
 
         return d
 

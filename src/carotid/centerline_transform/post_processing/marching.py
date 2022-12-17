@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 import warnings
 from dijkstra3d import dijkstra
 from scipy.interpolate import interp1d
-from template import CenterlineExtractor
+from .template import CenterlineExtractor
 
 side_list = ["left", "right"]
 
@@ -12,9 +12,9 @@ class MarchingExtractor(CenterlineExtractor):
     def __init__(
         self,
         max_intensity_threshold: float,
-        step_size: int = 10,
-        spatial_threshold: int = 5,
-        cost_rule: str = "mix",
+        step_size: int,
+        spatial_threshold: int,
+        cost_rule: str,
         cut_common: bool = True,
         epsilon: float = 1e-6,
         **kwargs,
@@ -31,7 +31,7 @@ class MarchingExtractor(CenterlineExtractor):
 
         return {
             side: self.process_image_heatmap_pair(
-                sample[f"{side}_img"], sample[f"{side}_label"]
+                sample["img"], sample[f"{side}_label"]
             )
             for side in side_list
         }
@@ -66,7 +66,6 @@ class MarchingExtractor(CenterlineExtractor):
             :, :, np.newaxis, np.newaxis
         ]
 
-        print("Computing path to the end of the common carotid...")
         total_common_np = self.compute_lowest_slices_path(
             image_np, heatmap_np, root_coords
         )
@@ -75,7 +74,6 @@ class MarchingExtractor(CenterlineExtractor):
             to_remove = total_common_np[:, 3] > self.max_intensity_threshold
             total_common_np = total_common_np[~to_remove]
 
-        print("Computing path to the end of the internal and external carotids...")
         while (intensity_threshold_list <= self.max_intensity_threshold).any():
             # Go up through the internal and external carotids
             for label_idx in range(2):
@@ -172,7 +170,7 @@ class MarchingExtractor(CenterlineExtractor):
         uncertainty_np = np.append(path_np, np.zeros((len(path_np), 2)), axis=1)
 
         if label_idx is None:
-            heatmap_np = np.mean(heatmap_np, dim=0)[np.newaxis, :]
+            heatmap_np = np.mean(heatmap_np, axis=0)[np.newaxis, :]
             label_idx = 0
 
         max_image_intensity = starting_image_intensity

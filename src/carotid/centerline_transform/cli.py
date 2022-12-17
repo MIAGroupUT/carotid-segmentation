@@ -15,20 +15,23 @@ import click
     type=click.Path(exists=True),
 )
 @click.argument(
-    "config_path",
-    type=click.Path(exists=True),
-)
-@click.argument(
     "output_dir",
-    type=click.Path(exists=True, writable=True),
+    type=click.Path(writable=True),
+)
+@click.option(
+    "--config_path",
+    "-c",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to a TOML file to set parameters.",
 )
 @click.option("--participant", "-p", type=str, default=None, multiple=True)
 @click.option("--device", "-d", type=click.Choice(["cpu", "cuda"]), default="cuda")
 def cli(
     raw_dir,
     model_dir,
-    config_path,
     output_dir,
+    config_path,
     participant,
     device,
 ) -> None:
@@ -39,11 +42,9 @@ def cli(
 
     MODEL_DIR is the path to a directory where the models are stored.
 
-    CONFIG_PATH is the path to a TOML file containing the parameters to run the pipeline.
-
     OUTPUT_DIR is the path to the directory containing the results.
     """
-    from pipeline import apply_transform
+    from .pipeline import apply_transform
 
     apply_transform(
         raw_dir, model_dir, config_path, output_dir, participant, device=device

@@ -1,13 +1,12 @@
-import numpy as np
 import torch
 from tqdm import tqdm
 from os import path, listdir
 from typing import Tuple, Dict, Any
 import SimpleITK as sitk
 from carotid.utils.transforms import ExtractLeftAndRightd
-from post_processing import CenterlineExtractor, MarchingExtractor, OnePassExtractor
+from .post_processing import CenterlineExtractor, MarchingExtractor, OnePassExtractor
 
-from monai.transforms import Flipd, Spacingd, Compose, Transform, ToTensord
+from monai.transforms import Flipd, Spacingd, Compose, InvertibleTransform, ToTensord
 from monai.networks.nets import UNet
 from monai.inferers import SlidingWindowInferer
 
@@ -61,6 +60,9 @@ class UNetPredictor:
         self.inferer = SlidingWindowInferer(roi_size=roi_size, overlap=0.8)
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+
+        # Remember original image to avoid a loss of resolution
+        image_np = sample["img"].copy()
         # Put the sample in the working space of the U-Net
         unet_sample = self.transforms(sample)
         pred_dict = {
@@ -76,21 +78,29 @@ class UNetPredictor:
 
             for side in side_list:
                 with torch.no_grad():
-                    pred_dict[side] += self.inferer(
-                        sample[f"{side}_img"].to(self.device), self.model
+                    pred_dict[side] += (
+                        self.inferer(
+                            unet_sample[f"{side}_img"].unsqueeze(0).to(self.device),
+                            self.model,
+                        )
+                        .squeeze(0)
+                        .cpu()
                     )
 
         # Replace current label by model output
         for side in side_list:
-            sample[f"{side}_label"] = pred_dict[side] / len(self.model_paths_list)
+            unet_sample[f"{side}_label"] = pred_dict[side] / len(self.model_paths_list)
 
-        return sample
+        orig_sample = self.transforms.inverse(unet_sample)
+        orig_sample["img"] = image_np
+
+        return orig_sample
 
     @staticmethod
     def get_transforms(
         flip_z: bool = False,
         spacing: bool = False,
-    ) -> Transform:
+    ) -> InvertibleTransform:
         """
         Outputs a series of invertible transforms to go from the original space to the
         working space of the U-Net.
@@ -99,12 +109,16 @@ class UNetPredictor:
         key_list = ["img", "left_label", "right_label"]
         transforms = list()
         if flip_z:
-            transforms.append(Flipd(keys=key_list))
+            transforms.append(Flipd(keys=key_list, spatial_axis=0))
         if spacing:
             transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
 
-        transforms.append(ExtractLeftAndRightd(split_keys=["label"], keys=key_list))
-        transforms.append(ToTensord(keys=key_list))
+        transforms.append(
+            ExtractLeftAndRightd(split_keys=["label"], keys=["img", "label"])
+        )
+        transforms.append(
+            ToTensord(keys=["left_img", "right_img", "left_label", "right_label"])
+        )
 
         return Compose(transforms)
 
@@ -161,5 +175,5 @@ def save_heatmaps(sample: Dict[str, Any], output_dir: str, side: str, label: str
     img_sitk.SetSpacing(sample[f"{side}_label_meta_dict"]["spacing"])
     sitk.WriteImage(
         img_sitk,
-        path.join(output_dir, f"heatmap_{side}_{label}.mhd"),
+        path.join(output_dir, f"{side}_{label}_heatmap.mhd"),
     )

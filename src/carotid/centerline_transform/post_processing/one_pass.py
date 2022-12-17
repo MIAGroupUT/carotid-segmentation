@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, Any, List
 from dijkstra3d import dijkstra
 from scipy.interpolate import interp1d
-from template import CenterlineExtractor
+from .template import CenterlineExtractor
 
 side_list = ["left", "right"]
 
@@ -15,8 +15,8 @@ class OnePassExtractor(CenterlineExtractor):
 
     def __init__(
         self,
-        step_size: int = 25,
-        threshold: float = 75,
+        step_size: int,
+        threshold: float,
         **kwargs,
     ):
         super().__init__()
@@ -36,11 +36,13 @@ class OnePassExtractor(CenterlineExtractor):
         return paths
 
     def get_seedpoints(self, heatmap: np.ndarray) -> Dict[str, np.ndarray]:
+        # TODO no need to use torch function, everything could be done with numpy
         # obtain seedpoints for the Dijkstra algorithm, for both internal and external carotid artery, based on the predicted heatmap
         # return numpy arrays, as dijkstra algorithm takes numpy as input
         seeds = {"internal": [], "external": []}
         # cut based on heatmaps of both external / internal carotid
-        masked_heatmap = (torch.from_numpy(heatmap > self.threshold)).int()
+        heatmap = torch.from_numpy(heatmap)
+        masked_heatmap = (heatmap > self.threshold).int()
         # only determine seed points where both internal/external carotids exceed threshold
         min_slice = max(
             torch.min(torch.nonzero(masked_heatmap[0, :, :, :])[:, 0]).item(),
