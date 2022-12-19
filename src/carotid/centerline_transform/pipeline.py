@@ -2,8 +2,8 @@ from .utils import (
     UNetPredictor,
     get_centerline_extractor,
     save_mevislab_markerfile,
-    side_list,
     save_heatmaps,
+    save_dataframe,
 )
 from os import path, makedirs
 from carotid.utils import (
@@ -24,6 +24,7 @@ def apply_transform(
     output_dir: str,
     participant_list: List[str] = None,
     device: str = "cuda",
+    debug: bool = False,
 ):
     # Read parameters
     raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
@@ -76,15 +77,14 @@ def apply_transform(
 
         predicted_sample = unet_predictor(sample)
 
-        for side in side_list:
-            for label in ["internal", "external"]:
-                save_heatmaps(predicted_sample, participant_path, side, label)
+        if debug:
+            save_heatmaps(predicted_sample, participant_path)
 
         centerline_dict = centerline_extractor(predicted_sample)
 
-        for side in side_list:
-            for label in ["internal", "external"]:
-                save_mevislab_markerfile(
-                    centerline_dict[side][label],
-                    path.join(participant_path, f"{side}_{label}_markers.xml"),
-                )
+        if debug:
+            save_mevislab_markerfile(
+                centerline_dict,
+                participant_path,
+            )
+        save_dataframe(centerline_dict, participant_path)

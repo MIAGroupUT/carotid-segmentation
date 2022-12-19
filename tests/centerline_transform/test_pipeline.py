@@ -25,6 +25,7 @@ def test_first_lv(config_path):
         config_path=config_path,
         output_dir=path.join(test_dir, "output_dir"),
         device="cpu",
+        debug=True,
     )
 
     shutil.rmtree(path.join(test_dir, "output_dir"))

@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 import torch
 from tqdm import tqdm
 from os import path, listdir
@@ -136,44 +138,83 @@ def get_centerline_extractor(method: str, **kwargs) -> CenterlineExtractor:
     return centerline_extractor
 
 
-def save_mevislab_markerfile(markers, targetfile):
-    f = open(targetfile, "w")
-    print(r'<?xml version="1.0" encoding="UTF-8" standalone="no" ?>', file=f)
-    print(r"<MeVis-XML-Data-v1.0>" + "\n", file=f)
-    print(r'  <XMarkerList BaseType="XMarkerList" Version="1">', file=f)
-    print(r'    <_ListBase Version="0">', file=f)
-    print(r"      <hasPersistance>1</hasPersistance>", file=f)
-    print(r"      <currentIndex>9</currentIndex>", file=f)
-    print(r"    </_ListBase>", file=f)
-    print(r"    <ListSize>" + str(markers.shape[0]) + "</ListSize>", file=f)
-    print(r"    <ListItems>", file=f)
-    for pt in range(markers.shape[0]):
-        print(r'      <Item Version="0">', file=f)
-        print(r'        <_BaseItem Version="0">', file=f)
-        print(r"          <id>" + str(pt + 1) + "</id>", file=f)
-        print(r"        </_BaseItem>", file=f)
-        print(
-            r"        <pos>"
-            + str(markers[pt][0])
-            + " "
-            + str(markers[pt][1])
-            + " "
-            + str(markers[pt][2])
-            + r" 0 0 0</pos>",
-            file=f,
-        )
-        print(r"      </Item>", file=f)
-    print(r"    </ListItems>", file=f)
-    print(r"  </XMarkerList>" + "\n", file=f)
-    print(r"</MeVis-XML-Data-v1.0>", file=f)
+def save_mevislab_markerfile(
+    centerline_dict: Dict[str, Dict[str, np.ndarray]], output_dir: str
+):
+
+    for side in side_list:
+        for label in ["internal", "external"]:
+            output_path = path.join(output_dir, f"{side}_{label}_markers.xml")
+            markers = centerline_dict[side][label]
+            f = open(output_path, "w")
+            print(r'<?xml version="1.0" encoding="UTF-8" standalone="no" ?>', file=f)
+            print(r"<MeVis-XML-Data-v1.0>" + "\n", file=f)
+            print(r'  <XMarkerList BaseType="XMarkerList" Version="1">', file=f)
+            print(r'    <_ListBase Version="0">', file=f)
+            print(r"      <hasPersistance>1</hasPersistance>", file=f)
+            print(r"      <currentIndex>9</currentIndex>", file=f)
+            print(r"    </_ListBase>", file=f)
+            print(r"    <ListSize>" + str(markers.shape[0]) + "</ListSize>", file=f)
+            print(r"    <ListItems>", file=f)
+            for pt in range(markers.shape[0]):
+                print(r'      <Item Version="0">', file=f)
+                print(r'        <_BaseItem Version="0">', file=f)
+                print(r"          <id>" + str(pt + 1) + "</id>", file=f)
+                print(r"        </_BaseItem>", file=f)
+                print(
+                    r"        <pos>"
+                    + str(markers[pt][0])
+                    + " "
+                    + str(markers[pt][1])
+                    + " "
+                    + str(markers[pt][2])
+                    + r" 0 0 0</pos>",
+                    file=f,
+                )
+                print(r"      </Item>", file=f)
+            print(r"    </ListItems>", file=f)
+            print(r"  </XMarkerList>" + "\n", file=f)
+            print(r"</MeVis-XML-Data-v1.0>", file=f)
 
 
-def save_heatmaps(sample: Dict[str, Any], output_dir: str, side: str, label: str):
+def save_heatmaps(sample: Dict[str, Any], output_dir: str):
     label_idx_dict = {"internal": 0, "external": 1}
 
-    img_sitk = sitk.GetImageFromArray(sample[f"{side}_label"][label_idx_dict[label]])
-    img_sitk.SetSpacing(sample[f"{side}_label_meta_dict"]["spacing"])
-    sitk.WriteImage(
-        img_sitk,
-        path.join(output_dir, f"{side}_{label}_heatmap.mhd"),
+    for side in side_list:
+        for label in ["internal", "external"]:
+            img_sitk = sitk.GetImageFromArray(
+                sample[f"{side}_label"][label_idx_dict[label]]
+            )
+            img_sitk.SetSpacing(sample[f"{side}_label_meta_dict"]["spacing"])
+            sitk.WriteImage(
+                img_sitk,
+                path.join(output_dir, f"{side}_{label}_heatmap.mhd"),
+            )
+
+
+def save_dataframe(centerline_dict: Dict[str, Dict[str, np.ndarray]], output_dir: str):
+
+    output_df = pd.DataFrame(
+        columns=[
+            "side",
+            "label",
+            "z",
+            "y",
+            "x",
+            "image_uncertainty",
+            "heatmap_uncertainty",
+        ]
     )
+    for side in side_list:
+        for label in ["internal", "external"]:
+            markers = centerline_dict[side][label]
+            row_df = pd.DataFrame(
+                markers,
+                columns=["z", "y", "x", "image_uncertainty", "heatmap_uncertainty"],
+            )
+            row_df["side"] = side
+            row_df["label"] = label
+
+            output_df = pd.concat([output_df, row_df])
+
+    output_df.to_csv(path.join(output_dir, "centerline.tsv"), sep="\t", index=False)

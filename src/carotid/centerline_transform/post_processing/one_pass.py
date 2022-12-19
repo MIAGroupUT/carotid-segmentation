@@ -106,6 +106,10 @@ class OnePassExtractor(CenterlineExtractor):
             paths[carotid] = np.concatenate(
                 [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
             )
+            # Add empty uncertainty
+            paths[carotid] = np.append(
+                paths[carotid], [[0, 0]] * len(paths[carotid]), axis=1
+            )
         return paths
 
     @staticmethod
