@@ -7,3 +7,4 @@ test-carotid:
     - pip install -e ./src
   script:
     - pytest ./tests/test_cli.py
+    - pytest ./tests/centerline_transform/test_pipeline.py
