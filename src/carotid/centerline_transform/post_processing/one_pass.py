@@ -84,6 +84,7 @@ class OnePassExtractor(CenterlineExtractor):
     ) -> Dict[str, np.ndarray]:
         # in case of based on heatmap
         cost_map = -1 * cost_map + np.ones_like(cost_map) * np.max(cost_map)
+        len_z = cost_map.shape[1]
         paths = {"internal": [], "external": []}
         for index, carotid in enumerate(["internal", "external"]):
             for j in range(seedpoints[carotid].shape[0] - 1):
@@ -101,8 +102,8 @@ class OnePassExtractor(CenterlineExtractor):
             )
             slices = np.arange(
                 np.maximum(3, seedpoints[carotid][0, 0]),
-                np.minimum(seedpoints[carotid][-1, 0], 284),
-            )  # /!\ 284 based on afterfifteen data!
+                np.minimum(seedpoints[carotid][-1, 0], len_z - 3),
+            )
             paths[carotid] = np.concatenate(
                 [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
             )

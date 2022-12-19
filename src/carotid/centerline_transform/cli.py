@@ -1,5 +1,4 @@
 import click
-import torch.cuda
 
 
 @click.command(
@@ -53,5 +52,4 @@ def cli(
 
 
 if __name__ == "__main__":
-    print("Available CUDA", torch.cuda.is_available())
     cli()
