@@ -1,6 +1,7 @@
 import pytest
 from os import path
 from carotid.centerline_transform.pipeline import apply_transform
+import shutil
 
 test_dir = path.dirname(path.realpath(__file__))
 
@@ -25,3 +26,5 @@ def test_first_lv(config_path):
         output_dir=path.join(test_dir, "output_dir"),
         device="cpu",
     )
+
+    shutil.rmtree(path.join(test_dir, "output_dir"))
