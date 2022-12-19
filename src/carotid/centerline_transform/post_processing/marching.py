@@ -394,10 +394,14 @@ class MarchingExtractor(CenterlineExtractor):
         slices = np.arange(
             np.ceil(np.min(point_cloud[:, 0])), np.floor(np.max(point_cloud[:, 0])) + 1
         )
-        interpolated_pc = interpolator(slices).transpose()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            interpolated_pc = interpolator(slices).transpose()
         point_cloud = np.concatenate(
             [np.expand_dims(slices, 1), interpolated_pc], axis=1
         )
+        nan_rows = np.any(np.isnan(point_cloud), axis=1)
+        point_cloud = point_cloud[~nan_rows]
         return point_cloud
 
     @staticmethod

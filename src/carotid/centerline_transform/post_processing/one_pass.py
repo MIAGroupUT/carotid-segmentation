@@ -25,9 +25,11 @@ class OnePassExtractor(CenterlineExtractor):
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Dict[str, np.ndarray]]:
 
+        print(sample["left_label"].shape)
         seedpoints = {
             side: self.get_seedpoints(sample[f"{side}_label"]) for side in side_list
         }
+        print(seedpoints)
         paths = {
             side: self.get_centerline(seedpoints[side], sample[f"{side}_label"])
             for side in side_list
@@ -41,8 +43,9 @@ class OnePassExtractor(CenterlineExtractor):
         # return numpy arrays, as dijkstra algorithm takes numpy as input
         seeds = {"internal": [], "external": []}
         # cut based on heatmaps of both external / internal carotid
-        heatmap = torch.from_numpy(heatmap)
+        heatmap = torch.from_numpy(heatmap.copy())
         masked_heatmap = (heatmap > self.threshold).int()
+        print(masked_heatmap.shape)
         # only determine seed points where both internal/external carotids exceed threshold
         min_slice = max(
             torch.min(torch.nonzero(masked_heatmap[0, :, :, :])[:, 0]).item(),

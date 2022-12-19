@@ -65,6 +65,7 @@ def apply_transform(
         lower_percentile_rescaler=centerline_parameters["lower_percentile_rescaler"],
         upper_percentile_rescaler=centerline_parameters["upper_percentile_rescaler"],
         z_flip=raw_parameters["z_orientation"] != "down",
+        data_type=raw_parameters["data_type"],
     )
 
     for sample in dataset:
