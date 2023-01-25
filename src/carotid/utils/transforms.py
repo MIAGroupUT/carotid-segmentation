@@ -5,6 +5,7 @@ import numpy as np
 from copy import deepcopy
 
 
+# TODO: work on non-inverted images
 class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
     """
     Extract the left (first two thirds) and right (last two thirds) parts of an image.
@@ -25,6 +26,7 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                 to the key data, default is `meta_dict`, the meta-data is a dictionary object.
                 For example, to handle key `image`,  read/write affine matrices from the
                 metadata `image_meta_dict` dictionary's `affine` field.
+            split_keys: list of keys for which the 'left' and 'right' volumes are already available.
         """
         self.keys = keys
         self.meta_key_postfix = meta_key_postfix

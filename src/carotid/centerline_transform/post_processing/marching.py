@@ -253,7 +253,7 @@ class MarchingExtractor(CenterlineExtractor):
         if self.cost_rule == "mix":
             cost_np = np.mean(1 - prod_np, axis=0)  # Mean value of both labels
         else:
-            cost_np = image_np[0].numpy().copy()
+            cost_np = image_np[0].copy()
 
         cost_np[root_slice:] = np.max(
             cost_np
@@ -348,7 +348,7 @@ class MarchingExtractor(CenterlineExtractor):
             cost_np = 1 - prod_np
             cost_np = cost_np[label_idx]
         else:
-            cost_np = image_np[0].numpy()
+            cost_np = image_np[0].copy()
 
         cost_np[root_slice::] = 1
         slice_shape = image_np[0, 0].shape

@@ -39,6 +39,7 @@ class OnePassExtractor(CenterlineExtractor):
 
     def get_seedpoints(self, heatmap: np.ndarray) -> Dict[str, np.ndarray]:
         # TODO no need to use torch function, everything could be done with numpy
+        # TODO take into image transpose
         # obtain seedpoints for the Dijkstra algorithm, for both internal and external carotid artery, based on the predicted heatmap
         # return numpy arrays, as dijkstra algorithm takes numpy as input
         seeds = {"internal": [], "external": []}

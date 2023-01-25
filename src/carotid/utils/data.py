@@ -9,7 +9,6 @@ from monai.transforms import (
 from os import path, listdir
 from monai.data.image_reader import ITKReader
 from monai.data import Dataset, CacheDataset
-from carotid.utils.transforms import BuildEmptyLabelsd
 from typing import List
 
 
@@ -27,7 +26,7 @@ def get_loader_transforms(
         z_flip: flip along the orthogonal direction to axial slices.
     """
     loader = LoadImaged(keys=["img"])
-    loader.register(ITKReader(reverse_indexing=True))
+    loader.register(ITKReader(reverse_indexing=True))  # TODO: remove + add orientation
     transforms = [
         loader,
         ScaleIntensityRangePercentilesd(
@@ -39,9 +38,8 @@ def get_loader_transforms(
             clip=True,
         ),
         AddChanneld(keys=["img"]),
-        BuildEmptyLabelsd(image_key="img"),
     ]
-    if z_flip:
+    if z_flip:  # TODO: remove and rely on orientation
         transforms.append(Flipd(keys=["img"], spatial_axis=0))
 
     return transforms

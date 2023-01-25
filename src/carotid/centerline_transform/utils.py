@@ -5,7 +5,7 @@ from tqdm import tqdm
 from os import path, listdir
 from typing import Tuple, Dict, Any
 import SimpleITK as sitk
-from carotid.utils.transforms import ExtractLeftAndRightd
+from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyLabelsd
 from .post_processing import CenterlineExtractor, MarchingExtractor, OnePassExtractor
 
 from monai.transforms import Flipd, Spacingd, Compose, InvertibleTransform, ToTensord
@@ -100,7 +100,7 @@ class UNetPredictor:
 
     @staticmethod
     def get_transforms(
-        flip_z: bool = False,
+        flip_z: bool = False,  # TODO: remove that
         spacing: bool = False,
     ) -> InvertibleTransform:
         """
@@ -109,7 +109,7 @@ class UNetPredictor:
         """
 
         key_list = ["img", "left_label", "right_label"]
-        transforms = list()
+        transforms = [BuildEmptyLabelsd(image_key="img")]
         if flip_z:
             transforms.append(Flipd(keys=key_list, spatial_axis=0))
         if spacing:
@@ -121,6 +121,7 @@ class UNetPredictor:
         transforms.append(
             ToTensord(keys=["left_img", "right_img", "left_label", "right_label"])
         )
+        # TODO: add transpose
 
         return Compose(transforms)
 

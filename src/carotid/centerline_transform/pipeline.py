@@ -23,7 +23,7 @@ def apply_transform(
     config_path: str,
     output_dir: str,
     participant_list: List[str] = None,
-    device: str = "cuda",
+    device: str = "cuda",  # TODO Automatically detect device if None
     debug: bool = False,
 ):
     # Read parameters
