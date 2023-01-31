@@ -2,7 +2,45 @@ import monai
 from monai.config import KeysCollection
 from monai.utils.enums import TraceKeys
 import numpy as np
+import pandas as pd
+from os import listdir, path
 from copy import deepcopy
+
+
+class LoadCSVd(monai.transforms.MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False, sep=","):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.sep = sep
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            d[key] = pd.read_csv(d[key], sep=self.sep)
+
+        return d
+
+
+class LoadPolarDird(monai.transforms.MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            polar_path = d[key]
+            d[key] = list()
+            for filename in listdir(polar_path):
+                polar_np = np.load(path.join(polar_path, filename))
+                label_name = filename.split("_")[0].split("-")[1]
+                slice_idx = filename.split("_")[1].split("-")[1]
+                d[key].append(
+                    {
+                        "label": label_name,
+                        "slice_idx": slice_idx,
+                        "polar_img": polar_np,
+                    },
+                )
+        return d
 
 
 # TODO: work on non-inverted images
@@ -140,7 +178,7 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
         return np.flip(image_np[..., 0 : 2 * image_np.shape[-1] // 3], axis=-1)
 
 
-class BuildEmptyLabelsd(monai.transforms.Transform):
+class BuildEmptyHeatmapd(monai.transforms.Transform):
     """
     Create left and right empty labels corresponding to the image.
     """
@@ -160,6 +198,39 @@ class BuildEmptyLabelsd(monai.transforms.Transform):
         orig_size = data[f"{self.image_key}"].shape[1::]
 
         for side in ["left", "right"]:
-            d[f"{side}_label"] = np.zeros([2, *orig_size])
-            d[f"{side}_label_meta_dict"] = meta_dict.copy()
+            d[f"{side}_heatmap"] = np.zeros([2, *orig_size])
+            d[f"{side}_heatmap_meta_dict"] = meta_dict.copy()
         return d
+
+
+class Printd(monai.transforms.InvertibleTransform, monai.transforms.MapTransform):
+    def __init__(self, keys, allow_missing_keys=False, message=""):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.message = message
+
+    def __call__(self, d):
+        self.print(d, inverse=False)
+        return d
+
+    def inverse(self, d):
+        self.print(d, inverse=True)
+        return d
+
+    def print(self, d, inverse=False):
+        for key in self.key_iterator(d):
+            print(self.message)
+            if inverse:
+                print("Printing inverse", key)
+            else:
+                print("Printing", key)
+
+            print("Type", type(d[key]))
+            if isinstance(d[key], str):
+                print((d[key]))
+            else:
+                print("Shape", d[key].shape)
+                print("Affine", d[f"{key}_meta_dict"]["affine"])
+
+            if self.trace_key(key) in d:
+                print("Transforms", d[self.trace_key(key)])
+            print()

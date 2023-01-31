@@ -1,4 +1,5 @@
 import click
+from .heatmap_transform.cli import cli as heatmap_cli
 from .centerline_transform.cli import cli as centerline_cli
 
 
@@ -17,6 +18,7 @@ def cli():
     pass
 
 
+cli.add_command(heatmap_cli)
 cli.add_command(centerline_cli)
 
 if __name__ == "__main__":

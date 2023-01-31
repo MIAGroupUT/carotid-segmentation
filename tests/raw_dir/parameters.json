@@ -1,5 +1,6 @@
 {
 	"spacing_required": false,
 	"z_orientation": "down",
-	"data_type": "mhd"
+	"lower_percentile_rescaler": 5,
+	"upper_percentile_rescaler": 95
 }

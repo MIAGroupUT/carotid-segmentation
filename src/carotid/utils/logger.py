@@ -35,14 +35,8 @@ def read_and_fill_default_toml(
             f"Current value is {config_path}."
         )
 
-    for task_key, task_dict in default_parameters.items():
-        # Initialize task if not in config
-        if task_key not in config_parameters:
-            config_parameters[task_key] = dict()
-
-        # Replace parameters
-        for param, value in task_dict.items():
-            if param not in config_parameters[task_key]:
-                config_parameters[task_key][param] = value
+    for param, value in default_parameters.items():
+        if param not in config_parameters:
+            config_parameters[param] = value
 
     return config_parameters

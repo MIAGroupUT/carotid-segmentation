@@ -1,221 +1,158 @@
+import abc
 import numpy as np
+from dijkstra3d import dijkstra
+from scipy.interpolate import interp1d
+from typing import Dict, Any
 import pandas as pd
-import torch
-from tqdm import tqdm
-from os import path, listdir
-from typing import Tuple, Dict, Any
-import SimpleITK as sitk
-from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyLabelsd
-from .post_processing import CenterlineExtractor, MarchingExtractor, OnePassExtractor
 
-from monai.transforms import Flipd, Spacingd, Compose, InvertibleTransform, ToTensord
-from monai.networks.nets import UNet
-from monai.inferers import SlidingWindowInferer
 
 side_list = ["left", "right"]
 
 
-class UNetPredictor:
-    """
-    Transform MRI, compute the heatmap, and process it back to the original space.
+class CenterlineExtractor:
+    def __init__(self):
+        pass
 
-    Args:
-        model_dir: folder in which the weights of the pre-trained models are stored
-        roi_size: size of the ROI used for inference
-        flip_z: whether the images should be flipped to be correctly oriented before being fed to the U-Net.
-        spacing: whether the images should be resampled to the U-Net pixdim.
-        device: device used for computations.
+    @abc.abstractmethod
+    def __call__(
+        self, sample: Dict[str, np.ndarray]
+    ) -> Dict[str, Dict[str, np.ndarray]]:
+        pass
+
+
+class OnePassExtractor(CenterlineExtractor):
+    """
+    Extracts centerline from heatmaps by seeding them once.
     """
 
     def __init__(
         self,
-        model_dir: str,
-        roi_size: Tuple[int, int, int],
-        flip_z: bool,
-        spacing: bool,
-        device: str = "cuda",
+        step_size: int,
+        threshold: float,
+        **kwargs,
     ):
-
-        # Remember all args
-        self.model_dir = model_dir
-        self.flip_z = flip_z
-        self.spacing = spacing
-        self.device = device
-
-        # Create useful objects
-        self.model_paths_list = [
-            path.join(model_dir, filename)
-            for filename in listdir(model_dir)
-            if filename.endswith(".pt")
-        ]
-        self.model = UNet(
-            spatial_dims=3,
-            in_channels=1,
-            out_channels=2,
-            channels=(8, 16, 32, 64, 128),
-            strides=(2, 2, 2, 2),
-            num_res_units=2,
-            dropout=0.1,
-        ).to(self.device)
-
-        self.transforms = self.get_transforms(flip_z=flip_z, spacing=spacing)
-        self.inferer = SlidingWindowInferer(roi_size=roi_size, overlap=0.8)
+        super().__init__()
+        self.step_size = step_size
+        self.threshold = threshold
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
-        # Remember original image to avoid a loss of resolution
-        image_np = sample["img"].copy()
-        # Put the sample in the working space of the U-Net
-        unet_sample = self.transforms(sample)
-        pred_dict = {
-            side: torch.zeros_like(unet_sample[f"{side}_label"]) for side in side_list
+        seedpoints = {
+            side: self.get_seedpoints(sample[f"{side}_heatmap"]) for side in side_list
         }
 
-        # Compute sum of heatmaps for both sides
-        for index, model_path in tqdm(
-            enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
-        ):
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.eval()
-
-            for side in side_list:
-                with torch.no_grad():
-                    pred_dict[side] += (
-                        self.inferer(
-                            unet_sample[f"{side}_img"].unsqueeze(0).to(self.device),
-                            self.model,
-                        )
-                        .squeeze(0)
-                        .cpu()
-                    )
-
-        # Replace current label by model output
         for side in side_list:
-            unet_sample[f"{side}_label"] = pred_dict[side] / len(self.model_paths_list)
+            centerline_dict = self.get_centerline(
+                seedpoints[side], sample[f"{side}_heatmap"]
+            )
+            centerline_df = pd.DataFrame(columns=["label", "z", "y", "x"])
+            for label_name in centerline_dict.keys():
+                label_df = pd.DataFrame(
+                    centerline_dict[label_name], columns=["z", "y", "x"]
+                )
+                label_df["label"] = label_name
+                centerline_df = pd.concat([centerline_df, label_df])
 
-        orig_sample = self.transforms.inverse(unet_sample)
-        orig_sample["img"] = image_np
+            sample[f"{side}_centerline"] = centerline_df
 
-        return orig_sample
+        return sample
+
+    def get_seedpoints(self, heatmap_np: np.ndarray) -> Dict[str, np.ndarray]:
+        """
+        Find seeds that will be connected by the Dijkstra algorithm.
+
+        Args:
+            heatmap_np: heatmap from which the seeds are extracted.
+
+        Returns:
+            dictionary with keys corresponding to labels (internal, external) and items to the array of seeds.
+        """
+        # TODO take into image transpose
+        slice_shape = heatmap_np[0, 0].shape
+        mask_np = heatmap_np > self.threshold
+
+        # only determine seed points where both internal/external carotids exceed threshold
+        (valid_slice_indices,) = np.where(
+            mask_np.any(axis=(-2, -1)).all(axis=0)
+        )  # TODO transpose here
+        min_slice = valid_slice_indices[0]
+        max_slice = valid_slice_indices[-1]
+        steps = np.arange(min_slice, max_slice, self.step_size)
+
+        seeds_dict = {
+            "internal": np.zeros((len(steps) + 1, 3)),
+            "external": np.zeros((len(steps) + 1, 3)),
+        }
+
+        for label_idx, label_name in enumerate(["internal", "external"]):
+            # First seed on min_slice
+            seed = np.unravel_index(
+                np.argmax(heatmap_np[label_idx, min_slice]),
+                slice_shape,
+            )  # TODO transpose here
+            seeds_dict[label_name][0] = np.array([min_slice, *seed])
+
+            # Seeds in each 3D section
+            for i in range(len(steps) - 1):
+                heatmap_section = heatmap_np[label_idx, steps[i] : steps[i + 1], :, :]
+                seed = np.unravel_index(
+                    np.argmax(heatmap_section), heatmap_section.shape
+                )  # TODO transpose here
+                seed = np.array(seed) + np.array([steps[i], 0, 0])
+                seeds_dict[label_name][i + 1] = seed
+
+            # Last seed point on max_slice
+            seed = np.unravel_index(
+                np.argmax(heatmap_np[label_idx, max_slice]), slice_shape
+            )  # TODO transpose here
+            seeds_dict[label_name][-1] = np.array([max_slice, *seed])
+
+        return seeds_dict
 
     @staticmethod
-    def get_transforms(
-        flip_z: bool = False,  # TODO: remove that
-        spacing: bool = False,
-    ) -> InvertibleTransform:
+    def get_centerline(
+        seeds_dict: Dict[str, np.ndarray], heatmap_np: np.ndarray
+    ) -> Dict[str, np.ndarray]:
         """
-        Outputs a series of invertible transforms to go from the original space to the
-        working space of the U-Net.
+        Connect seeds with Dijkstra algorithm to obtain one center per slice.
+
+        Args:
+            seeds_dict: dictionary with keys corresponding to labels (internal, external) and items to the array of seeds.
+            heatmap_np: heatmap from which the seeds are extracted.
+
+        Returns:
+            dictionary with keys corresponding to labels (internal, external) and items to the array of centers.
         """
+        # cost based on heatmap only
+        cost_np = np.max(heatmap_np) - heatmap_np
 
-        key_list = ["img", "left_label", "right_label"]
-        transforms = [BuildEmptyLabelsd(image_key="img")]
-        if flip_z:
-            transforms.append(Flipd(keys=key_list, spatial_axis=0))
-        if spacing:
-            transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
+        paths = {"internal": [], "external": []}
+        for label_idx, label_name in enumerate(["internal", "external"]):
+            label_cost_np = cost_np[label_idx]
+            seeds_np = seeds_dict[label_name]
+            for seed_idx in range(seeds_np.shape[0] - 1):
+                # Restrict possible space between seeds only
+                seed_cost_np = np.copy(label_cost_np)
+                seed_cost_np[: int(seeds_np[seed_idx, 0])] = np.inf
+                seed_cost_np[int(seeds_np[seed_idx + 1, 0]) + 1 :] = np.inf
 
-        transforms.append(
-            ExtractLeftAndRightd(split_keys=["label"], keys=["img", "label"])
-        )
-        transforms.append(
-            ToTensord(keys=["left_img", "right_img", "left_label", "right_label"])
-        )
-        # TODO: add transpose
-
-        return Compose(transforms)
-
-
-def get_centerline_extractor(method: str, **kwargs) -> CenterlineExtractor:
-    if method == "one_pass":
-        centerline_extractor = OnePassExtractor(**kwargs)
-    elif method == "marching":
-        centerline_extractor = MarchingExtractor(**kwargs)
-    else:
-        raise NotImplementedError(
-            f"Method {method} for centerline extractor do not exist."
-        )
-
-    return centerline_extractor
-
-
-def save_mevislab_markerfile(
-    centerline_dict: Dict[str, Dict[str, np.ndarray]], output_dir: str
-):
-
-    for side in side_list:
-        for label in ["internal", "external"]:
-            output_path = path.join(output_dir, f"{side}_{label}_markers.xml")
-            markers = centerline_dict[side][label]
-            f = open(output_path, "w")
-            print(r'<?xml version="1.0" encoding="UTF-8" standalone="no" ?>', file=f)
-            print(r"<MeVis-XML-Data-v1.0>" + "\n", file=f)
-            print(r'  <XMarkerList BaseType="XMarkerList" Version="1">', file=f)
-            print(r'    <_ListBase Version="0">', file=f)
-            print(r"      <hasPersistance>1</hasPersistance>", file=f)
-            print(r"      <currentIndex>9</currentIndex>", file=f)
-            print(r"    </_ListBase>", file=f)
-            print(r"    <ListSize>" + str(markers.shape[0]) + "</ListSize>", file=f)
-            print(r"    <ListItems>", file=f)
-            for pt in range(markers.shape[0]):
-                print(r'      <Item Version="0">', file=f)
-                print(r'        <_BaseItem Version="0">', file=f)
-                print(r"          <id>" + str(pt + 1) + "</id>", file=f)
-                print(r"        </_BaseItem>", file=f)
-                print(
-                    r"        <pos>"
-                    + str(markers[pt][0])
-                    + " "
-                    + str(markers[pt][1])
-                    + " "
-                    + str(markers[pt][2])
-                    + r" 0 0 0</pos>",
-                    file=f,
+                paths[label_name].append(
+                    dijkstra(
+                        seed_cost_np,
+                        seeds_np[seed_idx],
+                        seeds_np[seed_idx + 1],
+                    )
                 )
-                print(r"      </Item>", file=f)
-            print(r"    </ListItems>", file=f)
-            print(r"  </XMarkerList>" + "\n", file=f)
-            print(r"</MeVis-XML-Data-v1.0>", file=f)
+            paths[label_name] = np.vstack(paths[label_name])
 
+            # resample so we have one center per axial slice
+            interp = interp1d(
+                paths[label_name][:, 0], paths[label_name][:, [1, 2]].transpose()
+            )  # TODO transpose
 
-def save_heatmaps(sample: Dict[str, Any], output_dir: str):
-    label_idx_dict = {"internal": 0, "external": 1}
-
-    for side in side_list:
-        for label in ["internal", "external"]:
-            img_sitk = sitk.GetImageFromArray(
-                sample[f"{side}_label"][label_idx_dict[label]]
+            # Interpolate between min_slice and max_slice
+            slices = np.arange(seeds_np[0, 0], seeds_np[-1, 0])
+            paths[label_name] = np.concatenate(
+                [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
             )
-            img_sitk.SetSpacing(sample[f"{side}_label_meta_dict"]["spacing"])
-            sitk.WriteImage(
-                img_sitk,
-                path.join(output_dir, f"{side}_{label}_heatmap.mhd"),
-            )
-
-
-def save_dataframe(centerline_dict: Dict[str, Dict[str, np.ndarray]], output_dir: str):
-
-    output_df = pd.DataFrame(
-        columns=[
-            "side",
-            "label",
-            "z",
-            "y",
-            "x",
-            "image_uncertainty",
-            "heatmap_uncertainty",
-        ]
-    )
-    for side in side_list:
-        for label in ["internal", "external"]:
-            markers = centerline_dict[side][label]
-            row_df = pd.DataFrame(
-                markers,
-                columns=["z", "y", "x", "image_uncertainty", "heatmap_uncertainty"],
-            )
-            row_df["side"] = side
-            row_df["label"] = label
-
-            output_df = pd.concat([output_df, row_df])
-
-    output_df.to_csv(path.join(output_dir, "centerline.tsv"), sep="\t", index=False)
+        return paths

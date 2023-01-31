@@ -2,9 +2,17 @@ import click
 
 
 @click.command(
-    "centerline_transform",
+    "heatmap_transform",
     no_args_is_help=True,
     context_settings={"show_default": True},
+)
+@click.argument(
+    "raw_dir",
+    type=click.Path(exists=True),
+)
+@click.argument(
+    "model_dir",
+    type=click.Path(exists=True),
 )
 @click.argument(
     "output_dir",
@@ -20,6 +28,8 @@ import click
 @click.option("--participant", "-p", type=str, default=None, multiple=True)
 @click.option("--device", "-d", type=click.Choice(["cpu", "cuda"]), default="cuda")
 def cli(
+    raw_dir,
+    model_dir,
     output_dir,
     config_path,
     participant,
@@ -36,7 +46,9 @@ def cli(
     """
     from .pipeline import apply_transform
 
-    apply_transform(output_dir, config_path, participant, device=device)
+    apply_transform(
+        raw_dir, model_dir, output_dir, config_path, participant, device=device
+    )
 
 
 if __name__ == "__main__":

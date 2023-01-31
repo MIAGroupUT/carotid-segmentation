@@ -1,7 +1,2 @@
-[centerline_transform]
-roi_size = [64, 64, 160]
-lower_percentile_rescaler = 1
-upper_percentile_rescaler = 99
-
-[post_processing]
-method = "one_pass"
+step_size = 50
+threshold = 100
