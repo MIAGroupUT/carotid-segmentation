@@ -18,7 +18,7 @@ def test_first_lv():
 
     # Read reference
     ref_dataset = build_dataset(
-        [HeatmapLogger({"dir": path.join(test_dir, "reference")})]
+        [HeatmapLogger({"dir": path.join(test_dir, "heatmap_transform", "reference")})]
     )
 
     # Read output
