@@ -27,6 +27,6 @@ def test_first_lv():
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]
 
-    assert np.allclose(ref_sample["left_heatmap"] == out_sample["left_heatmap"])
-    assert np.allclose(ref_sample["right_heatmap"] == out_sample["right_heatmap"])
+    assert np.allclose(ref_sample["left_heatmap"], out_sample["left_heatmap"])
+    assert np.allclose(ref_sample["right_heatmap"], out_sample["right_heatmap"])
     shutil.rmtree(path.join(test_dir, "tmp"))
