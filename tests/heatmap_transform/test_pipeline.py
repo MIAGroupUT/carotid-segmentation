@@ -8,7 +8,7 @@ import shutil
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 
-def test_first_lv():
+def test_pipeline():
 
     apply_transform(
         raw_dir=path.join(test_dir, "raw_dir"),
@@ -27,8 +27,12 @@ def test_first_lv():
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]
 
+    print("left")
     print(np.max(np.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"])))
+    print(np.max(np.abs(out_sample["left_heatmap"])))
+    print("right")
     print(np.max(np.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"])))
+    print(np.max(np.abs(out_sample["right"])))
 
     assert np.allclose(
         ref_sample["left_heatmap"], out_sample["left_heatmap"], rtol=1e-3

@@ -6,7 +6,7 @@ import shutil
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 
-def test_first_lv():
+def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
     input_dir = path.join(test_dir, "heatmap_transform", "reference")
     ref_dir = path.join(test_dir, "centerline_transform", "reference")
