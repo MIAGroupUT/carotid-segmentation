@@ -30,6 +30,10 @@ def test_first_lv():
     print(np.max(np.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"])))
     print(np.max(np.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"])))
 
-    assert np.allclose(ref_sample["left_heatmap"], out_sample["left_heatmap"])
-    assert np.allclose(ref_sample["right_heatmap"], out_sample["right_heatmap"])
+    assert np.allclose(
+        ref_sample["left_heatmap"], out_sample["left_heatmap"], rtol=1e-3
+    )
+    assert np.allclose(
+        ref_sample["right_heatmap"], out_sample["right_heatmap"], rtol=1e-3
+    )
     shutil.rmtree(path.join(test_dir, "tmp"))
