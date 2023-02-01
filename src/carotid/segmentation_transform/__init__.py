@@ -1,1 +1,1 @@
-# polar images + polar parameters + model --> contours
+# polar images + polar parameters + centers + model --> contours

@@ -6,5 +6,6 @@ from .data import (
     HeatmapSerializer,
     CenterlineSerializer,
     PolarSerializer,
+    SegmentationSerializer,
 )
 from .device import check_device
