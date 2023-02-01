@@ -9,3 +9,4 @@ test-carotid:
     - pytest ./tests/test_cli.py
     - pytest ./tests/heatmap_transform/test_pipeline.py
     - pytest ./tests/centerline_transform/test_pipeline.py
+    - pytest ./tests/polar_transform/test_pipeline.py

@@ -24,7 +24,7 @@ class PolarLogger(Logger):
     def add_path(self, sample_list: List[Dict[str, str]]):
         for sample in sample_list:
             heatmap_dir = path.join(
-                self.parameters["dir"], sample["participant_id"], "heatmap_transform"
+                self.parameters["dir"], sample["participant_id"], "polar_transform"
             )
             sample["left_polar"] = path.join(heatmap_dir, "left_polar")
             sample["right_polar"] = path.join(heatmap_dir, "right_polar")
@@ -49,14 +49,3 @@ class PolarLogger(Logger):
                     ),
                     polar_np,
                 )
-
-
-polar_dict = {
-    "participant_id": "choup",
-    "left_polar": [
-        {"label": "internal", "slice_idx": 0, "polar_img": np.array(...)},
-        {"label": "external", "slice_idx": 0, "polar_img": np.array(...)},
-    ],
-}
-
-"left_internal_0_polar.npy"

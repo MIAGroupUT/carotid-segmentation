@@ -5,5 +5,6 @@ from .data import (
     RawLogger,
     HeatmapLogger,
     CenterlineLogger,
+    PolarLogger,
 )
 from .device import check_device

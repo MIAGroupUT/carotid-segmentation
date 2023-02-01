@@ -29,8 +29,12 @@ class LoadPolarDird(monai.transforms.MapTransform):
         for key in self.key_iterator(d):
             polar_path = d[key]
             d[key] = list()
-            for filename in listdir(polar_path):
-                polar_np = np.load(path.join(polar_path, filename))
+            file_list = listdir(polar_path)
+            file_list.sort()
+            for filename in file_list:
+                polar_np = np.load(
+                    path.join(polar_path, filename), allow_pickle=True
+                ).astype(float)
                 label_name = filename.split("_")[0].split("-")[1]
                 slice_idx = filename.split("_")[1].split("-")[1]
                 d[key].append(
