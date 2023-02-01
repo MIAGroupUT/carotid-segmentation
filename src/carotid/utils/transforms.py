@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from os import listdir, path
 from copy import deepcopy
+from .data.errors import MissingProcessedObjException
 
 
 class LoadCSVd(monai.transforms.MapTransform):
@@ -15,7 +16,13 @@ class LoadCSVd(monai.transforms.MapTransform):
     def __call__(self, data):
         d = dict(data)
         for key in self.key_iterator(d):
-            d[key] = pd.read_csv(d[key], sep=self.sep)
+            try:
+                d[key] = pd.read_csv(d[key], sep=self.sep)
+            except FileNotFoundError:
+                MissingProcessedObjException(
+                    f"TSV file {key} was not found.\n"
+                    f"Please ensure that the centerline_transform was run in your experiment folder."
+                )
 
         return d
 
@@ -32,9 +39,15 @@ class LoadPolarDird(monai.transforms.MapTransform):
             file_list = listdir(polar_path)
             file_list.sort()
             for filename in file_list:
-                polar_np = np.load(
-                    path.join(polar_path, filename), allow_pickle=True
-                ).astype(float)
+                try:
+                    polar_np = np.load(
+                        path.join(polar_path, filename), allow_pickle=True
+                    ).astype(float)
+                except FileNotFoundError:
+                    raise MissingProcessedObjException(
+                        f"Polar image at path {path.join(polar_path, filename)} was not found.\n"
+                        f"Please ensure that the polar_transform was run in your experiment folder."
+                    )
                 label_name = filename.split("_")[0].split("-")[1]
                 slice_idx = filename.split("_")[1].split("-")[1]
                 d[key].append(

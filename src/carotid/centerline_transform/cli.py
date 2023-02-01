@@ -28,15 +28,16 @@ def cli(
     """
     Extracting centerlines from raw images using pre-trained U-Nets.
 
-    RAW_DIR is the path to raw data folder.
-
-    MODEL_DIR is the path to a directory where the models are stored.
-
     OUTPUT_DIR is the path to the directory containing the results.
     """
     from .pipeline import apply_transform
 
-    apply_transform(output_dir, config_path, participant, device=device)
+    apply_transform(
+        output_dir=output_dir,
+        config_path=config_path,
+        participant_list=participant,
+        device=device,
+    )
 
 
 if __name__ == "__main__":

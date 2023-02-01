@@ -15,18 +15,21 @@ pipeline_dir = path.dirname(path.realpath(__file__))
 
 def apply_transform(
     output_dir: str,
+    input_dir: str = None,
     config_path: str = None,
     participant_list: List[str] = None,
     device: str = None,
 ):
     # Read parameters
     device = check_device(device=device)
+    if input_dir is None:
+        input_dir = output_dir
 
     # Read global default args
     pipeline_parameters = read_and_fill_default_toml(
         config_path, path.join(pipeline_dir, "default_args.toml")
     )
-    heatmap_logger = HeatmapLogger({"dir": output_dir})
+    heatmap_logger = HeatmapLogger({"dir": input_dir})
 
     # Write parameters
     makedirs(output_dir, exist_ok=True)

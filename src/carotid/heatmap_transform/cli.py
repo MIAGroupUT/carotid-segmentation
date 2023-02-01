@@ -47,7 +47,12 @@ def cli(
     from .pipeline import apply_transform
 
     apply_transform(
-        raw_dir, model_dir, output_dir, config_path, participant, device=device
+        raw_dir=raw_dir,
+        model_dir=model_dir,
+        output_dir=output_dir,
+        config_path=config_path,
+        participant_list=participant,
+        device=device,
     )
 
 
