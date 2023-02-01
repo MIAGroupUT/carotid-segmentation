@@ -2,13 +2,13 @@ from monai.transforms import (
     LoadImaged,
     Transform,
 )
-from .template import Logger
+from .template import Serializer
 from os import path, listdir, makedirs
 import numpy as np
 from typing import List, Dict, Any, Set
 
 
-class HeatmapLogger(Logger):
+class HeatmapSerializer(Serializer):
     def get_transforms(self) -> List[Transform]:
         transforms = [
             LoadImaged(keys=["left_heatmap", "right_heatmap"], reader="numpyreader")

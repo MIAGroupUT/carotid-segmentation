@@ -8,7 +8,7 @@ from os import path, listdir
 from monai.data.image_reader import ITKReader
 from carotid.utils.logger import read_json
 from typing import List, Dict, Any, Set
-from .template import Logger
+from .template import Serializer
 
 from .errors import MissingRawArgException
 
@@ -52,7 +52,7 @@ def compute_raw_description(raw_dir: str) -> Dict[str, Any]:
     return raw_parameters
 
 
-class RawLogger(Logger):
+class RawSerializer(Serializer):
     def get_transforms(self) -> List[Transform]:
         """
         Returns list of transforms used to load, rescale and reshape MRI volume.

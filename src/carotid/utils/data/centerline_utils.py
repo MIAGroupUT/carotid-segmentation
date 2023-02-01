@@ -2,13 +2,13 @@ from carotid.utils.transforms import LoadCSVd
 from monai.transforms import Transform
 from os import path, listdir, makedirs
 from typing import Dict, Set, List, Any
-from .template import Logger
+from .template import Serializer
 
 
 side_list = ["left", "right"]
 
 
-class CenterlineLogger(Logger):
+class CenterlineSerializer(Serializer):
     def get_transforms(self) -> List[Transform]:
         transforms = [LoadCSVd(keys=["left_centerline", "right_centerline"], sep="\t")]
         return transforms

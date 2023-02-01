@@ -7,8 +7,8 @@ from carotid.utils import (
     build_dataset,
     check_device,
     compute_raw_description,
-    RawLogger,
-    HeatmapLogger,
+    RawSerializer,
+    HeatmapSerializer,
 )
 from typing import List
 
@@ -26,7 +26,7 @@ def apply_transform(
     # Read parameters
     device = check_device(device=device)
     raw_parameters = compute_raw_description(raw_dir)
-    raw_logger = RawLogger(raw_parameters)
+    raw_logger = RawSerializer(raw_parameters)
 
     model_parameters = read_json(path.join(model_dir, "parameters.json"))  # TODO remove
 
@@ -40,7 +40,7 @@ def apply_transform(
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
     heatmap_parameters["dir"] = output_dir
-    heatmap_logger = HeatmapLogger(heatmap_parameters)
+    heatmap_logger = HeatmapSerializer(heatmap_parameters)
     write_json(heatmap_parameters, path.join(output_dir, "heatmap_parameters.json"))
 
     unet_predictor = UNetPredictor(

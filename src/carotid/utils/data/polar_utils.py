@@ -2,13 +2,13 @@ from typing import List, Dict, Set
 from os import path, makedirs, listdir
 import numpy as np
 from monai.transforms import Transform
-from .template import Logger
+from .template import Serializer
 from carotid.utils.transforms import LoadPolarDird
 
 side_list = ["left", "right"]
 
 
-class PolarLogger(Logger):
+class PolarSerializer(Serializer):
     def get_transforms(self) -> List[Transform]:
         return [LoadPolarDird(keys=["left_polar", "right_polar"])]
 

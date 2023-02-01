@@ -36,7 +36,7 @@ def cli(
     device,
 ) -> None:
     """
-    Extracting centerlines from raw images using pre-trained U-Nets.
+    Extracting heatmaps from raw images using pre-trained U-Nets.
 
     RAW_DIR is the path to raw data folder.
 

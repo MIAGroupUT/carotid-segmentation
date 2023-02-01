@@ -50,7 +50,7 @@ class PolarTransform:
     def _transform(self, image_np: np.ndarray, center_np: np.ndarray):
         # does a polar transform on the image, given the center. Everything is in image coordinates!
         coords = self.coords + center_np
-        polar_transform = fast_trilinear_interpolation(
+        polar_transform = self.fast_trilinear_interpolation(
             image_np, coords[:, 2], coords[:, 1], coords[:, 0]
         ).reshape(self.length, self.polar_ray, self.n_angles)
         return np.concatenate(
@@ -62,42 +62,42 @@ class PolarTransform:
             axis=-1,
         ).transpose((0, 2, 1))
 
+    # TODO: implement more efficient cylindrical interpolation
+    @staticmethod
+    def fast_trilinear_interpolation(
+        array_np: np.ndarray,
+        x_indices: np.ndarray,
+        y_indices: np.ndarray,
+        z_indices: np.ndarray,
+    ):
+        # interpolate the image for given input coordinates.
 
-# TODO: implement more efficient cylindrical interpolation
-def fast_trilinear_interpolation(
-    array_np: np.ndarray,
-    x_indices: np.ndarray,
-    y_indices: np.ndarray,
-    z_indices: np.ndarray,
-):
-    # interpolate the image for given input coordinates.
+        x0 = x_indices.astype(int)
+        y0 = y_indices.astype(int)
+        z0 = z_indices.astype(int)
+        x1 = x0 + 1
+        y1 = y0 + 1
+        z1 = z0 + 1
 
-    x0 = x_indices.astype(int)
-    y0 = y_indices.astype(int)
-    z0 = z_indices.astype(int)
-    x1 = x0 + 1
-    y1 = y0 + 1
-    z1 = z0 + 1
+        x0 = np.clip(x0, 0, array_np.shape[2] - 1)
+        y0 = np.clip(y0, 0, array_np.shape[1] - 1)
+        z0 = np.clip(z0, 0, array_np.shape[0] - 1)
+        x1 = np.clip(x1, 0, array_np.shape[2] - 1)
+        y1 = np.clip(y1, 0, array_np.shape[1] - 1)
+        z1 = np.clip(z1, 0, array_np.shape[0] - 1)
 
-    x0 = np.clip(x0, 0, array_np.shape[2] - 1)
-    y0 = np.clip(y0, 0, array_np.shape[1] - 1)
-    z0 = np.clip(z0, 0, array_np.shape[0] - 1)
-    x1 = np.clip(x1, 0, array_np.shape[2] - 1)
-    y1 = np.clip(y1, 0, array_np.shape[1] - 1)
-    z1 = np.clip(z1, 0, array_np.shape[0] - 1)
+        x = x_indices - x0
+        y = y_indices - y0
+        z = z_indices - z0
 
-    x = x_indices - x0
-    y = y_indices - y0
-    z = z_indices - z0
-
-    output = (
-        array_np[z0, y0, x0] * (1 - x) * (1 - y) * (1 - z)
-        + array_np[z0, y0, x1] * x * (1 - y) * (1 - z)
-        + array_np[z0, y1, x0] * (1 - x) * y * (1 - z)
-        + array_np[z0, y1, x1] * x * y * (1 - z)
-        + array_np[z1, y0, x0] * (1 - x) * (1 - y) * z
-        + array_np[z1, y1, x0] * (1 - x) * y * z
-        + array_np[z1, y0, x1] * x * (1 - y) * z
-        + array_np[z1, y1, x1] * x * y * z
-    )
-    return output
+        output = (
+            array_np[z0, y0, x0] * (1 - x) * (1 - y) * (1 - z)
+            + array_np[z0, y0, x1] * x * (1 - y) * (1 - z)
+            + array_np[z0, y1, x0] * (1 - x) * y * (1 - z)
+            + array_np[z0, y1, x1] * x * y * (1 - z)
+            + array_np[z1, y0, x0] * (1 - x) * (1 - y) * z
+            + array_np[z1, y1, x0] * (1 - x) * y * z
+            + array_np[z1, y0, x1] * x * (1 - y) * z
+            + array_np[z1, y1, x1] * x * y * z
+        )
+        return output

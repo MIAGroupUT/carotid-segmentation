@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Set
 from monai.transforms import Transform
 
 
-class Logger:
+class Serializer:
     def __init__(self, parameters: Dict[str, Any]):
         self.parameters = parameters
 
