@@ -6,7 +6,6 @@ from carotid.utils import (
     write_json,
     read_and_fill_default_toml,
     build_dataset,
-    HeatmapSerializer,
     CenterlineSerializer,
 )
 from typing import List
@@ -32,7 +31,6 @@ def apply_transform(
     pipeline_parameters = read_and_fill_default_toml(
         config_path, path.join(pipeline_dir, "default_args.toml")
     )
-    heatmap_logger = HeatmapSerializer({"dir": heatmap_dir})
 
     # Write parameters
     makedirs(output_dir, exist_ok=True)
@@ -48,7 +46,7 @@ def apply_transform(
     )
 
     dataset = build_dataset(
-        [heatmap_logger],
+        heatmap_parameters={"dir": heatmap_dir},
         participant_list=participant_list,
     )
 

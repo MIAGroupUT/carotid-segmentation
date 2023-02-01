@@ -7,8 +7,6 @@ from carotid.utils import (
     build_dataset,
     check_device,
     compute_raw_description,
-    RawSerializer,
-    CenterlineSerializer,
     PolarSerializer,
 )
 from typing import List
@@ -34,8 +32,6 @@ def apply_transform(
     raw_dir = centerline_parameters["raw_dir"]
 
     raw_parameters = compute_raw_description(raw_dir)
-    raw_logger = RawSerializer(raw_parameters)
-    centerline_logger = CenterlineSerializer({"dir": centerline_dir})
 
     # Read global default args
     polar_parameters = read_and_fill_default_toml(
@@ -58,7 +54,8 @@ def apply_transform(
     )
 
     dataset = build_dataset(
-        [raw_logger, centerline_logger],
+        raw_parameters=raw_parameters,
+        centerline_parameters={"dir": centerline_dir},
         participant_list=participant_list,
     )
 

@@ -1,11 +1,32 @@
-from carotid.utils.transforms import LoadCSVd
-from monai.transforms import Transform
+from monai.transforms import Transform, MapTransform
+from monai.config import KeysCollection
 from os import path, listdir, makedirs
+import pandas as pd
 from typing import Dict, Set, List, Any
 from .template import Serializer
+from .errors import MissingProcessedObjException
 
 
 side_list = ["left", "right"]
+
+
+class LoadCSVd(MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False, sep=","):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.sep = sep
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            try:
+                d[key] = pd.read_csv(d[key], sep=self.sep)
+            except FileNotFoundError:
+                MissingProcessedObjException(
+                    f"TSV file {key} was not found.\n"
+                    f"Please ensure that the centerline_transform was run in your experiment folder."
+                )
+
+        return d
 
 
 class CenterlineSerializer(Serializer):

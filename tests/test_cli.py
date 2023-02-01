@@ -5,7 +5,14 @@ from carotid.cli import cli
 
 
 # Test for the first level at the command line
-@pytest.fixture(params=["centerline_transform", "heatmap_transform", "polar_transform"])
+@pytest.fixture(
+    params=[
+        "centerline_transform",
+        "heatmap_transform",
+        "polar_transform",
+        "segmentation_transform",
+    ]
+)
 def cli_args_first_lv(request):
     task = request.param
     return task

@@ -7,6 +7,6 @@ test-carotid:
     - pip install -e ./src
   script:
     - pytest ./tests/test_cli.py
-    - pytest ./tests/heatmap_transform/test_pipeline.py
-    - pytest ./tests/centerline_transform/test_pipeline.py
-    - pytest ./tests/polar_transform/test_pipeline.py
+    - pytest ./tests/heatmap_transform/test_heatmap_transform.py
+    - pytest ./tests/centerline_transform/test_centerline_transform.py
+    - pytest ./tests/polar_transform/test_polar_transform.py

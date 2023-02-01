@@ -2,62 +2,7 @@ import monai
 from monai.config import KeysCollection
 from monai.utils.enums import TraceKeys
 import numpy as np
-import pandas as pd
-from os import listdir, path
 from copy import deepcopy
-from .data.errors import MissingProcessedObjException
-
-
-class LoadCSVd(monai.transforms.MapTransform):
-    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False, sep=","):
-        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
-        self.sep = sep
-
-    def __call__(self, data):
-        d = dict(data)
-        for key in self.key_iterator(d):
-            try:
-                d[key] = pd.read_csv(d[key], sep=self.sep)
-            except FileNotFoundError:
-                MissingProcessedObjException(
-                    f"TSV file {key} was not found.\n"
-                    f"Please ensure that the centerline_transform was run in your experiment folder."
-                )
-
-        return d
-
-
-class LoadPolarDird(monai.transforms.MapTransform):
-    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
-        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
-
-    def __call__(self, data):
-        d = dict(data)
-        for key in self.key_iterator(d):
-            polar_path = d[key]
-            d[key] = list()
-            file_list = listdir(polar_path)
-            file_list.sort()
-            for filename in file_list:
-                try:
-                    polar_np = np.load(
-                        path.join(polar_path, filename), allow_pickle=True
-                    ).astype(float)
-                except FileNotFoundError:
-                    raise MissingProcessedObjException(
-                        f"Polar image at path {path.join(polar_path, filename)} was not found.\n"
-                        f"Please ensure that the polar_transform was run in your experiment folder."
-                    )
-                label_name = filename.split("_")[0].split("-")[1]
-                slice_idx = filename.split("_")[1].split("-")[1]
-                d[key].append(
-                    {
-                        "label": label_name,
-                        "slice_idx": slice_idx,
-                        "polar_img": polar_np,
-                    },
-                )
-        return d
 
 
 # TODO: work on non-inverted images

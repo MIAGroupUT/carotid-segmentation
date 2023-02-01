@@ -42,8 +42,15 @@ class PolarTransform:
                         "label": label_name,
                         "slice_idx": int(center[0]),
                         "polar_img": polar_np,
+                        "center": center,
                     }
                 )
+            sample[f"{side}_polar_meta_dict"] = {
+                "n_angles": self.n_angles,
+                "polar_ray": self.polar_ray,
+                "cartesian_ray": self.cartesian_ray,
+                "length": self.length,
+            }
 
         return sample
 

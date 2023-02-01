@@ -1,0 +1,36 @@
+from os import path
+import numpy as np
+from carotid.utils import build_dataset
+from carotid.heatmap_transform.pipeline import apply_transform
+
+import shutil
+
+test_dir = path.dirname(path.dirname(path.realpath(__file__)))
+
+
+def test_pipeline():
+    tmp_dir = path.join(test_dir, "tmp")
+    ref_dir = path.join(test_dir, "heatmap_transform", "reference")
+
+    apply_transform(
+        raw_dir=path.join(test_dir, "raw_dir"),
+        model_dir=path.join(test_dir, "models", "heatmap_transform"),
+        output_dir=tmp_dir,
+    )
+
+    # Read reference
+    ref_dataset = build_dataset(heatmap_parameters={"dir": ref_dir})
+
+    # Read output
+    out_dataset = build_dataset(heatmap_parameters={"dir": tmp_dir})
+
+    ref_sample = ref_dataset[0]
+    out_sample = out_dataset[0]
+
+    assert (
+        np.max(np.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"])) < 1e-3
+    )
+    assert (
+        np.max(np.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"])) < 1e-3
+    )
+    shutil.rmtree(path.join(test_dir, "tmp"))
