@@ -29,10 +29,10 @@ def test_pipeline():
 
     print("left")
     print(np.max(np.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"])))
-    print(np.max(np.abs(out_sample["left_heatmap"])))
+    print(np.min(np.abs(out_sample["left_heatmap"])))
     print("right")
     print(np.max(np.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"])))
-    print(np.max(np.abs(out_sample["right"])))
+    print(np.min(np.abs(out_sample["right_heatmap"])))
 
     assert np.allclose(
         ref_sample["left_heatmap"], out_sample["left_heatmap"], rtol=1e-3
