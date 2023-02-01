@@ -1,7 +1,7 @@
 {
     "step_size": 10,
     "threshold": 50,
-    "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp",
-    "heatmap_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/heatmap_transform/reference",
-    "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/heatmap_transform/../raw_dir"
+    "dir": "tests/tmp",
+    "heatmap_dir": "tests/heatmap_transform/reference",
+    "raw_dir": "tests/raw_dir"
 }

@@ -4,6 +4,6 @@
         64,
         160
     ],
-    "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/heatmap_transform/../raw_dir",
-    "model_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/heatmap_transform/../models/centerline_transform"
+    "raw_dir": "tests/raw_dir",
+    "model_dir": "tests/models/centerline_transform"
 }

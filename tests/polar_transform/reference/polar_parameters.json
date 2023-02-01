@@ -3,7 +3,7 @@
     "polar_ray": 127,
     "cartesian_ray": 60,
     "length": 7,
-    "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/heatmap_transform/../raw_dir",
-    "centerline_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/centerline_transform/reference",
-    "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp"
+    "raw_dir": "tests/raw_dir",
+    "centerline_dir": "tests/centerline_transform/reference",
+    "dir": "tests/tmp"
 }
