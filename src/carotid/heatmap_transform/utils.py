@@ -18,7 +18,7 @@ class UNetPredictor:
 
         # Remember all args
         self.model_dir = parameters["model_dir"]
-        self.spacing = parameters["spacing_required"]
+        self.spacing = parameters["spacing"]
         self.device = parameters["device"]
         self.roi_size = parameters["roi_size"]
 

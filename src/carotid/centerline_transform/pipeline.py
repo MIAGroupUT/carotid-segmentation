@@ -38,12 +38,9 @@ def apply_transform(
     pipeline_parameters["heatmap_dir"] = heatmap_dir
     pipeline_parameters["raw_dir"] = heatmap_parameters["raw_dir"]
     write_json(pipeline_parameters, path.join(output_dir, "centerline_parameters.json"))
-    centerline_logger = CenterlineSerializer(pipeline_parameters)
 
-    centerline_extractor = OnePassExtractor(
-        step_size=pipeline_parameters["step_size"],
-        threshold=pipeline_parameters["threshold"],
-    )
+    centerline_logger = CenterlineSerializer(pipeline_parameters)
+    centerline_extractor = OnePassExtractor(pipeline_parameters)
 
     dataset = build_dataset(
         heatmap_parameters={"dir": heatmap_dir},

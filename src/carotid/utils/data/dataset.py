@@ -42,7 +42,7 @@ def compute_sample_list(
 ) -> List[Dict[str, str]]:
 
     for serializer in serializer_list:
-        if participant_set is not None:
+        if participant_set is not None and len(participant_set) != 0:
             participant_set = participant_set & serializer.find_participant_set()
         else:
             participant_set = serializer.find_participant_set()
@@ -50,13 +50,11 @@ def compute_sample_list(
     sample_list = [
         {"participant_id": participant_id} for participant_id in participant_set
     ]
-    print(sample_list)
 
     # Add the useful information for all existing inputs
     for serializer in serializer_list:
         serializer.add_path(sample_list)
 
-    print(sample_list)
     return sample_list
 
 

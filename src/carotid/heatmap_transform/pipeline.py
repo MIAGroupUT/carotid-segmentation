@@ -1,7 +1,6 @@
 from .utils import UNetPredictor
 from os import path, makedirs
 from carotid.utils import (
-    read_json,
     write_json,
     read_and_fill_default_toml,
     build_dataset,
@@ -26,8 +25,6 @@ def apply_transform(
     device = check_device(device=device)
     raw_parameters = compute_raw_description(raw_dir)
 
-    model_parameters = read_json(path.join(model_dir, "parameters.json"))  # TODO remove
-
     # Read global default args
     heatmap_parameters = read_and_fill_default_toml(
         config_path, path.join(pipeline_dir, "default_args.toml")
@@ -37,7 +34,6 @@ def apply_transform(
     makedirs(output_dir, exist_ok=True)
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
-    heatmap_parameters["spacing_required"] = raw_parameters["spacing_required"]
     heatmap_parameters["device"] = device.type
     heatmap_parameters["dir"] = output_dir
     heatmap_logger = HeatmapSerializer(heatmap_parameters)

@@ -7,18 +7,19 @@ import torch
 
 
 class PolarTransform:
-    def __init__(self, n_angles: int, polar_ray: int, cartesian_ray: int, length: int):
+    def __init__(self, parameters: Dict[str, Any]):
         """
         Args:
-            n_angles: number of angles to discretize the cylinder in
-            polar_ray: number of intensities along ray
-            cartesian_ray: diameter of cylinder in voxel coordinates
-            length: length of cylinder in terms of z coordinates
+            parameters: dictionary with following entries
+                n_angles: number of angles to discretize the cylinder in
+                polar_ray: number of intensities along ray
+                cartesian_ray: diameter of cylinder in voxel coordinates
+                length: length of cylinder in terms of z coordinates
         """
-        self.n_angles = n_angles
-        self.polar_ray = polar_ray
-        self.cartesian_ray = cartesian_ray
-        self.length = length
+        self.n_angles = parameters["n_angles"]
+        self.polar_ray = parameters["polar_ray"]
+        self.cartesian_ray = parameters["cartesian_ray"]
+        self.length = parameters["length"]
 
         # construct coordinates of rays
         theta = np.linspace(0, 2 * np.pi, self.n_angles + 1)[: self.n_angles]
@@ -45,7 +46,7 @@ class PolarTransform:
                     {
                         "label": label_name,
                         "slice_idx": int(center[0]),
-                        "polar_pt": torch.from_numpy(polar_np).unsqueeze(0),
+                        "polar_pt": torch.from_numpy(polar_np).unsqueeze(0).float(),
                         "center": center,
                     }
                 )

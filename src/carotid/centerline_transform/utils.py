@@ -10,8 +10,8 @@ side_list = ["left", "right"]
 
 
 class CenterlineExtractor:
-    def __init__(self):
-        pass
+    def __init__(self, parameters: Dict[str, Any]):
+        self.parameters = parameters
 
     @abc.abstractmethod
     def __call__(
@@ -24,16 +24,6 @@ class OnePassExtractor(CenterlineExtractor):
     """
     Extracts centerline from heatmaps by seeding them once.
     """
-
-    def __init__(
-        self,
-        step_size: int,
-        threshold: float,
-        **kwargs,
-    ):
-        super().__init__()
-        self.step_size = step_size
-        self.threshold = threshold
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
@@ -53,6 +43,7 @@ class OnePassExtractor(CenterlineExtractor):
                 label_df["label"] = label_name
                 centerline_df = pd.concat([centerline_df, label_df])
 
+            centerline_df.reset_index(inplace=True, drop=True)
             sample[f"{side}_centerline"] = centerline_df
 
         return sample
@@ -69,7 +60,7 @@ class OnePassExtractor(CenterlineExtractor):
         """
         # TODO take into image transpose
         slice_shape = heatmap_np[0, 0].shape
-        mask_np = heatmap_np > self.threshold
+        mask_np = heatmap_np > self.parameters["threshold"]
 
         # only determine seed points where both internal/external carotids exceed threshold
         (valid_slice_indices,) = np.where(
@@ -77,7 +68,7 @@ class OnePassExtractor(CenterlineExtractor):
         )  # TODO transpose here
         min_slice = valid_slice_indices[0]
         max_slice = valid_slice_indices[-1]
-        steps = np.arange(min_slice, max_slice, self.step_size)
+        steps = np.arange(min_slice, max_slice, self.parameters["step_size"])
 
         seeds_dict = {
             "internal": np.zeros((len(steps) + 1, 3)),

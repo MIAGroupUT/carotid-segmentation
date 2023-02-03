@@ -11,6 +11,7 @@ from carotid.cli import cli
         "heatmap_transform",
         "polar_transform",
         "segmentation_transform",
+        "pipeline_transform",
     ]
 )
 def cli_args_first_lv(request):

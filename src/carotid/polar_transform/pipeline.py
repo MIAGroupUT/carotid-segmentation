@@ -46,12 +46,7 @@ def apply_transform(
     polar_logger = PolarSerializer(polar_parameters)
     write_json(polar_parameters, path.join(output_dir, "polar_parameters.json"))
 
-    polar_transform = PolarTransform(
-        n_angles=polar_parameters["n_angles"],
-        cartesian_ray=polar_parameters["cartesian_ray"],
-        polar_ray=polar_parameters["polar_ray"],
-        length=polar_parameters["length"],
-    )
+    polar_transform = PolarTransform(polar_parameters)
 
     dataset = build_dataset(
         raw_parameters=raw_parameters,

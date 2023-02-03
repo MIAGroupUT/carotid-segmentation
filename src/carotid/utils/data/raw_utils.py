@@ -26,7 +26,6 @@ def compute_raw_description(raw_dir: str) -> Dict[str, Any]:
     """
     raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
     mandatory_args = {
-        "spacing_required",
         "lower_percentile_rescaler",
         "upper_percentile_rescaler",
     }

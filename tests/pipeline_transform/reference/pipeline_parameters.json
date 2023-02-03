@@ -1,0 +1,36 @@
+{
+    "heatmap_transform": {
+        "roi_size": [
+            64,
+            64,
+            160
+        ],
+        "spacing": true,
+        "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/raw_dir",
+        "device": "cpu",
+        "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp",
+        "model_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/models/heatmap_transform"
+    },
+    "centerline_transform": {
+        "step_size": 50,
+        "threshold": 100,
+        "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/raw_dir",
+        "device": "cpu",
+        "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp"
+    },
+    "polar_transform": {
+        "n_angles": 31,
+        "polar_ray": 127,
+        "cartesian_ray": 60,
+        "length": 7,
+        "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/raw_dir",
+        "device": "cpu",
+        "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp"
+    },
+    "segmentation_transform": {
+        "raw_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/raw_dir",
+        "device": "cpu",
+        "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp",
+        "model_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/models/segmentation_transform"
+    }
+}
