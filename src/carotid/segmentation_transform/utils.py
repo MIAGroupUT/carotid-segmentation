@@ -74,7 +74,7 @@ class SegmentationTransform:
         # First coordinate of prediction is the distance between the border and the lumen
         lumen_dists = (polar_ray / 2 - prediction_np[0, :]) * cartesian_ray / polar_ray
         # Second coordinate of prediction is the wall width
-        wall_dists = (lumen_dists + prediction_np[1, :]) * cartesian_ray / polar_ray
+        wall_dists = lumen_dists + prediction_np[1, :] * cartesian_ray / polar_ray
 
         angle_vals = np.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(1, -1)
         lumen_cont = np.zeros((n_angles, 3))
