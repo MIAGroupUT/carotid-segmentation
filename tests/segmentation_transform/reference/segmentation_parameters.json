@@ -1,0 +1,7 @@
+{
+    "raw_dir": "tests/raw_dir",
+    "polar_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/polar_transform/reference",
+    "model_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/models/segmentation_transform",
+    "device": "cpu",
+    "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp"
+}

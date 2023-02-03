@@ -6,14 +6,17 @@ from .raw_utils import RawSerializer
 from .heatmap_utils import HeatmapSerializer
 from .centerline_utils import CenterlineSerializer
 from .polar_utils import PolarSerializer
+from .segmentation_utils import SegmentationSerializer
 from .template import Serializer
 
 
+# TODO: parameters are only necessary for raw Reader: could be simplified for other modalities
 def compute_serializer_list(
     raw_parameters: Dict[str, Any] = None,
     heatmap_parameters: Dict[str, Any] = None,
     centerline_parameters: Dict[str, Any] = None,
     polar_parameters: Dict[str, Any] = None,
+    segmentation_parameters: Dict[str, Any] = None,
 ):
     serializer_list = list()
     if raw_parameters is not None:
@@ -27,6 +30,9 @@ def compute_serializer_list(
 
     if polar_parameters is not None:
         serializer_list.append(PolarSerializer(polar_parameters))
+
+    if segmentation_parameters is not None:
+        serializer_list.append(SegmentationSerializer(segmentation_parameters))
 
     return serializer_list
 
@@ -59,6 +65,7 @@ def build_dataset(
     heatmap_parameters: Dict[str, Any] = None,
     centerline_parameters: Dict[str, Any] = None,
     polar_parameters: Dict[str, Any] = None,
+    segmentation_parameters: Dict[str, Any] = None,
     participant_list: List[str] = None,
 ) -> Dataset:
 
@@ -67,6 +74,7 @@ def build_dataset(
         heatmap_parameters=heatmap_parameters,
         centerline_parameters=centerline_parameters,
         polar_parameters=polar_parameters,
+        segmentation_parameters=segmentation_parameters,
     )
 
     sample_list = compute_sample_list(

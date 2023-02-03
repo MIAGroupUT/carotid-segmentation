@@ -10,3 +10,4 @@ test-carotid:
     - pytest ./tests/heatmap_transform/test_heatmap_transform.py
     - pytest ./tests/centerline_transform/test_centerline_transform.py
     - pytest ./tests/polar_transform/test_polar_transform.py
+    - pytest ./tests/segmentation_transform/test_segmentation_transform.py

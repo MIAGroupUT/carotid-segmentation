@@ -1,10 +1,10 @@
 import torch
 from tqdm import tqdm
 from os import path, listdir
-from typing import Tuple, Dict, Any
+from typing import Dict, Any
 from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd
 
-from monai.transforms import Flipd, Spacingd, Compose, InvertibleTransform, ToTensord
+from monai.transforms import Spacingd, Compose, InvertibleTransform, ToTensord
 from monai.networks.nets import UNet
 from monai.inferers import SlidingWindowInferer
 
@@ -12,34 +12,20 @@ from monai.inferers import SlidingWindowInferer
 class UNetPredictor:
     """
     Transform MRI, compute the heatmap, and process it back to the original space.
-
-    Args:
-        model_dir: folder in which the weights of the pre-trained models are stored
-        roi_size: size of the ROI used for inference
-        flip_z: whether the images should be flipped to be correctly oriented before being fed to the U-Net.
-        spacing: whether the images should be resampled to the U-Net pixdim.
-        device: device used for computations.
     """
 
-    def __init__(
-        self,
-        model_dir: str,
-        roi_size: Tuple[int, int, int],
-        flip_z: bool,
-        spacing: bool,
-        device: str = "cuda",
-    ):
+    def __init__(self, parameters: Dict[str, Any]):
 
         # Remember all args
-        self.model_dir = model_dir
-        self.flip_z = flip_z
-        self.spacing = spacing
-        self.device = device
+        self.model_dir = parameters["model_dir"]
+        self.spacing = parameters["spacing_required"]
+        self.device = parameters["device"]
+        self.roi_size = parameters["roi_size"]
 
         # Create useful objects
         self.model_paths_list = [
-            path.join(model_dir, filename)
-            for filename in listdir(model_dir)
+            path.join(self.model_dir, filename)
+            for filename in listdir(self.model_dir)
             if filename.endswith(".pt")
         ]
         self.model = UNet(
@@ -52,8 +38,8 @@ class UNetPredictor:
             dropout=0.1,
         ).to(self.device)
 
-        self.transforms = self.get_transforms(flip_z=flip_z, spacing=spacing)
-        self.inferer = SlidingWindowInferer(roi_size=roi_size, overlap=0.8)
+        self.transforms = self.get_transforms(spacing=self.spacing)
+        self.inferer = SlidingWindowInferer(roi_size=self.roi_size, overlap=0.8)
         self.side_list = ["left", "right"]
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -99,7 +85,6 @@ class UNetPredictor:
 
     @staticmethod
     def get_transforms(
-        flip_z: bool = False,  # TODO: remove that
         spacing: bool = False,
     ) -> InvertibleTransform:
         """
@@ -109,8 +94,6 @@ class UNetPredictor:
 
         key_list = ["img", "left_heatmap", "right_heatmap"]
         transforms = [BuildEmptyHeatmapd(image_key="img")]
-        if flip_z:
-            transforms.append(Flipd(keys=key_list, spatial_axis=0))
         if spacing:
             transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
 

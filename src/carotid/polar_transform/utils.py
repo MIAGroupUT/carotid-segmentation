@@ -1,5 +1,9 @@
 import numpy as np
 from typing import Dict, Any
+import torch
+
+
+# TODO solve problem of too low / high centerlines for 3D length
 
 
 class PolarTransform:
@@ -35,13 +39,13 @@ class PolarTransform:
             sample[f"{side}_polar"] = list()
             for idx in centerline_df.index.values:
                 label_name = centerline_df.loc[idx, "label"]
-                center = centerline_df.loc[idx, ["z", "y", "x"]].values
+                center = centerline_df.loc[idx, ["z", "y", "x"]].values.astype(float)
                 polar_np = self._transform(image_np, center)
                 sample[f"{side}_polar"].append(
                     {
                         "label": label_name,
                         "slice_idx": int(center[0]),
-                        "polar_img": polar_np,
+                        "polar_pt": torch.from_numpy(polar_np).unsqueeze(0),
                         "center": center,
                     }
                 )
@@ -55,7 +59,6 @@ class PolarTransform:
         return sample
 
     def _transform(self, image_np: np.ndarray, center_np: np.ndarray):
-        # does a polar transform on the image, given the center. Everything is in image coordinates!
         coords = self.coords + center_np
         polar_transform = self.fast_trilinear_interpolation(
             image_np, coords[:, 2], coords[:, 1], coords[:, 0]

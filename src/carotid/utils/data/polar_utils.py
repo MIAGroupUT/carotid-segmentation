@@ -1,11 +1,12 @@
 from typing import List, Dict, Set
 from os import path, makedirs, listdir
 import numpy as np
+import torch
 from monai.transforms import Transform, MapTransform
 from monai.config import KeysCollection
 from .template import Serializer
 from .errors import MissingProcessedObjException
-from ..logger import write_json
+from ..logger import write_json, read_json
 
 side_list = ["left", "right"]
 
@@ -17,19 +18,20 @@ class LoadPolarDird(MapTransform):
     def __call__(self, data):
         d = dict(data)
         for key in self.key_iterator(d):
-            polar_path = d[key]
+            dir_path = d[key]
             d[key] = list()
             file_list = [
                 filename
-                for filename in listdir(polar_path)
-                if filename.endswith("_center.npy")
+                for filename in listdir(dir_path)
+                if filename.endswith("_polar.npy")
             ]
             file_list.sort()
             for filename in file_list:
                 try:
-                    polar_np = np.load(
-                        path.join(polar_path, filename), allow_pickle=True
-                    ).astype(float)
+                    polar_path = path.join(dir_path, filename)
+                    polar_np = np.load(polar_path, allow_pickle=True).astype(float)
+                    center_path = polar_path[:-10] + "_center.npy"
+                    center_np = np.load(center_path, allow_pickle=True).astype(float)
                 except FileNotFoundError:
                     raise MissingProcessedObjException(
                         f"Polar image at path {path.join(polar_path, filename)} was not found.\n"
@@ -41,13 +43,29 @@ class LoadPolarDird(MapTransform):
                     {
                         "label": label_name,
                         "slice_idx": slice_idx,
-                        "polar_img": polar_np,
+                        "polar_pt": torch.from_numpy(polar_np).float().unsqueeze(0),
+                        "center": center_np,
                     },
                 )
+
+            # Read meta dict
+            json_path = path.join(dir_path, "parameters.json")
+            d[f"{key}_meta_dict"] = read_json(json_path)
+
         return d
 
 
 class PolarSerializer(Serializer):
+    """
+    Read and write outputs of polar_transform.
+    For each side this corresponds to a list of dictionaries with the following keys:
+        - "label": str is the label "external" or "internal",
+        - "slice_idx": int is the index of the axial slice,
+        - "polar_pt": Tensor is the tensor wrapping the 3D polar image,
+        - "center": array is the array of the 3 spatial coordinates of the center.
+    Each side is also associated to a meta dict including the parameters of the polar transform.
+    """
+
     def get_transforms(self) -> List[Transform]:
         return [LoadPolarDird(keys=["left_polar", "right_polar"])]
 
@@ -62,11 +80,11 @@ class PolarSerializer(Serializer):
 
     def add_path(self, sample_list: List[Dict[str, str]]):
         for sample in sample_list:
-            heatmap_dir = path.join(
+            polar_dir = path.join(
                 self.parameters["dir"], sample["participant_id"], "polar_transform"
             )
-            sample["left_polar"] = path.join(heatmap_dir, "left_polar")
-            sample["right_polar"] = path.join(heatmap_dir, "right_polar")
+            sample["left_polar"] = path.join(polar_dir, "left_polar")
+            sample["right_polar"] = path.join(polar_dir, "right_polar")
 
     def write(self, sample):
         output_dir = path.join(
@@ -81,7 +99,7 @@ class PolarSerializer(Serializer):
             for polar_dict in polar_list:
                 label_name = polar_dict["label"]
                 slice_idx = polar_dict["slice_idx"]
-                polar_np = polar_dict["polar_img"]
+                polar_np = polar_dict["polar_pt"].squeeze(0).numpy()
                 center_np = polar_dict["center"]
                 np.save(
                     path.join(

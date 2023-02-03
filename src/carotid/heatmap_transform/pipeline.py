@@ -37,17 +37,13 @@ def apply_transform(
     makedirs(output_dir, exist_ok=True)
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
+    heatmap_parameters["spacing_required"] = raw_parameters["spacing_required"]
+    heatmap_parameters["device"] = device.type
     heatmap_parameters["dir"] = output_dir
     heatmap_logger = HeatmapSerializer(heatmap_parameters)
     write_json(heatmap_parameters, path.join(output_dir, "heatmap_parameters.json"))
 
-    unet_predictor = UNetPredictor(
-        model_dir=model_dir,
-        roi_size=heatmap_parameters["roi_size"],
-        flip_z=model_parameters["z_orientation"] != "down",  # Remove
-        spacing=raw_parameters["spacing_required"],
-        device=device,
-    )
+    unet_predictor = UNetPredictor(parameters=heatmap_parameters)
     dataset = build_dataset(
         raw_parameters=raw_parameters,
         participant_list=participant_list,

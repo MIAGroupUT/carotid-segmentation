@@ -1,5 +1,5 @@
 from os import path
-import numpy as np
+import torch
 from carotid.utils import build_dataset
 from carotid.polar_transform.pipeline import apply_transform
 import shutil
@@ -28,6 +28,6 @@ def test_pipeline():
         out_list = out_dataset[0][f"{side}_polar"]
         assert len(ref_list) == len(out_list)
         for idx in range(len(ref_list)):
-            assert np.allclose(ref_list[idx]["polar_img"], out_list[idx]["polar_img"])
+            assert torch.allclose(ref_list[idx]["polar_pt"], out_list[idx]["polar_pt"])
 
     shutil.rmtree(tmp_dir)

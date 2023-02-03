@@ -16,6 +16,7 @@ pipeline_dir = path.dirname(path.realpath(__file__))
 
 def apply_transform(
     output_dir: str,
+    model_dir: str,
     polar_dir: str = None,
     config_path: str = None,
     participant_list: List[str] = None,
@@ -28,7 +29,6 @@ def apply_transform(
 
     polar_parameters = read_json(path.join(polar_dir, "polar_parameters.json"))
     raw_dir = polar_parameters["raw_dir"]
-    centerline_dir = polar_parameters["centerline_dir"]
 
     raw_parameters = compute_raw_description(raw_dir)
 
@@ -41,12 +41,17 @@ def apply_transform(
     makedirs(output_dir, exist_ok=True)
     segmentation_parameters["raw_dir"] = raw_dir
     segmentation_parameters["polar_dir"] = polar_dir
-    segmentation_parameters["centerline_dir"] = centerline_dir
+    segmentation_parameters["model_dir"] = model_dir
+    segmentation_parameters["device"] = device.type
     segmentation_parameters["dir"] = output_dir
     segmentation_logger = SegmentationSerializer(segmentation_parameters)
-    write_json(segmentation_parameters, path.join(output_dir, "polar_parameters.json"))
+    write_json(
+        segmentation_parameters, path.join(output_dir, "segmentation_parameters.json")
+    )
 
-    segmentation_transform = SegmentationTransform(segmentation_parameters)
+    segmentation_transform = SegmentationTransform(
+        segmentation_parameters,
+    )
 
     dataset = build_dataset(
         raw_parameters=raw_parameters,
@@ -56,7 +61,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Heatmap transform {participant_id}...")
+        print(f"Segmentation transform {participant_id}...")
 
         predicted_sample = segmentation_transform(sample)
         segmentation_logger.write(predicted_sample)

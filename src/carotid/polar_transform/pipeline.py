@@ -61,7 +61,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Heatmap transform {participant_id}...")
+        print(f"Polar transform {participant_id}...")
 
         predicted_sample = polar_transform(sample)
         polar_logger.write(predicted_sample)
