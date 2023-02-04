@@ -11,3 +11,7 @@ test-carotid:
     - pytest ./tests/centerline_transform/test_centerline_transform.py
     - pytest ./tests/polar_transform/test_polar_transform.py
     - pytest ./tests/segmentation_transform/test_segmentation_transform.py
+
+test-docker-ubuntu:
+  image: ubuntu
+  script: ./test.sh

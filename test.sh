@@ -20,6 +20,7 @@ docker run --rm \
         --shm-size="128m" \
         --pids-limit="256" \
         -v $SCRIPTPATH/tests/raw_dir/:/input/ \
+        -v $SCRIPTPATH/models/:/models/ \
         -v carotidsegmentation-output-$VOLUME_SUFFIX:/output/ \
         carotidsegmentation "--device cpu"
 

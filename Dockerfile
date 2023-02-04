@@ -23,6 +23,4 @@ RUN python -m pip install --user -r docker-requirements.txt
 COPY --chown=algorithm:algorithm src/ /opt/algorithm/src/
 RUN python -m pip install --user ./src
 
-COPY --chown=algorithm:algorithm models/ /opt/algorithm/models/
-
-ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/segmentation_transform /output $0 $@
+ENTRYPOINT carotid pipeline_transform /input /models/heatmap_transform /models/segmentation_transform /output $0 $@
