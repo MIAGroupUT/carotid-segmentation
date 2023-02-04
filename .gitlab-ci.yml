@@ -1,4 +1,8 @@
-test-build:
+stages:
+  - build
+  - test
+
+build:
   services:
     - docker:dind
   stage: build
@@ -9,9 +13,9 @@ test-build:
     - dockerd
     - docker build -t carotidsegmentation .
 
-test-carotid:
+test:
   image: python:3.9.7
-  stage: test-python-library
+  stage: test
   before_script:
     - pip install numpy==1.22.4
     - pip install -e ./src
