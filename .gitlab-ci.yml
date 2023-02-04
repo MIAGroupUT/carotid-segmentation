@@ -16,4 +16,5 @@ test-docker-ubuntu:
   variables:
     CI_DEBUG_TRACE: "true"
   image: ubuntu
-  script: ./test.sh
+  script:
+  - source ./test.sh
