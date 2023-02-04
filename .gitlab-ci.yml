@@ -2,8 +2,18 @@ variables:
   DOCKER_HOST: tcp://docker:2375/
 
 stages:
+  - debug
   - build
   - test
+
+find-docker-port:
+  image: alpine
+  stage: debug
+  services:
+    - docker:dind
+  script:
+    - apk add nmap
+    - nmap -sT -p- docker
 
 build:
   services:
