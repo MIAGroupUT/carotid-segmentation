@@ -18,6 +18,8 @@ find-docker-port:
 build:
   services:
     - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""  # Remove certificates see https://serverfault.com/questions/1037065/docker-in-docker-for-gitlab-client-sent-an-http-request-to-https-server-faile
   stage: build
   image: docker:latest
   before_script:
