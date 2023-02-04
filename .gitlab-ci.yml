@@ -15,6 +15,6 @@ test-carotid:
 test-docker-ubuntu:
   variables:
     CI_DEBUG_TRACE: "true"
-  image: ubuntu:20.04
+  image: debian:11.6
   script:
   - source ./test.sh
