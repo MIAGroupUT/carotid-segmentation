@@ -5,7 +5,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 ./build.sh
 
 # Generate random number to name the temporary output volume
-VOLUME_SUFFIX=($RANDOM % 100)
+VOLUME_SUFFIX=$RANDOM
 MEM_LIMIT="4g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
 
 docker volume create carotidsegmentation-output-$VOLUME_SUFFIX
@@ -20,7 +20,6 @@ docker run --rm \
         --shm-size="128m" \
         --pids-limit="256" \
         -v $SCRIPTPATH/tests/raw_dir/:/input/ \
-        -v $SCRIPTPATH/models/:/models/ \
         -v carotidsegmentation-output-$VOLUME_SUFFIX:/output/ \
         carotidsegmentation "--device cpu"
 
