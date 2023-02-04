@@ -13,5 +13,7 @@ test-carotid:
     - pytest ./tests/segmentation_transform/test_segmentation_transform.py
 
 test-docker-ubuntu:
+  variables:
+    CI_DEBUG_TRACE: "true"
   image: ubuntu
   script: ./test.sh
