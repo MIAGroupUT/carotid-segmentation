@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 MODELPATH="${SCRIPTPATH}/models"
 

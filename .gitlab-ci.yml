@@ -16,5 +16,7 @@ services:
 docker_build:
   stage: build
   image: docker:latest
+  before_script:
+    - cp -r ./tests/models .
   script:
-    - source ./test.sh
+    - docker build -t carotidsegmentation .
