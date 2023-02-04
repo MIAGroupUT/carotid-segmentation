@@ -1,5 +1,16 @@
+test-build:
+  services:
+    - docker:dind
+  stage: build
+  image: docker:latest
+  before_script:
+    - cp -r ./tests/models .
+  script:
+    - docker build -t carotidsegmentation .
+
 test-carotid:
   image: python:3.9.7
+  stage: test-python-library
   before_script:
     - pip install numpy==1.22.4
     - pip install -e ./src
@@ -9,14 +20,3 @@ test-carotid:
     - pytest ./tests/centerline_transform/test_centerline_transform.py
     - pytest ./tests/polar_transform/test_polar_transform.py
     - pytest ./tests/segmentation_transform/test_segmentation_transform.py
-
-services:
-  - docker:dind
-
-docker_build:
-  stage: build
-  image: docker:latest
-  before_script:
-    - cp -r ./tests/models .
-  script:
-    - docker build -t carotidsegmentation .
