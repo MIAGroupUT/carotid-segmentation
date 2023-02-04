@@ -1,5 +1,6 @@
 variables:
   DOCKER_HOST: tcp://docker:2376/
+  DOCKER_TLS_CERTDIR: ""  # Remove certificates see https://serverfault.com/questions/1037065/docker-in-docker-for-gitlab-client-sent-an-http-request-to-https-server-faile
 
 stages:
   - check-port
