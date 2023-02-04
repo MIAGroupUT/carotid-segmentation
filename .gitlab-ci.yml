@@ -13,7 +13,6 @@ build:
   before_script:
     - cp -r ./tests/models .
   script:
-    - dockerd
     - docker build -t carotidsegmentation .
 
 test:
