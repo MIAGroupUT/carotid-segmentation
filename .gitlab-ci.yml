@@ -1,6 +1,4 @@
 test-carotid:
-  variables:
-    CI_DEBUG_TRACE: "true"
   image: python:3.9.7
   before_script:
     - pip install numpy==1.22.4
@@ -12,9 +10,11 @@ test-carotid:
     - pytest ./tests/polar_transform/test_polar_transform.py
     - pytest ./tests/segmentation_transform/test_segmentation_transform.py
 
-test-docker-ubuntu:
-  variables:
-    CI_DEBUG_TRACE: "true"
+test-docker-debian:
   image: debian:11.6
+  before_script:
+    - apt update
+    - apt install apt-transport-https ca-certificates curl gnupg lsb-release
+    - apt install docker-ce docker-ce-cli containerd.io
   script:
-  - source ./test.sh
+    - source ./test.sh
