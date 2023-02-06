@@ -1,31 +1,5 @@
-variables:
-  # DOCKER_HOST: tcp://docker:2376/
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-
 stages:
-  - check-port
-  - build
   - test
-
-find-docker-port:
-  image: alpine
-  stage: check-port
-  services:
-    - docker:dind
-  script:
-    - apk add nmap
-    - nmap -sT -p- docker
-
-build:
-  services:
-    - docker:dind
-  stage: build
-  image: docker:latest
-  before_script:
-    - cp -r ./tests/models .
-  script:
-    - docker build -t carotidsegmentation .
 
 test:
   image: python:3.9.7
