@@ -8,7 +8,6 @@ from carotid.utils import (
     read_and_fill_default_toml,
     build_dataset,
     check_device,
-    compute_raw_description,
     SegmentationSerializer,
 )
 import toml
@@ -34,7 +33,6 @@ def apply_transform(
 ):
     # Read parameters
     device = check_device(device=device)
-    raw_parameters = compute_raw_description(raw_dir)
 
     if config_path is None:
         config_dir = dict()
@@ -69,13 +67,12 @@ def apply_transform(
         parameters=config_dir["segmentation_transform"]
     )
 
-    segmentation_serializer = SegmentationSerializer(
-        parameters=config_dir["segmentation_transform"]
-    )
-
     dataset = build_dataset(
-        raw_parameters=raw_parameters,
+        raw_dir=raw_dir,
         participant_list=participant_list,
+    )
+    serializer = SegmentationSerializer(
+        dir_path=output_dir,
     )
 
     for sample in dataset:
@@ -85,4 +82,4 @@ def apply_transform(
         sample = centerline_extractor(sample)
         sample = polar_transform(sample)
         sample = segmentation_transform(sample)
-        segmentation_serializer.write(sample)
+        serializer.write(sample)

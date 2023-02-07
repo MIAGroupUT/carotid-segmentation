@@ -20,10 +20,10 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(segmentation_parameters={"dir": ref_dir})
+    ref_dataset = build_dataset(segmentation_dir=ref_dir)
 
     # Read output
-    out_dataset = build_dataset(segmentation_parameters={"dir": tmp_dir})
+    out_dataset = build_dataset(segmentation_dir=tmp_dir)
 
     for side in ["left", "right"]:
         ref_np = ref_dataset[0][f"{side}_segmentation"]

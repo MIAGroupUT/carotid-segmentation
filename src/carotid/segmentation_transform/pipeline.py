@@ -6,7 +6,6 @@ from carotid.utils import (
     read_and_fill_default_toml,
     build_dataset,
     check_device,
-    compute_raw_description,
     SegmentationSerializer,
 )
 from typing import List
@@ -30,8 +29,6 @@ def apply_transform(
     polar_parameters = read_json(path.join(polar_dir, "polar_parameters.json"))
     raw_dir = polar_parameters["raw_dir"]
 
-    raw_parameters = compute_raw_description(raw_dir)
-
     # Read global default args
     segmentation_parameters = read_and_fill_default_toml(
         config_path, path.join(pipeline_dir, "default_args.toml")
@@ -43,8 +40,6 @@ def apply_transform(
     segmentation_parameters["polar_dir"] = polar_dir
     segmentation_parameters["model_dir"] = model_dir
     segmentation_parameters["device"] = device.type
-    segmentation_parameters["dir"] = output_dir
-    segmentation_logger = SegmentationSerializer(segmentation_parameters)
     write_json(
         segmentation_parameters, path.join(output_dir, "segmentation_parameters.json")
     )
@@ -54,14 +49,15 @@ def apply_transform(
     )
 
     dataset = build_dataset(
-        raw_parameters=raw_parameters,
-        polar_parameters={"dir": polar_dir},
+        raw_dir=raw_dir,
+        polar_dir=polar_dir,
         participant_list=participant_list,
     )
+    serializer = SegmentationSerializer(output_dir)
 
     for sample in dataset:
         participant_id = sample["participant_id"]
         print(f"Segmentation transform {participant_id}...")
 
         predicted_sample = segmentation_transform(sample)
-        segmentation_logger.write(predicted_sample)
+        serializer.write(predicted_sample)

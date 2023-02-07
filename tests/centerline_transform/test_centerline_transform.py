@@ -18,10 +18,10 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(centerline_parameters={"dir": ref_dir})
+    ref_dataset = build_dataset(centerline_dir=ref_dir)
 
     # Read output
-    out_dataset = build_dataset(centerline_parameters={"dir": tmp_dir})
+    out_dataset = build_dataset(centerline_dir=tmp_dir)
 
     for side in ["left", "right"]:
         ref_df = ref_dataset[0][f"{side}_centerline"]

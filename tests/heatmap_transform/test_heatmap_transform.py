@@ -19,10 +19,10 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(heatmap_parameters={"dir": ref_dir})
+    ref_dataset = build_dataset(heatmap_dir=ref_dir)
 
     # Read output
-    out_dataset = build_dataset(heatmap_parameters={"dir": tmp_dir})
+    out_dataset = build_dataset(heatmap_dir=tmp_dir)
 
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]

@@ -5,7 +5,6 @@ from carotid.utils import (
     read_and_fill_default_toml,
     build_dataset,
     check_device,
-    compute_raw_description,
     HeatmapSerializer,
 )
 from typing import List
@@ -23,7 +22,6 @@ def apply_transform(
 ):
     # Read parameters
     device = check_device(device=device)
-    raw_parameters = compute_raw_description(raw_dir)
 
     # Read global default args
     heatmap_parameters = read_and_fill_default_toml(
@@ -35,19 +33,18 @@ def apply_transform(
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
     heatmap_parameters["device"] = device.type
-    heatmap_parameters["dir"] = output_dir
-    heatmap_logger = HeatmapSerializer(heatmap_parameters)
     write_json(heatmap_parameters, path.join(output_dir, "heatmap_parameters.json"))
 
     unet_predictor = UNetPredictor(parameters=heatmap_parameters)
     dataset = build_dataset(
-        raw_parameters=raw_parameters,
+        raw_dir=raw_dir,
         participant_list=participant_list,
     )
+    serializer = HeatmapSerializer(output_dir)
 
     for sample in dataset:
         participant_id = sample["participant_id"]
         print(f"Heatmap transform {participant_id}...")
 
         predicted_sample = unet_predictor(sample)
-        heatmap_logger.write(predicted_sample)
+        serializer.write(predicted_sample)

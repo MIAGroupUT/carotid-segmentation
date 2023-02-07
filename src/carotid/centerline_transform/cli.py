@@ -25,13 +25,11 @@ import click
     help="Path to a TOML file to set parameters.",
 )
 @click.option("--participant", "-p", type=str, default=None, multiple=True)
-@click.option("--device", "-d", type=click.Choice(["cpu", "cuda"]), default="cuda")
 def cli(
     output_dir,
     heatmap_dir,
     config_path,
     participant,
-    device,
 ) -> None:
     """
     Extracting centerlines from heatmaps with the Dijkstra algorithm.
@@ -45,7 +43,6 @@ def cli(
         heatmap_dir=heatmap_dir,
         config_path=config_path,
         participant_list=participant,
-        device=device,
     )
 
 
