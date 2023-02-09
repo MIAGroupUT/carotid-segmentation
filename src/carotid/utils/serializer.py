@@ -9,7 +9,7 @@ from monai.transforms import (
     MapTransform,
     LoadImaged,
     ScaleIntensityRangePercentilesd,
-    AddChanneld,
+    Orientationd,
     Compose,
 )
 from monai.config import KeysCollection
@@ -302,21 +302,17 @@ class RawReader:
         """
         Returns list of transforms used to load, rescale and reshape MRI volume.
         """
-        loader = LoadImaged(keys=["img"])
-        loader.register(
-            ITKReader(reverse_indexing=True)
-        )  # TODO: remove + add orientation
         transforms = [
-            loader,
+            LoadImaged(keys=["image"], ensure_channel_first=True),
             ScaleIntensityRangePercentilesd(
-                keys=["img"],
+                keys=["image"],
                 lower=self.parameters["lower_percentile_rescaler"],
                 upper=self.parameters["upper_percentile_rescaler"],
                 b_min=0,
                 b_max=1,
                 clip=True,
             ),
-            AddChanneld(keys=["img"]),
+            Orientationd(keys=["image"], axcodes="SAR"),
         ]
 
         return transforms
@@ -350,7 +346,7 @@ class RawReader:
                 img_path = path.join(self.dir_path, participant_id)
             else:
                 img_path = path.join(self.dir_path, f"{participant_id}.mhd")
-            sample["img"] = img_path
+            sample["image"] = img_path
 
     @staticmethod
     def compute_raw_description(raw_dir: str) -> Dict[str, Any]:

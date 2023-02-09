@@ -34,7 +34,7 @@ class PolarTransform:
         self.coords = np.stack([Z.flatten(), yy, xx], axis=1)
 
     def __call__(self, sample: Dict[str, Any]):
-        image_np = sample["img"][0]
+        image_np = sample["image"][0]
         for side in ["left", "right"]:
             centerline_df = sample[f"{side}_centerline"]
             sample[f"{side}_polar"] = list()

@@ -1,4 +1,5 @@
 import click
+from carotid.utils import cli_param
 
 
 @click.command(
@@ -6,10 +7,7 @@ import click
     no_args_is_help=True,
     context_settings={"show_default": True},
 )
-@click.argument(
-    "output_dir",
-    type=click.Path(writable=True),
-)
+@cli_param.argument.output_dir
 @click.option(
     "--heatmap_dir",
     "-hdir",
@@ -17,14 +15,8 @@ import click
     default=None,
     help="Path to the output directory of heatmap_transform, if different from output_dir.",
 )
-@click.option(
-    "--config_path",
-    "-c",
-    type=click.Path(exists=True),
-    default=None,
-    help="Path to a TOML file to set parameters.",
-)
-@click.option("--participant", "-p", type=str, default=None, multiple=True)
+@cli_param.option.config_path
+@cli_param.option.participant
 def cli(
     output_dir,
     heatmap_dir,
@@ -32,7 +24,7 @@ def cli(
     participant,
 ) -> None:
     """
-    Extracting centerlines from heatmaps with the Dijkstra algorithm.
+    Extract centerlines from heatmaps with the Dijkstra algorithm.
 
     OUTPUT_DIR is the path to the directory containing the results.
     """

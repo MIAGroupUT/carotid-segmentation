@@ -1,9 +1,19 @@
 stages:
-  - test
+  - unit-test
+  - functional-test
 
-test:
+unit-test:
   image: python:3.9.7
-  stage: test
+  stage: unit-test
+  before_script:
+    - pip install numpy==1.22.4
+    - pip install -e ./src
+  script:
+    - pytest ./tests/unit_tests
+
+functional-test:
+  image: python:3.9.7
+  stage: functional-test
   before_script:
     - pip install numpy==1.22.4
     - pip install -e ./src

@@ -10,6 +10,8 @@ class SegmentationTransform:
     def __init__(self, parameters: Dict[str, Any]):
         self.model_dir = parameters["model_dir"]
         self.device = parameters["device"]
+        self.eval_mode = parameters["eval_mode"]
+        self.n_repeats = parameters["n_repeats"]
         self.side_list = ["left", "right"]
 
         self.model_paths_list = [
@@ -48,7 +50,7 @@ class SegmentationTransform:
             enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
         ):
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.eval()
+            self.model.set_mode(self.eval_mode)
 
             with torch.no_grad():
                 all_pred_pt[index] = (
@@ -87,7 +89,7 @@ class SegmentationTransform:
 
 
 class CONV3D(nn.Module):
-    def __init__(self, hidden_size=16):
+    def __init__(self, hidden_size: int = 16, dropout: float = 0.2):
         super(CONV3D, self).__init__()
         model = [
             nn.Conv3d(1, hidden_size, kernel_size=3),
@@ -105,6 +107,7 @@ class CONV3D(nn.Module):
                     kernel_size=(3, 3, 3),
                     dilation=2**dr,
                 ),
+                # nn.Dropout3d(p=dropout),
                 nn.BatchNorm3d((dr + 1) * hidden_size),
                 nn.ReLU(),
             ]
@@ -117,6 +120,7 @@ class CONV3D(nn.Module):
                     kernel_size=(1, 3, 3),
                     dilation=2**dr,
                 ),
+                # nn.Dropout3d(p=dropout),
                 nn.BatchNorm3d((dr + 1) * hidden_size),
                 nn.ReLU(),
             ]
@@ -130,6 +134,7 @@ class CONV3D(nn.Module):
                     kernel_size=(1, 1, 3),
                     dilation=(1, 1, 2**dr),
                 ),
+                # nn.Dropout3d(p=dropout),
                 nn.BatchNorm3d((dr + 1) * hidden_size),
                 nn.ReLU(),
             ]
@@ -138,6 +143,7 @@ class CONV3D(nn.Module):
             nn.Conv3d(
                 max_pow * hidden_size, max_pow * hidden_size, kernel_size=(1, 1, 1)
             ),
+            # nn.Dropout3d(p=dropout),
             nn.BatchNorm3d(max_pow * hidden_size),
             nn.ReLU(),
             nn.Conv3d(max_pow * hidden_size, 2, kernel_size=(1, 1, 1)),
@@ -148,3 +154,16 @@ class CONV3D(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x.squeeze(-3).squeeze(-1)
+
+    def set_mode(self, mode="eval"):
+        if mode == "eval":
+            return self.model.eval()
+        elif mode == "train":
+            return self.model.train()
+        elif mode == "dropout":
+            self.model.eval()
+            for m in self.model.modules():
+                if m.__class__.__name__.startswith("Dropout"):
+                    m.train()
+
+            return self.model

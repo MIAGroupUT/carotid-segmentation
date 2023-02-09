@@ -45,7 +45,7 @@ class UNetPredictor:
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
         # Remember original image to avoid a loss of resolution
-        image_np = sample["img"].copy()
+        image_pt = sample["image"].clone()
         # Put the sample in the working space of the U-Net
         unet_sample = self.transforms(sample)
         pred_dict = {
@@ -65,7 +65,7 @@ class UNetPredictor:
                 with torch.no_grad():
                     pred_dict[side] += (
                         self.inferer(
-                            unet_sample[f"{side}_img"].unsqueeze(0).to(self.device),
+                            unet_sample[f"{side}_image"].unsqueeze(0).to(self.device),
                             self.model,
                         )
                         .squeeze(0)
@@ -79,7 +79,7 @@ class UNetPredictor:
             )
 
         orig_sample = self.transforms.inverse(unet_sample)
-        orig_sample["img"] = image_np
+        orig_sample["image"] = image_pt
 
         return orig_sample
 
@@ -92,17 +92,13 @@ class UNetPredictor:
         working space of the U-Net.
         """
 
-        key_list = ["img", "left_heatmap", "right_heatmap"]
-        transforms = [BuildEmptyHeatmapd(image_key="img")]
+        key_list = ["image", "left_heatmap", "right_heatmap"]
+        transforms = [BuildEmptyHeatmapd(image_key="image")]
         if spacing:
             transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
 
         transforms.append(
-            ExtractLeftAndRightd(split_keys=["heatmap"], keys=["img", "heatmap"])
+            ExtractLeftAndRightd(split_keys=["heatmap"], keys=["image", "heatmap"])
         )
-        transforms.append(
-            ToTensord(keys=["left_img", "right_img", "left_heatmap", "right_heatmap"])
-        )
-        # TODO: add transpose
 
         return Compose(transforms)

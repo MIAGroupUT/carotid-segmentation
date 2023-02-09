@@ -12,7 +12,6 @@ from .serializer import (
 )
 
 
-# TODO: parameters are only necessary for raw Reader: could be simplified for other modalities
 def compute_serializer_list(
     raw_dir: str = None,
     heatmap_dir: str = None,

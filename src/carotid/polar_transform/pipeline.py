@@ -18,10 +18,8 @@ def apply_transform(
     centerline_dir: str = None,
     config_path: str = None,
     participant_list: List[str] = None,
-    device: str = None,
 ):
     # Read parameters
-    device = check_device(device=device)
     if centerline_dir is None:
         centerline_dir = output_dir
 

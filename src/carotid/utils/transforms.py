@@ -1,8 +1,11 @@
 import monai
 from monai.config import KeysCollection
-from monai.utils.enums import TraceKeys
-import numpy as np
+from monai.utils.enums import TraceKeys, PytorchPadMode
+from monai.data.meta_tensor import MetaTensor, get_track_meta
+import torch
 from copy import deepcopy
+
+from torch import Tensor
 
 
 # TODO: work on non-inverted images
@@ -10,6 +13,7 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
     """
     Extract the left (first two thirds) and right (last two thirds) parts of an image.
     The right part is flipped.
+    Assumes that the first dimension is the channel axis and that the orientation is SAR.
     """
 
     def __init__(
@@ -40,26 +44,23 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                 right_key = f"right_{key}"
             else:
                 left_key, right_key = key, key
-                if self.trace_key(key) in d:
-                    d[self.trace_key(f"left_{key}")] = deepcopy(d[self.trace_key(key)])
-                    d[self.trace_key(f"right_{key}")] = deepcopy(d[self.trace_key(key)])
-                    del d[self.trace_key(key)]
-
-            self.push_transform(
-                d,
-                f"left_{key}",
-                extra_info={"side": "left"},
-                orig_size=d[left_key].shape[1::],
-            )
-            self.push_transform(
-                d,
-                f"right_{key}",
-                extra_info={"side": "right"},
-                orig_size=d[right_key].shape[1::],
-            )
 
             d[f"left_{key}"] = deepcopy(self.extract_left(d[left_key]))
             d[f"right_{key}"] = deepcopy(self.extract_right(d[right_key]))
+
+            if get_track_meta():
+                self.push_transform(
+                    d,
+                    f"left_{key}",
+                    extra_info={"side": "left"},
+                    orig_size=d[left_key].shape[1::],
+                )
+                self.push_transform(
+                    d,
+                    f"right_{key}",
+                    extra_info={"side": "right"},
+                    orig_size=d[right_key].shape[1::],
+                )
 
             if key in d:
                 del d[key]
@@ -83,61 +84,54 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                 d = self._run_inversion(d, f"{side}_{key}")
             if self.split_keys is None or key not in self.split_keys:
                 d[key] = self.recombine(
-                    left_np=d[f"left_{key}"], right_np=d[f"right_{key}"]
-                )
-                d[self.trace_key(key)] = deepcopy(d[self.trace_key(f"left_{key}")])
-                d[f"{key}_{self.meta_key_postfix}"] = deepcopy(
-                    d[f"left_{key}_{self.meta_key_postfix}"]
+                    left_pt=d[f"left_{key}"], right_pt=d[f"right_{key}"]
                 )
 
                 # After combination forget the previous separated versions
                 for side in ["left", "right"]:
                     del d[f"{side}_{key}"]
                     del d[f"{side}_{key}_{self.meta_key_postfix}"]
-                    del d[self.trace_key(f"{side}_{key}")]
 
         return d
 
     def _run_inversion(self, d, key):
-        transform = self.get_most_recent_transform(d, key)
+        transform = self.get_most_recent_transform(d, key, pop=True, check=False)
         orig_size = transform[TraceKeys.ORIG_SIZE]
         current_size = d[key].shape
         side = transform[TraceKeys.EXTRA_INFO]["side"]
         padding_size = orig_size[-1] - current_size[-1]
-        pad_transform = monai.transforms.Pad(
-            [(0, 0), (0, 0), (0, 0), (padding_size, 0)]
-        )
+        to_pad = [(0, 0), (0, 0), (0, 0), (padding_size, 0)]
+        pad_transform = monai.transforms.Pad()
 
-        d[key] = pad_transform(d[key])
+        d[key] = pad_transform._pt_pad(d[key], to_pad, mode=PytorchPadMode.CONSTANT)
 
-        if side == "right":
-            d[key] = np.flip(d[key], axis=-1)
-
-        self.pop_transform(d, key)
+        if side == "left":
+            d[key] = torch.flip(d[key], dims=(-1,))
 
         return d
 
     @staticmethod
-    def recombine(left_np: np.ndarray, right_np: np.ndarray) -> np.ndarray:
-        orig_y = left_np.shape[-1]
-        recombined_np = np.zeros_like(left_np)
-        recombined_np[..., : orig_y // 3 :] = right_np[..., : orig_y // 3 :]
-        recombined_np[..., orig_y * 2 // 3 : :] = left_np[..., orig_y * 2 // 3 : :]
-        recombined_np[..., orig_y // 3 : orig_y * 2 // 3 :] = (
-            right_np[..., orig_y // 3 : orig_y * 2 // 3 :]
-            + left_np[..., orig_y // 3 : orig_y * 2 // 3 :]
+    def recombine(left_pt: MetaTensor, right_pt: MetaTensor) -> MetaTensor:
+        orig_y = left_pt.shape[-1]
+        recombined_pt = left_pt.clone()
+        recombined_pt[:] = 0
+        recombined_pt[..., : orig_y // 3 :] = left_pt[..., : orig_y // 3 :]
+        recombined_pt[..., orig_y * 2 // 3 : :] = right_pt[..., orig_y * 2 // 3 : :]
+        recombined_pt[..., orig_y // 3 : orig_y * 2 // 3 :] = (
+            right_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
+            + left_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
         ) / 2
-        return recombined_np
+        return recombined_pt
 
     @staticmethod
-    def extract_left(image_np: np.ndarray) -> np.ndarray:
-        """Extract the first two thirds of the image."""
-        return image_np[..., image_np.shape[-1] // 3 : :]
+    def extract_left(image_pt: Tensor) -> Tensor:
+        """Extract the first two thirds of the image and flip it."""
+        return torch.flip(image_pt[..., 0 : 2 * image_pt.shape[-1] // 3], dims=(-1,))
 
     @staticmethod
-    def extract_right(image_np: np.ndarray) -> np.ndarray:
-        """Extract the last two thirds of the image and flip it."""
-        return np.flip(image_np[..., 0 : 2 * image_np.shape[-1] // 3], axis=-1)
+    def extract_right(image_pt: Tensor) -> Tensor:
+        """Extract the last two thirds of the image."""
+        return image_pt[..., image_pt.shape[-1] // 3 : :]
 
 
 class BuildEmptyHeatmapd(monai.transforms.Transform):
@@ -147,7 +141,7 @@ class BuildEmptyHeatmapd(monai.transforms.Transform):
 
     def __init__(
         self,
-        image_key: str = "img",
+        image_key: str = "image",
         meta_key_postfix: str = "meta_dict",
     ):
         self.image_key = image_key
@@ -156,12 +150,11 @@ class BuildEmptyHeatmapd(monai.transforms.Transform):
     def __call__(self, data):
         d = dict(data)
 
-        meta_dict = data[f"{self.image_key}_{self.meta_key_postfix}"]
-        orig_size = data[f"{self.image_key}"].shape[1::]
+        zero_meta_tensor = data[f"{self.image_key}"].clone()
+        zero_meta_tensor[:] = 0
 
         for side in ["left", "right"]:
-            d[f"{side}_heatmap"] = np.zeros([2, *orig_size])
-            d[f"{side}_heatmap_meta_dict"] = meta_dict.copy()
+            d[f"{side}_heatmap"] = zero_meta_tensor.clone()
         return d
 
 
