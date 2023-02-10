@@ -30,8 +30,8 @@ class SegmentationTransform:
                 lumen_cont, wall_cont = self._transform(
                     polar_dict["polar_pt"], sample[f"{side}_polar_meta_dict"]
                 )
-                slice_point_cloud = np.stack((lumen_cont, wall_cont))
-                center_np = polar_dict["center"]
+                slice_point_cloud = torch.stack((lumen_cont, wall_cont)).numpy()
+                center_np = polar_dict["center_pt"].numpy()
                 slice_point_cloud += center_np
                 point_cloud = np.concatenate((point_cloud, slice_point_cloud), axis=1)
             sample[f"{side}_segmentation"] = point_cloud
@@ -40,7 +40,7 @@ class SegmentationTransform:
 
     def _transform(
         self, polar_pt: torch.Tensor, polar_meta_dict: Dict[str, Any]
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         n_angles = polar_meta_dict["n_angles"]
         polar_ray = polar_meta_dict["polar_ray"]
         cartesian_ray = polar_meta_dict["cartesian_ray"]
@@ -58,9 +58,8 @@ class SegmentationTransform:
                 )
 
         prediction_pt, _ = torch.median(all_pred_pt, dim=0)
-        prediction_np = prediction_pt.numpy()
         lumen_cont, wall_cont = self.polar2cartesian(
-            prediction_np,
+            prediction_pt,
             n_angles=n_angles,
             polar_ray=polar_ray,
             cartesian_ray=cartesian_ray,
@@ -70,21 +69,23 @@ class SegmentationTransform:
 
     @staticmethod
     def polar2cartesian(
-        prediction_np: np.ndarray, n_angles: int, polar_ray: int, cartesian_ray: int
-    ) -> Tuple[np.ndarray, np.ndarray]:
+        prediction_np: torch.Tensor, n_angles: int, polar_ray: int, cartesian_ray: int
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Maps polar predictions to the cartesian space"""
         # First coordinate of prediction is the distance between the border and the lumen
         lumen_dists = (polar_ray / 2 - prediction_np[0, :]) * cartesian_ray / polar_ray
         # Second coordinate of prediction is the wall width
         wall_dists = lumen_dists + prediction_np[1, :] * cartesian_ray / polar_ray
 
-        angle_vals = np.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(1, -1)
-        lumen_cont = np.zeros((n_angles, 3))
-        wall_cont = np.zeros_like(lumen_cont)
-        lumen_cont[:, 1] = lumen_dists * np.cos(angle_vals)
-        lumen_cont[:, 2] = lumen_dists * np.sin(angle_vals)
-        wall_cont[:, 1] = wall_dists * np.cos(angle_vals)
-        wall_cont[:, 2] = wall_dists * np.sin(angle_vals)
+        angle_vals = torch.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(
+            1, -1
+        )
+        lumen_cont = torch.zeros((n_angles, 3))
+        wall_cont = torch.zeros_like(lumen_cont)
+        lumen_cont[:, 1] = lumen_dists * torch.cos(angle_vals)
+        lumen_cont[:, 2] = lumen_dists * torch.sin(angle_vals)
+        wall_cont[:, 1] = wall_dists * torch.cos(angle_vals)
+        wall_cont[:, 2] = wall_dists * torch.sin(angle_vals)
         return lumen_cont, wall_cont
 
 

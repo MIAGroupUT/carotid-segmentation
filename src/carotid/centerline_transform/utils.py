@@ -1,8 +1,9 @@
 import abc
 import numpy as np
+import torch
 from dijkstra3d import dijkstra
 from scipy.interpolate import interp1d
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 import pandas as pd
 
 
@@ -14,9 +15,7 @@ class CenterlineExtractor:
         self.parameters = parameters
 
     @abc.abstractmethod
-    def __call__(
-        self, sample: Dict[str, np.ndarray]
-    ) -> Dict[str, Dict[str, np.ndarray]]:
+    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         pass
 
 
@@ -48,79 +47,79 @@ class OnePassExtractor(CenterlineExtractor):
 
         return sample
 
-    def get_seedpoints(self, heatmap_np: np.ndarray) -> Dict[str, np.ndarray]:
+    def get_seedpoints(self, heatmap_pt: torch.Tensor) -> Dict[str, torch.Tensor]:
         """
         Find seeds that will be connected by the Dijkstra algorithm.
 
         Args:
-            heatmap_np: heatmap from which the seeds are extracted.
+            heatmap_pt: heatmap from which the seeds are extracted.
 
         Returns:
             dictionary with keys corresponding to labels (internal, external) and items to the array of seeds.
         """
         # TODO take into image transpose
-        slice_shape = heatmap_np[0, 0].shape
-        mask_np = heatmap_np > self.parameters["threshold"]
+        slice_shape = heatmap_pt[0, 0].shape
+        mask_pt = heatmap_pt > self.parameters["threshold"]
 
         # only determine seed points where both internal/external carotids exceed threshold
-        (valid_slice_indices,) = np.where(
-            mask_np.any(axis=(-2, -1)).all(axis=0)
-        )  # TODO transpose here
-        min_slice = valid_slice_indices[0]
-        max_slice = valid_slice_indices[-1]
-        steps = np.arange(min_slice, max_slice, self.parameters["step_size"])
+        (valid_slice_indices,) = torch.where(mask_pt.any(-1).any(-1).all(0))
+        min_slice = valid_slice_indices[0].item()
+        max_slice = valid_slice_indices[-1].item()
+        steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])
 
         seeds_dict = {
-            "internal": np.zeros((len(steps) + 1, 3)),
-            "external": np.zeros((len(steps) + 1, 3)),
+            "internal": torch.zeros((len(steps) + 1, 3)),
+            "external": torch.zeros((len(steps) + 1, 3)),
         }
 
         for label_idx, label_name in enumerate(["internal", "external"]):
             # First seed on min_slice
-            seed = np.unravel_index(
-                np.argmax(heatmap_np[label_idx, min_slice]),
+            seed = unravel_index(
+                torch.argmax(heatmap_pt[label_idx, min_slice]),
                 slice_shape,
             )  # TODO transpose here
-            seeds_dict[label_name][0] = np.array([min_slice, *seed])
+            seeds_dict[label_name][0] = torch.Tensor([min_slice, *seed])
 
             # Seeds in each 3D section
             for i in range(len(steps) - 1):
-                heatmap_section = heatmap_np[label_idx, steps[i] : steps[i + 1], :, :]
-                seed = np.unravel_index(
-                    np.argmax(heatmap_section), heatmap_section.shape
+                heatmap_section = heatmap_pt[label_idx, steps[i] : steps[i + 1], :, :]
+                seed = unravel_index(
+                    torch.argmax(heatmap_section), heatmap_section.shape
                 )  # TODO transpose here
-                seed = np.array(seed) + np.array([steps[i], 0, 0])
+                seed = torch.Tensor(seed) + torch.Tensor([steps[i], 0, 0])
                 seeds_dict[label_name][i + 1] = seed
 
             # Last seed point on max_slice
-            seed = np.unravel_index(
-                np.argmax(heatmap_np[label_idx, max_slice]), slice_shape
+            seed = unravel_index(
+                torch.argmax(heatmap_pt[label_idx, max_slice]), slice_shape
             )  # TODO transpose here
-            seeds_dict[label_name][-1] = np.array([max_slice, *seed])
+            seeds_dict[label_name][-1] = torch.Tensor([max_slice, *seed])
 
         return seeds_dict
 
     @staticmethod
     def get_centerline(
-        seeds_dict: Dict[str, np.ndarray], heatmap_np: np.ndarray
-    ) -> Dict[str, np.ndarray]:
+        seeds_dict: Dict[str, torch.Tensor], heatmap_pt: torch.Tensor
+    ) -> Dict[str, np.array]:
         """
         Connect seeds with Dijkstra algorithm to obtain one center per slice.
 
         Args:
-            seeds_dict: dictionary with keys corresponding to labels (internal, external) and items to the array of seeds.
-            heatmap_np: heatmap from which the seeds are extracted.
+            seeds_dict: dictionary with keys corresponding to labels (internal, external)
+                and items to the indices of seeds.
+            heatmap_pt: heatmap from which the seeds are extracted.
 
         Returns:
             dictionary with keys corresponding to labels (internal, external) and items to the array of centers.
         """
         # cost based on heatmap only
+        heatmap_np = heatmap_pt.numpy()
         cost_np = np.max(heatmap_np) - heatmap_np
 
         paths = {"internal": [], "external": []}
         for label_idx, label_name in enumerate(["internal", "external"]):
             label_cost_np = cost_np[label_idx]
-            seeds_np = seeds_dict[label_name]
+            seeds_np = seeds_dict[label_name].numpy()
             for seed_idx in range(seeds_np.shape[0] - 1):
                 # Restrict possible space between seeds only
                 seed_cost_np = np.copy(label_cost_np)
@@ -147,3 +146,50 @@ class OnePassExtractor(CenterlineExtractor):
                 [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
             )
         return paths
+
+
+def unravel_indices(
+    indices: torch.LongTensor,
+    shape: Tuple[int, ...],
+) -> torch.LongTensor:
+    r"""Converts flat indices into unraveled coordinates in a target shape.
+    Source: https://github.com/pytorch/pytorch/issues/35674
+
+    Args:
+        indices: A tensor of (flat) indices, (*, N).
+        shape: The targeted shape, (D,).
+
+    Returns:
+        The unraveled coordinates, (*, N, D).
+    """
+
+    coord = []
+
+    for dim in reversed(shape):
+        coord.append(indices % dim)
+        indices = torch.div(indices, dim, rounding_mode="floor")
+
+    coord = torch.stack(coord[::-1], dim=-1).long()
+
+    return coord
+
+
+def unravel_index(
+    indices: torch.LongTensor,
+    shape: Tuple[int, ...],
+) -> Tuple[torch.LongTensor, ...]:
+    r"""Converts flat indices into unraveled coordinates in a target shape.
+    Source: https://github.com/pytorch/pytorch/issues/35674
+
+    This is a `torch` implementation of `numpy.unravel_index`.
+
+    Args:
+        indices: A tensor of (flat) indices, (N,).
+        shape: The targeted shape, (D,).
+
+    Returns:
+        A tuple of unraveled coordinate tensors of shape (D,).
+    """
+
+    coord = unravel_indices(indices, shape)
+    return tuple(coord)

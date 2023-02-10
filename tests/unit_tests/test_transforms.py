@@ -12,11 +12,11 @@ def compare_left_and_right(original_sample, transformed_sample, reconstructed_sa
 
     def extract_left(image_pt: torch.Tensor) -> torch.Tensor:
         """Extract the first two thirds of the image."""
-        return torch.flip(image_pt[..., 0 : 2 * image_pt.shape[-1] // 3], dims=(-1,))
+        return image_pt[..., image_pt.shape[-1] // 3 : :]
 
     def extract_right(image_pt: torch.Tensor) -> torch.Tensor:
         """Extract the last two thirds of the image and flip it."""
-        return image_pt[..., image_pt.shape[-1] // 3 : :]
+        return torch.flip(image_pt[..., 0 : 2 * image_pt.shape[-1] // 3], dims=(-1,))
 
     for side, extract_fn in {"left": extract_left, "right": extract_right}.items():
         assert torch.equal(

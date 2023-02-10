@@ -13,7 +13,6 @@ from monai.transforms import (
     Compose,
 )
 from monai.config import KeysCollection
-from monai.data.image_reader import ITKReader
 from typing import Dict, Any, Union, Optional, List, Set
 from .errors import MissingProcessedObjException, MissingRawArgException
 
@@ -121,7 +120,7 @@ class PolarSerializer(Serializer):
         - "label": str is the label "external" or "internal",
         - "slice_idx": int is the index of the axial slice,
         - "polar_pt": Tensor is the tensor wrapping the 3D polar image,
-        - "center": array is the array of the 3 spatial coordinates of the center.
+        - "center_pt": array is the array of the 3 spatial coordinates of the center.
     Each side is also associated to a meta dict including the parameters of the polar transform.
     """
 
@@ -140,7 +139,7 @@ class PolarSerializer(Serializer):
             label_name = polar_dict["label"]
             slice_idx = polar_dict["slice_idx"]
             polar_np = polar_dict["polar_pt"].squeeze(0).numpy()
-            center_np = polar_dict["center"]
+            center_np = polar_dict["center_pt"].numpy()
             np.save(
                 path.join(
                     output_path, f"label-{label_name}_slice-{slice_idx}_polar.npy"
@@ -192,7 +191,7 @@ class LoadPolarDird(MapTransform):
                         "label": label_name,
                         "slice_idx": slice_idx,
                         "polar_pt": torch.from_numpy(polar_np).float().unsqueeze(0),
-                        "center": center_np,
+                        "center_pt": torch.from_numpy(center_np).float(),
                     },
                 )
 
@@ -220,7 +219,7 @@ class HeatmapSerializer(Serializer):
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        heatmap_np = sample[key]
+        heatmap_np = sample[key].numpy()
         np.save(output_path, heatmap_np)
 
 
@@ -312,7 +311,7 @@ class RawReader:
                 b_max=1,
                 clip=True,
             ),
-            Orientationd(keys=["image"], axcodes="SAR"),
+            Orientationd(keys=["image"], axcodes="SPL"),
         ]
 
         return transforms

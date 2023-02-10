@@ -13,7 +13,7 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
     """
     Extract the left (first two thirds) and right (last two thirds) parts of an image.
     The right part is flipped.
-    Assumes that the first dimension is the channel axis and that the orientation is SAR.
+    Assumes that the first dimension is the channel axis and that the orientation is SPL.
     """
 
     def __init__(
@@ -45,6 +45,9 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
             else:
                 left_key, right_key = key, key
 
+            left_orig_size = d[left_key].shape[1::]
+            right_orig_size = d[right_key].shape[1::]
+
             d[f"left_{key}"] = deepcopy(self.extract_left(d[left_key]))
             d[f"right_{key}"] = deepcopy(self.extract_right(d[right_key]))
 
@@ -53,24 +56,26 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                     d,
                     f"left_{key}",
                     extra_info={"side": "left"},
-                    orig_size=d[left_key].shape[1::],
+                    orig_size=left_orig_size,
                 )
                 self.push_transform(
                     d,
                     f"right_{key}",
                     extra_info={"side": "right"},
-                    orig_size=d[right_key].shape[1::],
+                    orig_size=right_orig_size,
                 )
 
             if key in d:
                 del d[key]
 
-            d[f"left_{key}_{self.meta_key_postfix}"] = deepcopy(
-                d[f"{left_key}_{self.meta_key_postfix}"]
-            )
-            d[f"right_{key}_{self.meta_key_postfix}"] = deepcopy(
-                d[f"{right_key}_{self.meta_key_postfix}"]
-            )
+            if f"{left_key}_{self.meta_key_postfix}" in d:
+                d[f"left_{key}_{self.meta_key_postfix}"] = deepcopy(
+                    d[f"{left_key}_{self.meta_key_postfix}"]
+                )
+            if f"{right_key}_{self.meta_key_postfix}" in d:
+                d[f"right_{key}_{self.meta_key_postfix}"] = deepcopy(
+                    d[f"{right_key}_{self.meta_key_postfix}"]
+                )
 
             if f"{key}_{self.meta_key_postfix}" in d:
                 del d[f"{key}_{self.meta_key_postfix}"]
@@ -90,7 +95,8 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
                 # After combination forget the previous separated versions
                 for side in ["left", "right"]:
                     del d[f"{side}_{key}"]
-                    del d[f"{side}_{key}_{self.meta_key_postfix}"]
+                    if f"{side}_{key}_{self.meta_key_postfix}" in d:
+                        del d[f"{side}_{key}_{self.meta_key_postfix}"]
 
         return d
 
@@ -105,7 +111,7 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
 
         d[key] = pad_transform._pt_pad(d[key], to_pad, mode=PytorchPadMode.CONSTANT)
 
-        if side == "left":
+        if side == "right":
             d[key] = torch.flip(d[key], dims=(-1,))
 
         return d
@@ -115,8 +121,8 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
         orig_y = left_pt.shape[-1]
         recombined_pt = left_pt.clone()
         recombined_pt[:] = 0
-        recombined_pt[..., : orig_y // 3 :] = left_pt[..., : orig_y // 3 :]
-        recombined_pt[..., orig_y * 2 // 3 : :] = right_pt[..., orig_y * 2 // 3 : :]
+        recombined_pt[..., : orig_y // 3 :] = right_pt[..., : orig_y // 3 :]
+        recombined_pt[..., orig_y * 2 // 3 : :] = left_pt[..., orig_y * 2 // 3 : :]
         recombined_pt[..., orig_y // 3 : orig_y * 2 // 3 :] = (
             right_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
             + left_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
@@ -126,12 +132,12 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
     @staticmethod
     def extract_left(image_pt: Tensor) -> Tensor:
         """Extract the first two thirds of the image and flip it."""
-        return torch.flip(image_pt[..., 0 : 2 * image_pt.shape[-1] // 3], dims=(-1,))
+        return image_pt[..., image_pt.shape[-1] // 3 : :]
 
     @staticmethod
     def extract_right(image_pt: Tensor) -> Tensor:
         """Extract the last two thirds of the image."""
-        return image_pt[..., image_pt.shape[-1] // 3 : :]
+        return torch.flip(image_pt[..., 0 : 2 * image_pt.shape[-1] // 3], dims=(-1,))
 
 
 class BuildEmptyHeatmapd(monai.transforms.Transform):
@@ -150,7 +156,7 @@ class BuildEmptyHeatmapd(monai.transforms.Transform):
     def __call__(self, data):
         d = dict(data)
 
-        zero_meta_tensor = data[f"{self.image_key}"].clone()
+        zero_meta_tensor = data[f"{self.image_key}"].repeat((2, 1, 1, 1))
         zero_meta_tensor[:] = 0
 
         for side in ["left", "right"]:
@@ -182,10 +188,9 @@ class Printd(monai.transforms.InvertibleTransform, monai.transforms.MapTransform
             print("Type", type(d[key]))
             if isinstance(d[key], str):
                 print((d[key]))
-            else:
+            elif isinstance(d[key], MetaTensor):
                 print("Shape", d[key].shape)
-                print("Affine", d[f"{key}_meta_dict"]["affine"])
+                print("Affine", d[key].affine)
+                print("Transforms", d[key].applied_operations)
 
-            if self.trace_key(key) in d:
-                print("Transforms", d[self.trace_key(key)])
             print()

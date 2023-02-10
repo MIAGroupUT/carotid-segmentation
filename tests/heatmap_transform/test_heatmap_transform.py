@@ -1,5 +1,5 @@
 from os import path
-import numpy as np
+import torch
 from carotid.utils import build_dataset
 from carotid.heatmap_transform.pipeline import apply_transform
 
@@ -15,6 +15,7 @@ def test_pipeline():
     apply_transform(
         raw_dir=path.join(test_dir, "raw_dir"),
         model_dir=path.join(test_dir, "models", "heatmap_transform"),
+        config_path=path.join(test_dir, "heatmap_transform", "test_args.toml"),
         output_dir=tmp_dir,
     )
 
@@ -28,9 +29,11 @@ def test_pipeline():
     out_sample = out_dataset[0]
 
     assert (
-        np.max(np.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"])) < 1e-3
+        torch.max(torch.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"]))
+        < 1e-3
     )
     assert (
-        np.max(np.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"])) < 1e-3
+        torch.max(torch.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"]))
+        < 1e-3
     )
     shutil.rmtree(path.join(test_dir, "tmp"))

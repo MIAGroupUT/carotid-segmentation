@@ -4,7 +4,7 @@ from os import path, listdir
 from typing import Dict, Any
 from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd
 
-from monai.transforms import Spacingd, Compose, InvertibleTransform, ToTensord
+from monai.transforms import Spacingd, Compose, InvertibleTransform
 from monai.networks.nets import UNet
 from monai.inferers import SlidingWindowInferer
 
@@ -60,7 +60,7 @@ class UNetPredictor:
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.model.eval()
 
-            # TODO: combine both sides on the same batch
+            # Sides cannot be combined in the same batch as left and right images may have different dimensions
             for side in self.side_list:
                 with torch.no_grad():
                     pred_dict[side] += (
