@@ -6,7 +6,7 @@ from .serializer import (
     HeatmapSerializer,
     CenterlineSerializer,
     PolarSerializer,
-    SegmentationSerializer,
+    ContourSerializer,
     Serializer,
     RawReader,
 )
@@ -17,7 +17,7 @@ def compute_serializer_list(
     heatmap_dir: str = None,
     centerline_dir: str = None,
     polar_dir: str = None,
-    segmentation_dir: str = None,
+    contour_dir: str = None,
 ) -> List[Serializer]:
     serializer_list = list()
     if raw_dir is not None:
@@ -32,8 +32,8 @@ def compute_serializer_list(
     if polar_dir is not None:
         serializer_list.append(PolarSerializer(polar_dir))
 
-    if segmentation_dir is not None:
-        serializer_list.append(SegmentationSerializer(segmentation_dir))
+    if contour_dir is not None:
+        serializer_list.append(ContourSerializer(contour_dir))
 
     return serializer_list
 
@@ -59,12 +59,13 @@ def compute_sample_list(
     return sample_list
 
 
+# TODO: add pipeline_dir looking for all possible components of the pipeline in the same folder
 def build_dataset(
     raw_dir: str = None,
     heatmap_dir: str = None,
     centerline_dir: str = None,
     polar_dir: str = None,
-    segmentation_dir: str = None,
+    contour_dir: str = None,
     participant_list: List[str] = None,
 ) -> Dataset:
 
@@ -73,7 +74,7 @@ def build_dataset(
         heatmap_dir=heatmap_dir,
         centerline_dir=centerline_dir,
         polar_dir=polar_dir,
-        segmentation_dir=segmentation_dir,
+        contour_dir=contour_dir,
     )
 
     sample_list = compute_sample_list(

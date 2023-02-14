@@ -18,6 +18,27 @@ class CenterlineExtractor:
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
         pass
 
+    def remove_common_external_centers(self, label_df: pd.DataFrame) -> pd.DataFrame:
+        z = int(label_df.z.min())
+        flag = False
+        max_z = int(label_df.z.max())
+        label_df.set_index(["label", "z"], inplace=True, drop=True)
+
+        while z <= max_z and not flag:
+            external_center = label_df.loc[("external", z)].values
+            internal_center = label_df.loc[("internal", z)].values
+            if (
+                np.linalg.norm(internal_center - external_center)
+                > self.parameters["spatial_threshold"]
+            ):
+                flag = True
+            else:
+                label_df.drop(("external", z), inplace=True)
+            z += 1
+
+        label_df.reset_index(inplace=True)
+        return label_df
+
 
 class OnePassExtractor(CenterlineExtractor):
     """
@@ -41,8 +62,7 @@ class OnePassExtractor(CenterlineExtractor):
                 )
                 label_df["label"] = label_name
                 centerline_df = pd.concat([centerline_df, label_df])
-
-            centerline_df.reset_index(inplace=True, drop=True)
+            centerline_df = self.remove_common_external_centers(centerline_df)
             sample[f"{side}_centerline"] = centerline_df
 
         return sample
@@ -141,7 +161,7 @@ class OnePassExtractor(CenterlineExtractor):
             )  # TODO transpose
 
             # Interpolate between min_slice and max_slice
-            slices = np.arange(seeds_np[0, 0], seeds_np[-1, 0])
+            slices = np.arange(seeds_np[0, 0], seeds_np[-1, 0] + 1)
             paths[label_name] = np.concatenate(
                 [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
             )

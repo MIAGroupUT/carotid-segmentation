@@ -26,4 +26,4 @@ RUN python -m pip install --user ./src
 # Include model weights in the Docker
 COPY --chown=algorithm:algorithm models/ /opt/algorithm/models/
 
-ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/segmentation_transform /output $0 $@
+ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/contour_transform /output $0 $@

@@ -5,7 +5,7 @@ from .serializer import (
     HeatmapSerializer,
     CenterlineSerializer,
     PolarSerializer,
-    SegmentationSerializer,
+    ContourSerializer,
 )
 from .data import build_dataset
 from .device import check_device

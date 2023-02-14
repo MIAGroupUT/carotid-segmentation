@@ -13,7 +13,7 @@ from carotid.utils import cli_param
     type=click.Path(exists=True),
 )
 @click.argument(
-    "segmentation_model_dir",
+    "contour_model_dir",
     type=click.Path(exists=True),
 )
 @cli_param.argument.output_dir
@@ -23,7 +23,7 @@ from carotid.utils import cli_param
 def cli(
     raw_dir,
     heatmap_model_dir,
-    segmentation_model_dir,
+    contour_model_dir,
     output_dir,
     config_path,
     participant,
@@ -36,7 +36,7 @@ def cli(
 
     HEATMAP_MODEL_DIR is the path to a directory where the models for heatmap extraction are stored.
 
-    SEGMENTATION_MODEL_DIR is the path to a directory where the models for contour extraction are stored.
+    CONTOUR_MODEL_DIR is the path to a directory where the models for contour extraction are stored.
 
     OUTPUT_DIR is the path to the directory containing the results.
     """
@@ -46,7 +46,7 @@ def cli(
         raw_dir=raw_dir,
         output_dir=output_dir,
         heatmap_model_dir=heatmap_model_dir,
-        segmentation_model_dir=segmentation_model_dir,
+        contour_model_dir=contour_model_dir,
         config_path=config_path,
         participant_list=participant,
         device=device,

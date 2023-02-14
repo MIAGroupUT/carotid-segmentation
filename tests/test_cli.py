@@ -10,7 +10,7 @@ from carotid.cli import cli
         "centerline_transform",
         "heatmap_transform",
         "polar_transform",
-        "segmentation_transform",
+        "contour_transform",
         "pipeline_transform",
     ]
 )

@@ -262,9 +262,9 @@ class CenterlineSerializer(Serializer):
         sample[key].to_csv(output_path, sep="\t", index=False)
 
 
-class SegmentationSerializer(Serializer):
+class ContourSerializer(Serializer):
     """
-    Read and write outputs of segmentation_transform.
+    Read and write outputs of contour_transform.
     For each side this corresponds to a point cloud of size (2, M, 3).
     Description of each axis:
         - index 0 is the lumen, index 1 is the wall,
@@ -275,16 +275,13 @@ class SegmentationSerializer(Serializer):
     def __init__(self, dir_path: str):
         super().__init__(
             dir_path=dir_path,
-            transform_name="segmentation",
-            file_ext="npy",
-            monai_reader=LoadImaged(
-                keys=["left_segmentation", "right_segmentation"], reader="numpyreader"
-            ),
+            transform_name="contour",
+            file_ext="tsv",
+            monai_reader=LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        segmentation_np = sample[key]
-        np.save(output_path, segmentation_np)
+        sample[key].to_csv(output_path, sep="\t", index=False)
 
 
 class RawReader:

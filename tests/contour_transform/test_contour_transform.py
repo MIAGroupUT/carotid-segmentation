@@ -1,8 +1,7 @@
 from os import path
-import numpy as np
 from carotid.utils import build_dataset
-from carotid.pipeline_transform.pipeline import apply_transform
-
+from carotid.contour_transform.pipeline import apply_transform
+import numpy as np
 import shutil
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
@@ -10,13 +9,14 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    ref_dir = path.join(test_dir, "pipeline_transform", "reference")
+    input_dir = path.join(test_dir, "polar_transform", "reference")
+    ref_dir = path.join(test_dir, "contour_transform", "reference")
+    model_dir = path.join(test_dir, "models", "contour_transform")
 
     apply_transform(
-        raw_dir=path.join(test_dir, "raw_dir"),
-        heatmap_model_dir=path.join(test_dir, "models", "heatmap_transform"),
-        contour_model_dir=path.join(test_dir, "models", "contour_transform"),
         output_dir=tmp_dir,
+        polar_dir=input_dir,
+        model_dir=model_dir,
     )
 
     # Read reference
@@ -30,4 +30,4 @@ def test_pipeline():
         out_df = out_dataset[0][f"{side}_contour"]
         assert ref_df.equals(out_df)
 
-    shutil.rmtree(path.join(test_dir, "tmp"))
+    shutil.rmtree(tmp_dir)
