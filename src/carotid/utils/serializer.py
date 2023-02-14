@@ -329,6 +329,72 @@ class ContourSerializer(Serializer):
         )
 
 
+class SegmentationSerializer(Serializer):
+    """
+    Read and write outputs of contour_transform.
+    For each side this corresponds to a point cloud of size (2, M, 3).
+    Description of each axis:
+        - index 0 is the lumen, index 1 is the wall,
+        - M is the number of points in the cloud,
+        - spatial coords, ordered as Z, Y, X.
+    """
+
+    def __init__(self, dir_path: str):
+        super().__init__(
+            dir_path=dir_path,
+            transform_name="segmentation",
+            file_ext="npy",
+            monai_reader=Compose(
+                [
+                    LoadImaged(
+                        keys=[
+                            "left_lumen_segmentation",
+                            "left_wall_segmentation",
+                            "right_lumen_segmentation",
+                            "right_wall_segmentation",
+                        ],
+                        reader="numpyreader",
+                    )
+                ],
+            ),
+        )
+        self.object_list = ["lumen", "wall"]
+
+    def add_path(self, sample_list: List[Dict[str, str]]):
+        for sample in sample_list:
+            output_dir = path.join(
+                self.dir_path,
+                sample["participant_id"],
+                f"{self.transform_name}_transform",
+            )
+            for side in self.side_list:
+                for object_name in self.object_list:
+                    sample[f"{side}_{object_name}_{self.transform_name}"] = path.join(
+                        output_dir,
+                        f"{side}_{object_name}_{self.transform_name}{self.file_end}",
+                    )
+
+    def write(self, sample: Dict[str, Any]):
+        output_dir = path.join(
+            self.dir_path, sample["participant_id"], f"{self.transform_name}_transform"
+        )
+        makedirs(output_dir, exist_ok=True)
+
+        for side in self.side_list:
+            for object_name in self.object_list:
+                output_path = path.join(
+                    output_dir,
+                    f"{side}_{object_name}_{self.transform_name}{self.file_end}",
+                )
+                self._write(
+                    sample, f"{side}_{object_name}_{self.transform_name}", output_path
+                )
+
+    def _write(self, sample: Dict[str, Any], key: str, output_path: str):
+        heatmap_np = sample[key]
+        np.save(output_path, heatmap_np)
+
+
 class RawReader:
     """
     Reads raw images in DICOM or MHD format.

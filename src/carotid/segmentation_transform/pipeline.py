@@ -18,6 +18,10 @@ def apply_transform(
     config_path: str = None,
     participant_list: List[str] = None,
 ):
+    """
+    This segmentation procedure over-segment in the right & anterior directions and under-segment
+    in the left & posterior directions.
+    """
     # Read parameters
     if contour_dir is None:
         contour_dir = output_dir

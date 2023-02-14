@@ -23,3 +23,4 @@ functional-test:
     - pytest ./tests/centerline_transform/test_centerline_transform.py
     - pytest ./tests/polar_transform/test_polar_transform.py
     - pytest ./tests/contour_transform/test_contour_transform.py
+    - pytest ./tests/segmentation_transform/test_segmentation_transform.py

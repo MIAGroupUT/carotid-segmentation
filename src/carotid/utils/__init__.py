@@ -6,6 +6,7 @@ from .serializer import (
     CenterlineSerializer,
     PolarSerializer,
     ContourSerializer,
+    SegmentationSerializer,
 )
 from .data import build_dataset
 from .device import check_device

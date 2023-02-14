@@ -28,6 +28,10 @@ def test_pipeline():
     for side in ["left", "right"]:
         ref_df = ref_dataset[0][f"{side}_contour"]
         out_df = out_dataset[0][f"{side}_contour"]
+        print("Reference")
+        print(ref_df)
+        print("Output")
+        print(out_df)
         assert ref_df.equals(out_df)
 
     shutil.rmtree(tmp_dir)

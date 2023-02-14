@@ -2,6 +2,7 @@ from carotid.heatmap_transform.utils import UNetPredictor
 from carotid.centerline_transform.utils import OnePassExtractor
 from carotid.polar_transform.utils import PolarTransform
 from carotid.contour_transform.utils import ContourTransform
+from carotid.segmentation_transform.utils import SegmentationTransform
 from os import path, makedirs
 from carotid.utils import (
     write_json,
@@ -9,6 +10,7 @@ from carotid.utils import (
     build_dataset,
     check_device,
     ContourSerializer,
+    SegmentationSerializer,
 )
 import toml
 from typing import List
@@ -19,6 +21,7 @@ list_transforms = [
     "centerline_transform",
     "polar_transform",
     "contour_transform",
+    "segmentation_transform",
 ]
 
 
@@ -64,14 +67,18 @@ def apply_transform(
     )
     polar_transform = PolarTransform(parameters=config_dir["polar_transform"])
     contour_transform = ContourTransform(parameters=config_dir["contour_transform"])
+    segmentation_transform = SegmentationTransform(
+        parameters=config_dir["segmentation_transform"]
+    )
 
     dataset = build_dataset(
         raw_dir=raw_dir,
         participant_list=participant_list,
     )
-    serializer = ContourSerializer(
+    contour_serializer = ContourSerializer(
         dir_path=output_dir,
     )
+    segmentation_serializer = SegmentationSerializer(dir_path=output_dir)
 
     for sample in dataset:
         participant_id = sample["participant_id"]
@@ -80,4 +87,6 @@ def apply_transform(
         sample = centerline_extractor(sample)
         sample = polar_transform(sample)
         sample = contour_transform(sample)
-        serializer.write(sample)
+        contour_serializer.write(sample)
+        sample = segmentation_transform(sample)
+        segmentation_serializer.write(sample)

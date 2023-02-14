@@ -7,6 +7,7 @@ from .serializer import (
     CenterlineSerializer,
     PolarSerializer,
     ContourSerializer,
+    SegmentationSerializer,
     Serializer,
     RawReader,
 )
@@ -18,6 +19,7 @@ def compute_serializer_list(
     centerline_dir: str = None,
     polar_dir: str = None,
     contour_dir: str = None,
+    segmentation_dir: str = None,
 ) -> List[Serializer]:
     serializer_list = list()
     if raw_dir is not None:
@@ -34,6 +36,9 @@ def compute_serializer_list(
 
     if contour_dir is not None:
         serializer_list.append(ContourSerializer(contour_dir))
+
+    if segmentation_dir is not None:
+        serializer_list.append(SegmentationSerializer(segmentation_dir))
 
     return serializer_list
 
@@ -66,6 +71,7 @@ def build_dataset(
     centerline_dir: str = None,
     polar_dir: str = None,
     contour_dir: str = None,
+    segmentation_dir: str = None,
     participant_list: List[str] = None,
 ) -> Dataset:
 
@@ -75,6 +81,7 @@ def build_dataset(
         centerline_dir=centerline_dir,
         polar_dir=polar_dir,
         contour_dir=contour_dir,
+        segmentation_dir=segmentation_dir,
     )
 
     sample_list = compute_sample_list(
