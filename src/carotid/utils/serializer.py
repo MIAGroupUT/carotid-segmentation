@@ -56,13 +56,105 @@ def read_and_fill_default_toml(
     return config_parameters
 
 
+##############
+# TRANSFORMS #
+##############
+class LoadPolarDird(MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            dir_path = d[key]
+            d[key] = list()
+            file_list = [
+                filename
+                for filename in listdir(dir_path)
+                if filename.endswith("_polar.npy")
+            ]
+            file_list.sort()
+            for filename in file_list:
+                polar_path = path.join(dir_path, filename)
+                try:
+                    polar_np = np.load(polar_path, allow_pickle=True).astype(float)
+                    center_path = polar_path[:-10] + "_center.npy"
+                    center_np = np.load(center_path, allow_pickle=True).astype(float)
+                except FileNotFoundError:
+                    raise MissingProcessedObjException(
+                        f"Polar image at path {path.join(polar_path, filename)} was not found.\n"
+                        f"Please ensure that the polar_transform was run in your experiment folder."
+                    )
+                label_name = filename.split("_")[0].split("-")[1]
+                slice_idx = filename.split("_")[1].split("-")[1]
+                d[key].append(
+                    {
+                        "label": label_name,
+                        "slice_idx": slice_idx,
+                        "polar_pt": torch.from_numpy(polar_np).float().unsqueeze(0),
+                        "center_pt": torch.from_numpy(center_np).float(),
+                    },
+                )
+
+        return d
+
+
+class LoadCSVd(MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False, sep=","):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.sep = sep
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            try:
+                d[key] = pd.read_csv(d[key], sep=self.sep)
+            except FileNotFoundError:
+                MissingProcessedObjException(
+                    f"TSV file {key} was not found.\n"
+                    f"Please ensure that the centerline_transform was run in your experiment folder."
+                )
+
+        return d
+
+
+class LoadMetaJSONd(MapTransform):
+    def __init__(
+        self,
+        keys: KeysCollection,
+        allow_missing_keys: bool = False,
+        json_name: str = "parameters.json",
+        parent_dir: bool = True,
+    ):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.json_name = json_name
+        self.parent_dir = parent_dir
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            if self.parent_dir:
+                dir_path = path.dirname(d[key])
+            else:
+                dir_path = d[key]
+            try:
+                d[f"{key}_meta_dict"] = read_json(path.join(dir_path, self.json_name))
+            except FileNotFoundError:
+                raise MissingProcessedObjException(
+                    f"TSV file {key} was not found.\n"
+                    f"Please ensure that the centerline_transform was run in your experiment folder."
+                )
+
+        return d
+
+
 class Serializer:
     def __init__(
         self,
         dir_path: str,
         transform_name: str,
         file_ext: Optional[str],
-        monai_reader: MapTransform,
+        monai_reader: Union[MapTransform, Compose],
     ):
         self.dir_path = dir_path
         self.transform_name = transform_name
@@ -129,7 +221,12 @@ class PolarSerializer(Serializer):
             dir_path,
             "polar",
             file_ext=None,
-            monai_reader=LoadPolarDird(keys=["left_polar", "right_polar"]),
+            monai_reader=Compose(
+                [
+                    LoadMetaJSONd(keys=["left_polar", "right_polar"], parent_dir=False),
+                    LoadPolarDird(keys=["left_polar", "right_polar"]),
+                ],
+            ),
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
@@ -158,50 +255,6 @@ class PolarSerializer(Serializer):
         )
 
 
-class LoadPolarDird(MapTransform):
-    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
-        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
-
-    def __call__(self, data):
-        d = dict(data)
-        for key in self.key_iterator(d):
-            dir_path = d[key]
-            d[key] = list()
-            file_list = [
-                filename
-                for filename in listdir(dir_path)
-                if filename.endswith("_polar.npy")
-            ]
-            file_list.sort()
-            for filename in file_list:
-                polar_path = path.join(dir_path, filename)
-                try:
-                    polar_np = np.load(polar_path, allow_pickle=True).astype(float)
-                    center_path = polar_path[:-10] + "_center.npy"
-                    center_np = np.load(center_path, allow_pickle=True).astype(float)
-                except FileNotFoundError:
-                    raise MissingProcessedObjException(
-                        f"Polar image at path {path.join(polar_path, filename)} was not found.\n"
-                        f"Please ensure that the polar_transform was run in your experiment folder."
-                    )
-                label_name = filename.split("_")[0].split("-")[1]
-                slice_idx = filename.split("_")[1].split("-")[1]
-                d[key].append(
-                    {
-                        "label": label_name,
-                        "slice_idx": slice_idx,
-                        "polar_pt": torch.from_numpy(polar_np).float().unsqueeze(0),
-                        "center_pt": torch.from_numpy(center_np).float(),
-                    },
-                )
-
-            # Read meta dict
-            json_path = path.join(dir_path, "parameters.json")
-            d[f"{key}_meta_dict"] = read_json(json_path)
-
-        return d
-
-
 class HeatmapSerializer(Serializer):
     """
     Read and write outputs of heatmap_transform.
@@ -221,25 +274,6 @@ class HeatmapSerializer(Serializer):
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
         heatmap_np = sample[key].numpy()
         np.save(output_path, heatmap_np)
-
-
-class LoadCSVd(MapTransform):
-    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False, sep=","):
-        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
-        self.sep = sep
-
-    def __call__(self, data):
-        d = dict(data)
-        for key in self.key_iterator(d):
-            try:
-                d[key] = pd.read_csv(d[key], sep=self.sep)
-            except FileNotFoundError:
-                MissingProcessedObjException(
-                    f"TSV file {key} was not found.\n"
-                    f"Please ensure that the centerline_transform was run in your experiment folder."
-                )
-
-        return d
 
 
 class CenterlineSerializer(Serializer):
@@ -277,11 +311,22 @@ class ContourSerializer(Serializer):
             dir_path=dir_path,
             transform_name="contour",
             file_ext="tsv",
-            monai_reader=LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
+            monai_reader=Compose(
+                [
+                    LoadMetaJSONd(
+                        keys=["left_contour", "right_contour"], parent_dir=True
+                    ),
+                    LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
+                ],
+            ),
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
         sample[key].to_csv(output_path, sep="\t", index=False)
+        write_json(
+            sample[f"{key}_meta_dict"],
+            path.join(path.dirname(output_path), "parameters.json"),
+        )
 
 
 class RawReader:

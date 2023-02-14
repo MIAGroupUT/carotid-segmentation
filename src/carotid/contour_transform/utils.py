@@ -24,10 +24,10 @@ class ContourTransform:
         self.model = CONV3D().to(self.device)
 
     def __call__(self, sample):
-
         for side in self.side_list:
             contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x"])
             polar_list = sample[f"{side}_polar"]
+            orig_shape = sample[f"{side}_polar_meta_dict"]["orig_shape"]
             for polar_dict in polar_list:
                 label = polar_dict["label"]
                 lumen_cont, wall_cont = self._transform(
@@ -51,7 +51,9 @@ class ContourTransform:
                 wall_slice_df["label"] = label
 
                 contour_df = pd.concat((contour_df, lumen_slice_df, wall_slice_df))
+            contour_df.reset_index(drop=True, inplace=True)
             sample[f"{side}_contour"] = contour_df
+            sample[f"{side}_contour_meta_dict"] = {"orig_shape": orig_shape}
 
         return sample
 

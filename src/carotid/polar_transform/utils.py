@@ -58,6 +58,7 @@ class PolarTransform:
                 "polar_ray": self.polar_ray,
                 "cartesian_ray": self.cartesian_ray,
                 "length": self.length,
+                "orig_shape": image_pt.shape,
             }
 
         return sample

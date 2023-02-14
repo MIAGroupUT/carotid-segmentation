@@ -21,6 +21,6 @@ setup(
     author="Elina Thibeau-Sutre",
     author_email="elina.ts@free.fr",
     description="Utilitaries for carotid segmentation explainbility project",
-    keywords="carotid segmentation deep learning explainability",
+    keywords="carotid segmentation deep learning",
     license="MIT",
 )
