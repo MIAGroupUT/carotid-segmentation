@@ -39,6 +39,7 @@ def test_pipeline():
             ref_slice_np = ref_slice_df.values
             print(out_slice_np)
             print(ref_slice_np)
+            print(np.abs(ref_slice_np - out_slice_np))
             assert np.all(ref_slice_np == out_slice_np)
 
     shutil.rmtree(tmp_dir)

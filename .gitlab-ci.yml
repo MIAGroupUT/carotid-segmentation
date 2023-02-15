@@ -1,15 +1,15 @@
 stages:
-  - unit-test
+#  - unit-test
   - functional-test
 
-unit-test:
-  image: python:3.9.7
-  stage: unit-test
-  before_script:
-    - pip install numpy==1.22.4
-    - pip install -e ./src
-  script:
-    - pytest ./tests/unit_tests
+#unit-test:
+#  image: python:3.9.7
+#  stage: unit-test
+#  before_script:
+#    - pip install numpy==1.22.4
+#    - pip install -e ./src
+#  script:
+#    - pytest ./tests/unit_tests
 
 functional-test:
   image: python:3.9.7
@@ -18,6 +18,7 @@ functional-test:
     - pip install numpy==1.22.4
     - pip install -e ./src
   script:
+    - pytest ./tests/unit_tests
     - pytest ./tests/test_cli.py
     - pytest ./tests/heatmap_transform/test_heatmap_transform.py
     - pytest ./tests/centerline_transform/test_centerline_transform.py
