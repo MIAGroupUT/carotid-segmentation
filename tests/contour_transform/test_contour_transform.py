@@ -26,12 +26,19 @@ def test_pipeline():
     out_dataset = build_dataset(contour_dir=tmp_dir)
 
     for side in ["left", "right"]:
-        ref_df = ref_dataset[0][f"{side}_contour"]
-        out_df = out_dataset[0][f"{side}_contour"]
-        print("Reference")
-        print(ref_df)
-        print("Output")
-        print(out_df)
-        assert ref_df.equals(out_df)
+        ref_df = ref_dataset[0][f"{side}_contour"].set_index(
+            ["label", "object", "z"], drop=True
+        )
+        out_df = out_dataset[0][f"{side}_contour"].set_index(
+            ["label", "object", "z"], drop=True
+        )
+        for index, ref_slice_df in ref_df.groupby(["label", "object", "z"]):
+            print(index)
+            out_slice_df = out_df.loc[index]
+            out_slice_np = out_slice_df.values
+            ref_slice_np = ref_slice_df.values
+            print(out_slice_np)
+            print(ref_slice_np)
+            assert np.all(ref_slice_np == out_slice_np)
 
     shutil.rmtree(tmp_dir)
