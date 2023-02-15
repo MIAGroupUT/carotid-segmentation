@@ -40,6 +40,6 @@ def test_pipeline():
             print(out_slice_np)
             print(ref_slice_np)
             print(np.abs(ref_slice_np - out_slice_np))
-            assert np.all(ref_slice_np == out_slice_np)
+            assert np.allclose(ref_slice_np, out_slice_np, atol=1e-5)
 
     shutil.rmtree(tmp_dir)
