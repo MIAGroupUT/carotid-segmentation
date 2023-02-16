@@ -33,13 +33,25 @@ def test_pipeline():
             ["label", "object", "z"], drop=True
         )
         for index, ref_slice_df in ref_df.groupby(["label", "object", "z"]):
-            print(index)
             out_slice_df = out_df.loc[index]
             out_slice_np = out_slice_df.values
             ref_slice_np = ref_slice_df.values
-            print(out_slice_np)
-            print(ref_slice_np)
-            print(np.abs(ref_slice_np - out_slice_np))
             assert np.allclose(ref_slice_np, out_slice_np, atol=1e-5)
+
+    shutil.rmtree(tmp_dir)
+
+
+def test_pipeline_dropout():
+    tmp_dir = path.join(test_dir, "tmp")
+    input_dir = path.join(test_dir, "polar_transform", "reference")
+    model_dir = path.join(test_dir, "models", "contour_transform_dropout")
+    config_path = path.join(test_dir, "contour_transform", "test_args_dropout.toml")
+
+    apply_transform(
+        output_dir=tmp_dir,
+        polar_dir=input_dir,
+        model_dir=model_dir,
+        config_path=config_path,
+    )
 
     shutil.rmtree(tmp_dir)

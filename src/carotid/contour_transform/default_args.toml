@@ -1,2 +1,2 @@
-eval_mode = "dropout"
+eval_mode = "eval"
 n_repeats = 20

@@ -2,7 +2,7 @@ from os import path
 import torch
 from copy import deepcopy
 from carotid.utils import build_dataset
-from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd
+from carotid.utils.transforms import ExtractLeftAndRightd, polar2cart, cart2polar
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
@@ -41,3 +41,26 @@ def test_repro_extract_left_right_transform():
         transformed_sample = transform(deepcopy(sample))
         reconstructed_sample = transform.inverse(deepcopy(transformed_sample))
         compare_left_and_right(sample, transformed_sample, reconstructed_sample)
+
+
+def test_cart2polar():
+    dataset = build_dataset(
+        contour_dir=path.join(test_dir, "contour_transform", "reference")
+    )
+
+    sample = dataset[0]
+    for side in ["left", "right"]:
+        contour_df = sample[f"{side}_contour"]
+        obj_df = contour_df[
+            (contour_df.label == "internal") & (contour_df.object == "lumen")
+        ]
+        slice_idx = obj_df.z.median()
+        slice_df = obj_df[obj_df.z == slice_idx]
+        cart_pt = torch.from_numpy(slice_df[["z", "y", "x"]].values)
+        center_pt = torch.mean(cart_pt, dim=0)
+        polar_pt = cart2polar(cart_pt, center_pt)
+        inverse_pt = polar2cart(polar_pt, center_pt)
+        print(cart_pt - inverse_pt)
+        print(cart_pt)
+        print(inverse_pt)
+        assert torch.allclose(cart_pt, inverse_pt)

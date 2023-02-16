@@ -194,3 +194,36 @@ class Printd(monai.transforms.InvertibleTransform, monai.transforms.MapTransform
                 print("Transforms", d[key].applied_operations)
 
             print()
+
+
+def cart2polar(cart_pt: torch.Tensor, center_pt: torch.Tensor) -> torch.Tensor:
+    """
+    Transforms 3D tensor in cartesian coordinates (Z, Y, X) with equal Z to polar (Z, r, theta)
+    according to the given center.
+    """
+    polar_pt = torch.zeros_like(cart_pt)
+    # Report Z axis
+    polar_pt[:, 0] = cart_pt[:, 0]
+    # Find polar ray
+    polar_pt[:, 1] = torch.cdist(cart_pt, center_pt.unsqueeze(0))[:, 0]
+    # Find angle
+    orientation_pt = cart_pt - center_pt.unsqueeze(0)
+    polar_pt[:, 2] = torch.arctan2(orientation_pt[:, 2], orientation_pt[:, 1])
+
+    return polar_pt
+
+
+def polar2cart(polar_pt: torch.Tensor, center_pt: torch.Tensor) -> torch.Tensor:
+    """
+    Transforms 3D tensor in polar coordinates (Z, r, theta) with equal Z to cartesian (Z, Y, X)
+    according to the given center.
+    """
+
+    cart_pt = torch.zeros_like(polar_pt)
+    # Report Z axis
+    cart_pt[:, 0] = polar_pt[:, 0]
+    # Compute other Y and X
+    cart_pt[:, 1] = polar_pt[:, 1] * torch.cos(polar_pt[:, 2]) + center_pt[1]
+    cart_pt[:, 2] = polar_pt[:, 1] * torch.sin(polar_pt[:, 2]) + center_pt[2]
+
+    return cart_pt
