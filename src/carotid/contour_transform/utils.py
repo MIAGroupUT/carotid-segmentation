@@ -33,6 +33,7 @@ class ContourTransform:
             contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x"])
             polar_list = sample[f"{side}_polar"]
             orig_shape = sample[f"{side}_polar_meta_dict"]["orig_shape"]
+            affine = sample[f"{side}_polar_meta_dict"]["affine"]
             for polar_dict in polar_list:
                 label = polar_dict["label"]
                 lumen_cont, wall_cont = self._transform(
@@ -56,7 +57,10 @@ class ContourTransform:
                 contour_df = pd.concat((contour_df, lumen_slice_df, wall_slice_df))
             contour_df.reset_index(drop=True, inplace=True)
             sample[f"{side}_contour"] = contour_df
-            sample[f"{side}_contour_meta_dict"] = {"orig_shape": orig_shape}
+            sample[f"{side}_contour_meta_dict"] = {
+                "orig_shape": orig_shape,
+                "affine": affine,
+            }
 
         return sample
 

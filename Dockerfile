@@ -28,4 +28,3 @@ COPY --chown=algorithm:algorithm models /opt/algorithm/models/
 COPY --chown=algorithm:algorithm docker-utils/refactor_outputs.py /opt/algorithm
 
 ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/contour_transform /output $0 $@
-RUN python ./refactor_outputs.py

@@ -8,7 +8,6 @@ from copy import deepcopy
 from torch import Tensor
 
 
-# TODO: work on non-inverted images
 class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
     """
     Extract the left (first two thirds) and right (last two thirds) parts of an image.
@@ -118,14 +117,14 @@ class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
 
     @staticmethod
     def recombine(left_pt: MetaTensor, right_pt: MetaTensor) -> MetaTensor:
-        orig_y = left_pt.shape[-1]
+        orig_x = left_pt.shape[-1]
         recombined_pt = left_pt.clone()
         recombined_pt[:] = 0
-        recombined_pt[..., : orig_y // 3 :] = right_pt[..., : orig_y // 3 :]
-        recombined_pt[..., orig_y * 2 // 3 : :] = left_pt[..., orig_y * 2 // 3 : :]
-        recombined_pt[..., orig_y // 3 : orig_y * 2 // 3 :] = (
-            right_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
-            + left_pt[..., orig_y // 3 : orig_y * 2 // 3 :]
+        recombined_pt[..., : orig_x // 3 :] = right_pt[..., : orig_x // 3 :]
+        recombined_pt[..., orig_x * 2 // 3 : :] = left_pt[..., orig_x * 2 // 3 : :]
+        recombined_pt[..., orig_x // 3 : orig_x * 2 // 3 :] = (
+            right_pt[..., orig_x // 3 : orig_x * 2 // 3 :]
+            + left_pt[..., orig_x // 3 : orig_x * 2 // 3 :]
         ) / 2
         return recombined_pt
 

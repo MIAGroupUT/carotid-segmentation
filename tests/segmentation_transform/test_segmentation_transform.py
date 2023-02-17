@@ -24,9 +24,8 @@ def test_pipeline():
     out_dataset = build_dataset(segmentation_dir=tmp_dir)
 
     for side in ["left", "right"]:
-        for object_name in ["lumen", "wall"]:
-            ref_np = ref_dataset[0][f"{side}_{object_name}_segmentation"]
-            out_np = out_dataset[0][f"{side}_{object_name}_segmentation"]
-            assert np.all(ref_np == out_np)
+        ref_np = ref_dataset[0][f"{side}_segmentation"]
+        out_np = out_dataset[0][f"{side}_segmentation"]
+        assert np.all(ref_np == out_np)
 
     shutil.rmtree(tmp_dir)

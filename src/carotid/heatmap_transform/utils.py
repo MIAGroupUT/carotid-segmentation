@@ -4,7 +4,7 @@ from os import path, listdir
 from typing import Dict, Any
 from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd
 
-from monai.transforms import Spacingd, Compose, InvertibleTransform
+from monai.transforms import Spacingd, Compose, InvertibleTransform, Orientationd
 from monai.networks.nets import UNet
 from monai.inferers import SlidingWindowInferer
 
@@ -63,7 +63,7 @@ class UNetPredictor:
             # Sides cannot be combined in the same batch as left and right images may have different dimensions
             for side in self.side_list:
                 with torch.no_grad():
-                    pred_dict[side] += (
+                    prediction = (
                         self.inferer(
                             unet_sample[f"{side}_image"].unsqueeze(0).to(self.device),
                             self.model,
@@ -71,6 +71,7 @@ class UNetPredictor:
                         .squeeze(0)
                         .cpu()
                     )
+                    pred_dict[side] += prediction
 
         # Replace current label by model output
         for side in self.side_list:
@@ -93,7 +94,10 @@ class UNetPredictor:
         """
 
         key_list = ["image", "left_heatmap", "right_heatmap"]
-        transforms = [BuildEmptyHeatmapd(image_key="image")]
+        transforms = [
+            BuildEmptyHeatmapd(image_key="image"),
+            Orientationd(keys=key_list, axcodes="SPL"),
+        ]
         if spacing:
             transforms.append(Spacingd(keys=key_list, pixdim=[0.5, 0.5, 0.5]))
 

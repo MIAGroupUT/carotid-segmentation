@@ -13,6 +13,7 @@ from monai.transforms import (
     Compose,
 )
 from monai.config import KeysCollection
+from monai.data import ITKWriter
 from typing import Dict, Any, Union, Optional, List, Set
 from .errors import MissingProcessedObjException, MissingRawArgException
 
@@ -265,15 +266,19 @@ class HeatmapSerializer(Serializer):
         super().__init__(
             dir_path=dir_path,
             transform_name="heatmap",
-            file_ext="npy",
+            file_ext="mha",
             monai_reader=LoadImaged(
-                keys=["left_heatmap", "right_heatmap"], reader="numpyreader"
+                keys=["left_heatmap", "right_heatmap"],
+                reader="itkreader",
+                ensure_channel_first=True,
             ),
         )
+        self.writer = ITKWriter()
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        heatmap_np = sample[key].numpy()
-        np.save(output_path, heatmap_np)
+        self.writer.set_data_array(sample[key])
+        self.writer.set_metadata(sample[key].__dict__)
+        self.writer.write(output_path)
 
 
 class CenterlineSerializer(Serializer):
@@ -343,56 +348,19 @@ class SegmentationSerializer(Serializer):
         super().__init__(
             dir_path=dir_path,
             transform_name="segmentation",
-            file_ext="npy",
-            monai_reader=Compose(
-                [
-                    LoadImaged(
-                        keys=[
-                            "left_lumen_segmentation",
-                            "left_wall_segmentation",
-                            "right_lumen_segmentation",
-                            "right_wall_segmentation",
-                        ],
-                        reader="numpyreader",
-                    )
-                ],
+            file_ext="mha",
+            monai_reader=LoadImaged(
+                keys=["left_segmentation", "right_segmentation"],
+                reader="itkreader",
             ),
         )
         self.object_list = ["lumen", "wall"]
-
-    def add_path(self, sample_list: List[Dict[str, str]]):
-        for sample in sample_list:
-            output_dir = path.join(
-                self.dir_path,
-                sample["participant_id"],
-                f"{self.transform_name}_transform",
-            )
-            for side in self.side_list:
-                for object_name in self.object_list:
-                    sample[f"{side}_{object_name}_{self.transform_name}"] = path.join(
-                        output_dir,
-                        f"{side}_{object_name}_{self.transform_name}{self.file_end}",
-                    )
-
-    def write(self, sample: Dict[str, Any]):
-        output_dir = path.join(
-            self.dir_path, sample["participant_id"], f"{self.transform_name}_transform"
-        )
-        makedirs(output_dir, exist_ok=True)
-
-        for side in self.side_list:
-            for object_name in self.object_list:
-                output_path = path.join(
-                    output_dir,
-                    f"{side}_{object_name}_{self.transform_name}{self.file_end}",
-                )
-                self._write(
-                    sample, f"{side}_{object_name}_{self.transform_name}", output_path
-                )
+        self.writer = ITKWriter()
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        heatmap_np = sample[key]
-        np.save(output_path, heatmap_np)
+        self.writer.set_data_array(sample[key])
+        self.writer.set_metadata(sample[key].__dict__)
+        self.writer.write(output_path)
 
 
 class RawReader:
@@ -419,7 +387,7 @@ class RawReader:
                 b_max=1,
                 clip=True,
             ),
-            Orientationd(keys=["image"], axcodes="SPL"),
+            Orientationd(keys=["image"], axcodes="RAS"),
         ]
 
         return transforms

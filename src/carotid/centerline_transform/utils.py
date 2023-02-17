@@ -55,10 +55,10 @@ class OnePassExtractor(CenterlineExtractor):
             centerline_dict = self.get_centerline(
                 seedpoints[side], sample[f"{side}_heatmap"]
             )
-            centerline_df = pd.DataFrame(columns=["label", "z", "y", "x"])
+            centerline_df = pd.DataFrame(columns=["label", "x", "y", "z"])
             for label_name in centerline_dict.keys():
                 label_df = pd.DataFrame(
-                    centerline_dict[label_name], columns=["z", "y", "x"]
+                    centerline_dict[label_name], columns=["x", "y", "z"]
                 )
                 label_df["label"] = label_name
                 centerline_df = pd.concat([centerline_df, label_df])
@@ -77,12 +77,11 @@ class OnePassExtractor(CenterlineExtractor):
         Returns:
             dictionary with keys corresponding to labels (internal, external) and items to the array of seeds.
         """
-        # TODO take into image transpose
-        slice_shape = heatmap_pt[0, 0].shape
+        slice_shape = heatmap_pt[0, :, :, 0].shape
         mask_pt = heatmap_pt > self.parameters["threshold"]
 
         # only determine seed points where both internal/external carotids exceed threshold
-        (valid_slice_indices,) = torch.where(mask_pt.any(-1).any(-1).all(0))
+        (valid_slice_indices,) = torch.where(mask_pt.any(2).any(1).all(0))
         min_slice = valid_slice_indices[0].item()
         max_slice = valid_slice_indices[-1].item()
         steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])
@@ -95,25 +94,25 @@ class OnePassExtractor(CenterlineExtractor):
         for label_idx, label_name in enumerate(["internal", "external"]):
             # First seed on min_slice
             seed = unravel_index(
-                torch.argmax(heatmap_pt[label_idx, min_slice]),
+                torch.argmax(heatmap_pt[label_idx, :, :, min_slice]),
                 slice_shape,
             )  # TODO transpose here
-            seeds_dict[label_name][0] = torch.Tensor([min_slice, *seed])
+            seeds_dict[label_name][0] = torch.Tensor([*seed, min_slice])
 
             # Seeds in each 3D section
             for i in range(len(steps) - 1):
-                heatmap_section = heatmap_pt[label_idx, steps[i] : steps[i + 1], :, :]
+                heatmap_section = heatmap_pt[label_idx, :, :, steps[i] : steps[i + 1]]
                 seed = unravel_index(
                     torch.argmax(heatmap_section), heatmap_section.shape
                 )  # TODO transpose here
-                seed = torch.Tensor(seed) + torch.Tensor([steps[i], 0, 0])
+                seed = torch.Tensor(seed) + torch.Tensor([0, 0, steps[i]])
                 seeds_dict[label_name][i + 1] = seed
 
             # Last seed point on max_slice
             seed = unravel_index(
-                torch.argmax(heatmap_pt[label_idx, max_slice]), slice_shape
+                torch.argmax(heatmap_pt[label_idx, :, :, max_slice]), slice_shape
             )  # TODO transpose here
-            seeds_dict[label_name][-1] = torch.Tensor([max_slice, *seed])
+            seeds_dict[label_name][-1] = torch.Tensor([*seed, max_slice])
 
         return seeds_dict
 
@@ -143,27 +142,28 @@ class OnePassExtractor(CenterlineExtractor):
             for seed_idx in range(seeds_np.shape[0] - 1):
                 # Restrict possible space between seeds only
                 seed_cost_np = np.copy(label_cost_np)
-                seed_cost_np[: int(seeds_np[seed_idx, 0])] = np.inf
-                seed_cost_np[int(seeds_np[seed_idx + 1, 0]) + 1 :] = np.inf
+                min_seed = seeds_np[seed_idx]
+                max_seed = seeds_np[seed_idx + 1]
+                seed_cost_np[:, :, int(min_seed[2])] = np.inf
+                seed_cost_np[:, :, int(max_seed[2]) + 1 :] = np.inf
 
-                paths[label_name].append(
-                    dijkstra(
-                        seed_cost_np,
-                        seeds_np[seed_idx],
-                        seeds_np[seed_idx + 1],
-                    )
+                dijkstra_path = dijkstra(
+                    seed_cost_np,
+                    min_seed,
+                    max_seed,
                 )
+                paths[label_name].append(dijkstra_path)
             paths[label_name] = np.vstack(paths[label_name])
 
             # resample so we have one center per axial slice
             interp = interp1d(
-                paths[label_name][:, 0], paths[label_name][:, [1, 2]].transpose()
+                paths[label_name][:, 2], paths[label_name][:, [0, 1]].transpose()
             )  # TODO transpose
 
             # Interpolate between min_slice and max_slice
-            slices = np.arange(seeds_np[0, 0], seeds_np[-1, 0] + 1)
+            slices = np.arange(seeds_np[0, 2], seeds_np[-1, 2] + 1)
             paths[label_name] = np.concatenate(
-                [np.expand_dims(slices, 1), interp(slices.T).T], axis=1
+                [interp(slices.T).T, np.expand_dims(slices, 1)], axis=1
             )
         return paths
 
