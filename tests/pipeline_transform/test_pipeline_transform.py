@@ -20,14 +20,19 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(contour_dir=ref_dir)
+    ref_dataset = build_dataset(contour_dir=ref_dir, segmentation_dir=ref_dir)
 
     # Read output
-    out_dataset = build_dataset(contour_dir=tmp_dir)
+    out_dataset = build_dataset(contour_dir=tmp_dir, segmentation_dir=tmp_dir)
 
     for side in ["left", "right"]:
         ref_df = ref_dataset[0][f"{side}_contour"]
         out_df = out_dataset[0][f"{side}_contour"]
         assert ref_df.equals(out_df)
+
+        for object_name in ["lumen", "wall"]:
+            ref_np = ref_dataset[0][f"{side}_{object_name}_segmentation"]
+            out_np = out_dataset[0][f"{side}_{object_name}_segmentation"]
+            assert np.all(ref_np == out_np)
 
     shutil.rmtree(path.join(test_dir, "tmp"))
