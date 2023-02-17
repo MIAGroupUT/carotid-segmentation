@@ -20,11 +20,12 @@ RUN python -m pip install numpy==1.22.4
 COPY --chown=algorithm:algorithm docker-utils/docker-requirements.txt /opt/algorithm/
 RUN python -m pip install --user -r docker-requirements.txt
 
-COPY --chown=algorithm:algorithm src /opt/algorithm/src/
+COPY --chown=algorithm:algorithm ../src /opt/algorithm/src/
 RUN python -m pip install --user ../src
 
 # Include model weights in the Docker
-COPY --chown=algorithm:algorithm models /opt/algorithm/models/
-COPY --chown=algorithm:algorithm docker-utils/refactor_outputs.py /opt/algorithm
+COPY --chown=algorithm:algorithm ../models /opt/algorithm/models/
+COPY --chown=algorithm:algorithm ./refactor_outputs.py /opt/algorithm
 
 ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/contour_transform /output $0 $@
+RUN python ./refactor_outputs.py /output
