@@ -8,6 +8,10 @@ from carotid.cli import cli
 @pytest.fixture(
     params=[
         "centerline_transform",
+        "heatmap_transform",
+        "polar_transform",
+        "contour_transform",
+        "pipeline_transform",
     ]
 )
 def cli_args_first_lv(request):

@@ -1,95 +1,96 @@
-from monai.transforms import (
-    ScaleIntensityRangePercentilesd,
-    LoadImaged,
-    Transform,
-    AddChanneld,
-    Flipd,
-    Compose,
-)
-from os import path, listdir
-from monai.data.image_reader import ITKReader
+from monai.transforms import Compose
 from monai.data import Dataset, CacheDataset
-from typing import List
+from typing import List, Dict, Set
+
+from .serializer import (
+    HeatmapSerializer,
+    CenterlineSerializer,
+    PolarSerializer,
+    ContourSerializer,
+    SegmentationSerializer,
+    Serializer,
+    RawReader,
+)
 
 
-def get_loader_transforms(
-    lower_percentile_rescaler: float = 1,
-    upper_percentile_rescaler: float = 99,
-    z_flip: bool = False,
-) -> List[Transform]:
-    """
-    Returns list of transforms used to load, rescale and reshape MRI volume.
+def compute_serializer_list(
+    raw_dir: str = None,
+    heatmap_dir: str = None,
+    centerline_dir: str = None,
+    polar_dir: str = None,
+    contour_dir: str = None,
+    segmentation_dir: str = None,
+) -> List[Serializer]:
+    serializer_list = list()
+    if raw_dir is not None:
+        serializer_list.append(RawReader(raw_dir))
 
-    Args:
-        lower_percentile_rescaler: lower percentile used to rescale intensities.
-        upper_percentile_rescaler: higher percentile used to rescale intensities.
-        z_flip: flip along the orthogonal direction to axial slices.
-    """
-    loader = LoadImaged(keys=["img"])
-    loader.register(ITKReader(reverse_indexing=True))  # TODO: remove + add orientation
-    transforms = [
-        loader,
-        ScaleIntensityRangePercentilesd(
-            keys=["img"],
-            lower=lower_percentile_rescaler,
-            upper=upper_percentile_rescaler,
-            b_min=0,
-            b_max=1,
-            clip=True,
-        ),
-        AddChanneld(keys=["img"]),
+    if heatmap_dir is not None:
+        serializer_list.append(HeatmapSerializer(heatmap_dir))
+
+    if centerline_dir is not None:
+        serializer_list.append(CenterlineSerializer(centerline_dir))
+
+    if polar_dir is not None:
+        serializer_list.append(PolarSerializer(polar_dir))
+
+    if contour_dir is not None:
+        serializer_list.append(ContourSerializer(contour_dir))
+
+    if segmentation_dir is not None:
+        serializer_list.append(SegmentationSerializer(segmentation_dir))
+
+    return serializer_list
+
+
+def compute_sample_list(
+    serializer_list: List[Serializer], participant_set: Set[str] = None
+) -> List[Dict[str, str]]:
+
+    for serializer in serializer_list:
+        if participant_set is not None and len(participant_set) != 0:
+            participant_set = participant_set & serializer.find_participant_set()
+        else:
+            participant_set = serializer.find_participant_set()
+
+    sample_list = [
+        {"participant_id": participant_id} for participant_id in participant_set
     ]
-    if z_flip:  # TODO: remove and rely on orientation
-        transforms.append(Flipd(keys=["img"], spatial_axis=0))
 
-    return transforms
+    # Add the useful information for all existing inputs
+    for serializer in serializer_list:
+        serializer.add_path(sample_list)
+
+    return sample_list
 
 
+# TODO: add pipeline_dir looking for all possible components of the pipeline in the same folder
 def build_dataset(
-    raw_dir: str,
+    raw_dir: str = None,
+    heatmap_dir: str = None,
+    centerline_dir: str = None,
+    polar_dir: str = None,
+    contour_dir: str = None,
+    segmentation_dir: str = None,
     participant_list: List[str] = None,
-    lower_percentile_rescaler: float = 1,
-    upper_percentile_rescaler: float = 99,
-    z_flip: bool = False,
-    data_type: str = "dcm",
 ) -> Dataset:
 
-    if participant_list is None or len(participant_list) == 0:
-        if data_type == "dcm":
-            participant_list = [
-                participant_id
-                for participant_id in listdir(raw_dir)
-                if path.isdir(path.join(raw_dir, participant_id))
-            ]
-        else:
-            participant_list = [
-                participant_id.split(".")[0]
-                for participant_id in listdir(raw_dir)
-                if participant_id.endswith(".mhd")
-            ]
-
-    if data_type == "dcm":
-        sample_list = [
-            {
-                "img": path.join(raw_dir, participant_id),
-                "participant_id": participant_id,
-            }
-            for participant_id in participant_list
-        ]
-    else:
-        sample_list = [
-            {
-                "img": path.join(raw_dir, f"{participant_id}.mhd"),
-                "participant_id": participant_id,
-            }
-            for participant_id in participant_list
-        ]
-
-    return CacheDataset(
-        sample_list,
-        transform=Compose(
-            get_loader_transforms(
-                lower_percentile_rescaler, upper_percentile_rescaler, z_flip
-            )
-        ),
+    serializer_list = compute_serializer_list(
+        raw_dir=raw_dir,
+        heatmap_dir=heatmap_dir,
+        centerline_dir=centerline_dir,
+        polar_dir=polar_dir,
+        contour_dir=contour_dir,
+        segmentation_dir=segmentation_dir,
     )
+
+    sample_list = compute_sample_list(
+        serializer_list=serializer_list,
+        participant_set=set(participant_list) if participant_list is not None else None,
+    )
+
+    transform_list = list()
+    for serializer in serializer_list:
+        transform_list.append(serializer.monai_reader)
+
+    return CacheDataset(sample_list, transform=Compose(transform_list))

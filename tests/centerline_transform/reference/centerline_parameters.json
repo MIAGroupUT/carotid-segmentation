@@ -1,0 +1,7 @@
+{
+    "step_size": 10,
+    "threshold": 50,
+    "dir": "tests/tmp",
+    "heatmap_dir": "tests/heatmap_transform/reference",
+    "raw_dir": "tests/raw_dir"
+}

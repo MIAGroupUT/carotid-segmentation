@@ -1,0 +1,9 @@
+{
+    "roi_size": [
+        64,
+        64,
+        160
+    ],
+    "raw_dir": "tests/raw_dir",
+    "model_dir": "tests/models/centerline_transform"
+}

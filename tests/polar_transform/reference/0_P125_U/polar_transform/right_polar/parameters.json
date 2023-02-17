@@ -1,0 +1,11 @@
+{
+    "n_angles": 31,
+    "polar_ray": 127,
+    "cartesian_ray": 60,
+    "length": 7,
+    "orig_shape": [
+        92,
+        100,
+        720
+    ]
+}

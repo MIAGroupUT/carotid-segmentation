@@ -1,5 +1,0 @@
-[post_processing]
-max_intensity_threshold = 0.5
-step_size = 10
-spatial_threshold = 5
-cost_rule = "mix"

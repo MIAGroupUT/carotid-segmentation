@@ -1,0 +1,5 @@
+{
+    "raw_dir": "tests/raw_dir",
+    "contour_dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/contour_transform/reference",
+    "dir": "/Users/elina/Documents/postdoc/code/carotid-segmentation/tests/tmp"
+}
