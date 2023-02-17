@@ -4,3 +4,4 @@ src/carotid.egg-info/*
 *.DS_Store
 models/*
 tests/tmp
+CarotidSegmentation.tar.gz
