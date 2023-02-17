@@ -438,7 +438,7 @@ class RawReader:
             participant_set = {
                 participant_id.split(".")[0]
                 for participant_id in listdir(self.dir_path)
-                if participant_id.endswith(".mhd")
+                if participant_id.endswith(f".{data_type}")
             }
 
         return participant_set
@@ -452,7 +452,7 @@ class RawReader:
             if data_type == "dcm":
                 img_path = path.join(self.dir_path, participant_id)
             else:
-                img_path = path.join(self.dir_path, f"{participant_id}.mhd")
+                img_path = path.join(self.dir_path, f"{participant_id}.{data_type}")
             sample["image"] = img_path
 
     @staticmethod
@@ -484,8 +484,11 @@ class RawReader:
         # Find data type
         file_list = listdir(raw_dir)
         mhd_list = [filename for filename in file_list if filename.endswith(".mhd")]
+        mha_list = [filename for filename in file_list if filename.endswith(".mha")]
         if len(mhd_list) > 0:
             raw_parameters["data_type"] = "mhd"
+        elif len(mha_list) > 0:
+            raw_parameters["data_type"] = "mha"
         else:
             raw_parameters["data_type"] = "dcm"
 
