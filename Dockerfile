@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM pytorch/pytorch
 
 RUN apt update
 RUN apt install build-essential -y
@@ -15,17 +15,17 @@ WORKDIR /opt/algorithm
 ENV PATH="/home/algorithm/.local/bin:${PATH}"
 
 RUN python -m pip install --user -U pip
-RUN python -m pip install numpy==1.22.4
 
 COPY --chown=algorithm:algorithm docker-utils/docker-requirements.txt /opt/algorithm/
 RUN python -m pip install --user -r docker-requirements.txt
 
-COPY --chown=algorithm:algorithm src /opt/algorithm/src/
-RUN python -m pip install --user ../src
+COPY --chown=algorithm:algorithm src/ /opt/algorithm/src/
+RUN python -m pip install --user ./src
+
+COPY --chown=algorithm:algorithm docker-utils/commands.sh /opt/algorithm/commands.sh
 
 # Include model weights in the Docker
 COPY --chown=algorithm:algorithm models /opt/algorithm/models/
 COPY --chown=algorithm:algorithm docker-utils/refactor_outputs.py /opt/algorithm
 
-ENTRYPOINT carotid pipeline_transform /input ./models/heatmap_transform ./models/contour_transform /output $0 $@
-RUN python ./refactor_outputs.py
+ENTRYPOINT sh ./commands.sh $0 $@

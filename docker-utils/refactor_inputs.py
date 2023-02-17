@@ -1,1 +1,0 @@
-input_dir = "/input"

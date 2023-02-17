@@ -20,7 +20,7 @@ setup(
     # metadata for upload to PyPI
     author="Elina Thibeau-Sutre",
     author_email="elina.ts@free.fr",
-    description="Utilitaries for carotid segmentation explainbility project",
+    description="Utilitaries for carotid segmentation project",
     keywords="carotid segmentation deep learning",
     license="MIT",
 )

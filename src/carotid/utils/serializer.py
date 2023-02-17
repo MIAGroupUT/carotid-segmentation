@@ -435,19 +435,23 @@ class RawReader:
         Returns:
             dictionary of parameters to process the corresponding directory.
         """
-        raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
-        mandatory_args = {
-            "lower_percentile_rescaler",
-            "upper_percentile_rescaler",
-        }
-        intersection_args = set(raw_parameters.keys()) & mandatory_args
-        if intersection_args != mandatory_args:
-            missing_args = mandatory_args - intersection_args
-            raise MissingRawArgException(
-                f"Arguments to describe raw data are missing.\n"
-                f"Please define {missing_args} in the parameters.json "
-                f"of the raw directory."
-            )
+        if path.exists(path.join(raw_dir, "parameters.json")):
+            raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
+            mandatory_args = {
+                "lower_percentile_rescaler",
+                "upper_percentile_rescaler",
+            }
+            intersection_args = set(raw_parameters.keys()) & mandatory_args
+            if intersection_args != mandatory_args:
+                missing_args = mandatory_args - intersection_args
+                raise MissingRawArgException(
+                    f"Arguments to describe raw data are missing.\n"
+                    f"Please define {missing_args} in the parameters.json "
+                    f"of the raw directory."
+                )
+        else:
+            utils_dir = path.dirname(path.realpath(__file__))
+            raw_parameters = toml.load(path.join(utils_dir, "default_raw.toml"))
 
         # Find data type
         file_list = listdir(raw_dir)
