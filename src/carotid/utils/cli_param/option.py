@@ -20,6 +20,6 @@ device = click.option(
     "--device",
     "-d",
     type=click.Choice(["cpu", "cuda"]),
-    default="cuda",
+    default=None,
     help="Device used for deep learning computations.",
 )

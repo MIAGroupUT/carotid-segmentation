@@ -19,8 +19,6 @@ def test_pipeline():
         output_dir=tmp_dir,
     )
 
-    assert False
-
     # Read reference
     ref_dataset = build_dataset(heatmap_dir=ref_dir)
 

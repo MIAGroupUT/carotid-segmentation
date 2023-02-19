@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
-MODELPATH="${SCRIPTPATH}/models"
+MODELPATH="models/"
 
-if ! [[ -d $MODELPATH ]]
-then
-  echo "Using test models to build the image..."
-  cp -r "$SCRIPTPATH/tests/models" $MODELPATH
-fi
-
-
-docker build -t carotidsegmentation "$SCRIPTPATH"
+case $1 in
+  'test')
+    MODELPATH="tests/models/"
+    docker build -t carotidsegmentation-test -f debian.docker --build-arg MODELPATH=$MODELPATH $SCRIPTPATH
+    ;;
+  'test-grand-challenge')
+    MODELPATH="tests/models/"
+    docker build -t carotidsegmentation-test-grandchallenge -f grand-challenge.docker --build-arg MODELPATH=$MODELPATH $SCRIPTPATH
+    ;;
+  'grand-challenge')
+    docker build -t carotidsegmentation-grandchallenge -f grand-challenge.docker --build-arg MODELPATH=$MODELPATH $SCRIPTPATH
+    ;;
+  *)
+    docker build -t carotidsegmentation -f debian.docker --build-arg MODELPATH=$MODELPATH $SCRIPTPATH
+    ;;
+esac

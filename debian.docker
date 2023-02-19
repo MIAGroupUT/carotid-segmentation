@@ -1,7 +1,17 @@
-FROM pytorch/pytorch
+FROM python:3.9-slim
+# FROM pytorch/pytorch
+
+ARG MODELPATH
 
 RUN apt update
 RUN apt install build-essential -y
+# Install GDAL dependencies
+RUN apt-get install -y libgdal-dev g++ --no-install-recommends && \
+    apt-get clean -y
+
+# Update C env vars so compiler can find gdal
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
 
 RUN groupadd -r algorithm && useradd -m --no-log-init -r -g algorithm algorithm
 
@@ -15,6 +25,7 @@ WORKDIR /opt/algorithm
 ENV PATH="/home/algorithm/.local/bin:${PATH}"
 
 RUN python -m pip install --user -U pip
+RUN python -m pip install numpy==1.22.4
 
 COPY --chown=algorithm:algorithm docker-utils/docker-requirements.txt /opt/algorithm/
 RUN python -m pip install --user -r docker-requirements.txt
@@ -25,7 +36,7 @@ RUN python -m pip install --user ./src
 COPY --chown=algorithm:algorithm docker-utils/commands.sh /opt/algorithm/commands.sh
 
 # Include model weights in the Docker
-COPY --chown=algorithm:algorithm models /opt/algorithm/models/
+COPY --chown=algorithm:algorithm $MODELPATH /opt/algorithm/models/
 COPY --chown=algorithm:algorithm docker-utils/refactor_outputs.py /opt/algorithm
 
 ENTRYPOINT sh ./commands.sh $0 $@

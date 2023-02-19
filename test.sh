@@ -2,17 +2,17 @@
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-./build.sh
-
 # Generate random number to name the temporary output volume
 VOLUME_SUFFIX=$RANDOM
-MEM_LIMIT="4g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
+MEM_LIMIT="15g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
 
-# Create a volume to write outputs
-docker volume create carotidsegmentation-output-$VOLUME_SUFFIX
+rm -r $SCRIPTPATH/tests/tmp
+mkdir $SCRIPTPATH/tests/tmp
 
-# Do not change any of the parameters to docker run, these are fixed
-docker run --rm \
+case $1 in
+  'grand-challenge')
+    ./build.sh "test-grand-challenge"
+    docker run --rm \
         --memory="${MEM_LIMIT}" \
         --memory-swap="${MEM_LIMIT}" \
         --network="none" \
@@ -21,8 +21,24 @@ docker run --rm \
         --shm-size="128m" \
         --pids-limit="256" \
         -v $SCRIPTPATH/tests/raw_dir/:/input/ \
-        -v carotidsegmentation-output-$VOLUME_SUFFIX:/output/ \
-        carotidsegmentation "--device cpu"
+        -v $SCRIPTPATH/tests/tmp:/output/ \
+        --platform="linux/amd64" \
+        carotidsegmentation-test-grandchallenge
+    ;;
+  *)
+    ./build.sh "test"
+    docker run --rm \
+        --memory="${MEM_LIMIT}" \
+        --memory-swap="${MEM_LIMIT}" \
+        --network="none" \
+        --cap-drop="ALL" \
+        --security-opt="no-new-privileges" \
+        --shm-size="128m" \
+        --pids-limit="256" \
+        -v $SCRIPTPATH/tests/raw_dir/:/input/ \
+        -v $SCRIPTPATH/tests/tmp:/output/ \
+        carotidsegmentation-test
+    ;;
+esac
 
-# Remove the volume containing the outputs
-docker volume rm carotidsegmentation-output-$VOLUME_SUFFIX
+# rm -r $SCRIPTPATH/tests/tmp
