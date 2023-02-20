@@ -1,0 +1,61 @@
+# Project information
+site_name: Deep Carotid Segmentation Documentation
+# site_author: contributors
+# site_url: https://XXX.readthedocs.io/
+site_description: >-
+  Open-source deep learning software for carotid segmentation
+# Repository
+# repo_name: team/repo
+# repo_url: https://github.com/team/repo
+
+# Copyright
+# copyright: XXX
+
+# Configuration
+theme:
+  name: material
+  icon:
+    repo: material/github
+  language: en
+  # logo: images/logo.png
+  # favicon: images/favicon.png
+  features:
+    - header.autohide
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+# Version panel
+extra_javascript:
+  - "https://code.jquery.com/jquery-3.3.1.min.js"
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - md_in_html
+  - toc:
+      permalink: True
+
+# Page tree
+nav:
+  - Home: index.md
+  - Installation: Installation.md
+  - First steps: Introduction.md
+  - Pipeline:
+      - Centerline heatmap: Pipeline/Heatmap.md
+      - Centerline trajectory: Pipeline/Centerline.md
+      - Polar transform: Pipeline/Polar.md
+      - Lumen & Wall contours: Pipeline/Contour.md
+      - Lumen & Wall segmentation: Pipeline/Segmentation.md
