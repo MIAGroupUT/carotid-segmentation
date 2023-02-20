@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+SCRIPTPATH="$( cd $(dirname "$(dirname "$0")") ; pwd -P )"
 
 # Generate random number to name the temporary output volume
 VOLUME_SUFFIX=$RANDOM
@@ -11,7 +11,7 @@ mkdir $SCRIPTPATH/tests/tmp
 
 case $1 in
   'grand-challenge')
-    ./build.sh "test-grand-challenge"
+    build/build.sh "test-grand-challenge"
     docker run --rm \
         --memory="${MEM_LIMIT}" \
         --memory-swap="${MEM_LIMIT}" \
@@ -26,7 +26,7 @@ case $1 in
         carotidsegmentation-test-grandchallenge
     ;;
   *)
-    ./build.sh "test"
+    build/build.sh "test"
     docker run --rm \
         --memory="${MEM_LIMIT}" \
         --memory-swap="${MEM_LIMIT}" \
