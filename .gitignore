@@ -2,6 +2,6 @@
 ***/__pycache__/*
 src/carotid.egg-info/*
 *.DS_Store
-models/*
+models/*_transform/*
 tests/tmp
 CarotidSegmentation*.tar.gz

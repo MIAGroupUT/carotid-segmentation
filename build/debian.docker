@@ -39,4 +39,4 @@ COPY --chown=algorithm:algorithm build/commands.sh /opt/algorithm/commands.sh
 COPY --chown=algorithm:algorithm $MODELPATH /opt/algorithm/models/
 COPY --chown=algorithm:algorithm build/refactor_outputs.py /opt/algorithm
 
-ENTRYPOINT carotid pipeline_transform $@
+ENTRYPOINT sh ./commands.sh $@
