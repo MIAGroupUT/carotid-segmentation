@@ -52,7 +52,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Installation: Installation.md
-  - First steps: Introduction.md
   - Pipeline:
       - Centerline heatmap: Pipeline/Heatmap.md
       - Centerline trajectory: Pipeline/Centerline.md
