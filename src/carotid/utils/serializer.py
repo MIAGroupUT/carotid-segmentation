@@ -352,6 +352,7 @@ class SegmentationSerializer(Serializer):
             monai_reader=LoadImaged(
                 keys=["left_segmentation", "right_segmentation"],
                 reader="itkreader",
+                ensure_channel_first=True,
             ),
         )
         self.object_list = ["lumen", "wall"]
