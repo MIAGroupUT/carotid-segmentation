@@ -62,6 +62,7 @@ class OnePassExtractor(CenterlineExtractor):
                 )
                 label_df["label"] = label_name
                 centerline_df = pd.concat([centerline_df, label_df])
+            centerline_df.dropna(inplace=True)
             centerline_df = self.remove_common_external_centers(centerline_df)
             sample[f"{side}_centerline"] = centerline_df
 
