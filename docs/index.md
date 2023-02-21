@@ -88,6 +88,7 @@ raw_dir
 !!! warning
     The orientation of your volume is crucial for the algorithm.
     Please make sure that your tensor and affine allows to correctly orientate your image.
+    The algorithm also assumed that your image has an isotropic resolution in an axial slice.
 
 ### Command line
 
