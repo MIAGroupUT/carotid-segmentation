@@ -48,7 +48,7 @@ class PolarTransform:
                 sample[f"{side}_polar"].append(
                     {
                         "label": label_name,
-                        "slice_idx": int(center_pt[0]),
+                        "slice_idx": int(center_pt[2]),
                         "polar_pt": polar_pt.unsqueeze(0).float(),
                         "center_pt": center_pt,
                     }
