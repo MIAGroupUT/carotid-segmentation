@@ -32,7 +32,7 @@ class PolarTransform:
         R, Z, T = torch.meshgrid(radii, zz, theta, indexing="xy")
         xx = (R * torch.cos(T)).flatten()
         yy = (R * torch.sin(T)).flatten()
-        self.coords = torch.stack([Z.flatten(), yy, xx], dim=1)
+        self.coords = torch.stack([xx, yy, Z.flatten()], dim=1)
 
     def __call__(self, sample: Dict[str, Any]):
         image_pt = sample["image"][0]
@@ -42,7 +42,7 @@ class PolarTransform:
             for idx in centerline_df.index.values:
                 label_name = centerline_df.loc[idx, "label"]
                 center_pt = torch.from_numpy(
-                    centerline_df.loc[idx, ["z", "y", "x"]].values.astype(float)
+                    centerline_df.loc[idx, ["x", "y", "z"]].values.astype(float)
                 )
                 polar_pt = self._transform(image_pt, center_pt)
                 sample[f"{side}_polar"].append(
@@ -67,7 +67,7 @@ class PolarTransform:
     def _transform(self, image_pt: torch.Tensor, center_pt: torch.Tensor):
         coords = self.coords + center_pt
         polar_transform = self.fast_trilinear_interpolation(
-            image_pt, coords[:, 2], coords[:, 1], coords[:, 0]
+            image_pt, coords[:, 0], coords[:, 1], coords[:, 2]
         ).reshape(self.length, self.polar_ray, self.n_angles)
         return torch.cat(
             [
@@ -107,13 +107,13 @@ class PolarTransform:
         z = z_indices - z0
 
         output_pt = (
-            array_pt[z0, y0, x0] * (1 - x) * (1 - y) * (1 - z)
-            + array_pt[z0, y0, x1] * x * (1 - y) * (1 - z)
-            + array_pt[z0, y1, x0] * (1 - x) * y * (1 - z)
-            + array_pt[z0, y1, x1] * x * y * (1 - z)
-            + array_pt[z1, y0, x0] * (1 - x) * (1 - y) * z
-            + array_pt[z1, y1, x0] * (1 - x) * y * z
-            + array_pt[z1, y0, x1] * x * (1 - y) * z
-            + array_pt[z1, y1, x1] * x * y * z
+            array_pt[x0, y0, z0] * (1 - x) * (1 - y) * (1 - z)
+            + array_pt[x0, y0, z1] * x * (1 - y) * (1 - z)
+            + array_pt[x0, y1, z0] * (1 - x) * y * (1 - z)
+            + array_pt[x0, y1, z1] * x * y * (1 - z)
+            + array_pt[x1, y0, z0] * (1 - x) * (1 - y) * z
+            + array_pt[x1, y1, z0] * (1 - x) * y * z
+            + array_pt[x1, y0, z1] * x * (1 - y) * z
+            + array_pt[x1, y1, z1] * x * y * z
         )
         return output_pt
