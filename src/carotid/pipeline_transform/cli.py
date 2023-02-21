@@ -8,14 +8,8 @@ from carotid.utils import cli_param
     context_settings={"show_default": True},
 )
 @cli_param.argument.raw_dir
-@click.argument(
-    "heatmap_model_dir",
-    type=click.Path(exists=True),
-)
-@click.argument(
-    "contour_model_dir",
-    type=click.Path(exists=True),
-)
+@cli_param.argument.heatmap_model_dir
+@cli_param.argument.contour_model_dir
 @cli_param.argument.output_dir
 @cli_param.option.config_path
 @cli_param.option.participant

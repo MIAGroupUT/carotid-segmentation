@@ -8,17 +8,14 @@ from carotid.utils import cli_param
     context_settings={"show_default": True},
 )
 @cli_param.argument.raw_dir
-@click.argument(
-    "model_dir",
-    type=click.Path(exists=True),
-)
+@cli_param.argument.heatmap_model_dir
 @cli_param.argument.output_dir
 @cli_param.option.config_path
 @cli_param.option.participant
 @cli_param.option.device
 def cli(
     raw_dir,
-    model_dir,
+    heatmap_model_dir,
     output_dir,
     config_path,
     participant,
@@ -37,7 +34,7 @@ def cli(
 
     apply_transform(
         raw_dir=raw_dir,
-        model_dir=model_dir,
+        model_dir=heatmap_model_dir,
         output_dir=output_dir,
         config_path=config_path,
         participant_list=participant,

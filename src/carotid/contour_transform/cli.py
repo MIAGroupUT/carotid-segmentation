@@ -8,6 +8,7 @@ from carotid.utils import cli_param
     context_settings={"show_default": True},
 )
 @cli_param.argument.output_dir
+@cli_param.argument.contour_model_dir
 @click.option(
     "--polar_dir",
     "-pdir",
@@ -20,6 +21,7 @@ from carotid.utils import cli_param
 @cli_param.option.device
 def cli(
     output_dir,
+    contour_model_dir,
     polar_dir,
     config_path,
     participant,
@@ -34,6 +36,7 @@ def cli(
 
     apply_transform(
         output_dir=output_dir,
+        model_dir=contour_model_dir,
         polar_dir=polar_dir,
         config_path=config_path,
         participant_list=participant,
