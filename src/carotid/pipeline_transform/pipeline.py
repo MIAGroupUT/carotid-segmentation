@@ -9,6 +9,8 @@ from carotid.utils import (
     read_and_fill_default_toml,
     build_dataset,
     check_device,
+    HeatmapSerializer,
+    CenterlineSerializer,
     ContourSerializer,
     SegmentationSerializer,
 )
@@ -75,16 +77,18 @@ def apply_transform(
         raw_dir=raw_dir,
         participant_list=participant_list,
     )
-    contour_serializer = ContourSerializer(
-        dir_path=output_dir,
-    )
+    heatmap_serializer = HeatmapSerializer(dir_path=output_dir)
+    centerline_serializer = CenterlineSerializer(dir_path=output_dir)
+    contour_serializer = ContourSerializer(dir_path=output_dir)
     segmentation_serializer = SegmentationSerializer(dir_path=output_dir)
 
     for sample in dataset:
         participant_id = sample["participant_id"]
         print(f"Pipeline transform {participant_id}...")
         sample = unet_predictor(sample)
+        heatmap_serializer.write(sample)
         sample = centerline_extractor(sample)
+        centerline_serializer.write(sample)
         sample = polar_transform(sample)
         sample = contour_transform(sample)
         contour_serializer.write(sample)
