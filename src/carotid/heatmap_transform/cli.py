@@ -26,7 +26,7 @@ def cli(
 
     RAW_DIR is the path to raw data folder.
 
-    MODEL_DIR is the path to a directory where the models are stored.
+    HEATMAP_MODEL_DIR is the path to a directory where the models are stored.
 
     OUTPUT_DIR is the path to the directory containing the results.
     """

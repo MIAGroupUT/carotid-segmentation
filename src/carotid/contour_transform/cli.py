@@ -31,6 +31,8 @@ def cli(
     Extract contours from raw images, polar_images and centerlines found with previous steps.
 
     OUTPUT_DIR is the path to the directory containing the results.
+
+    CONTOUR_MODEL_DIR is the path to a directory where the models for contour extraction are stored.
     """
     from .pipeline import apply_transform
 
