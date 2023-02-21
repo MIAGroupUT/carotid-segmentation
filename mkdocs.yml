@@ -51,7 +51,6 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Installation: Installation.md
   - Pipeline:
       - Centerline heatmap: Pipeline/Heatmap.md
       - Centerline trajectory: Pipeline/Centerline.md

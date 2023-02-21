@@ -1,6 +1,8 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, dist
 
 VERSION = "0.1.0"
+
+dist.Distribution().fetch_build_eggs(['numpy==1.22.4'])
 
 with open("requirements.txt", "r") as f:
     requirements = f.read().splitlines()
