@@ -1,4 +1,6 @@
 import abc
+import warnings
+
 import numpy as np
 import torch
 from dijkstra3d import dijkstra
@@ -163,9 +165,11 @@ class OnePassExtractor(CenterlineExtractor):
 
             # Interpolate between min_slice and max_slice
             slices = np.arange(seeds_np[0, 2], seeds_np[-1, 2] + 1)
-            paths[label_name] = np.concatenate(
-                [interp(slices.T).T, np.expand_dims(slices, 1)], axis=1
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                paths[label_name] = np.concatenate(
+                    [interp(slices.T).T, np.expand_dims(slices, 1)], axis=1
+                )
         return paths
 
 
