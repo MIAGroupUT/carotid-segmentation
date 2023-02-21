@@ -3,9 +3,16 @@ from monai.data import ITKWriter
 import numpy as np
 from os import makedirs, path
 import json
+import argparse
 
-input_dir = "/input"
-output_dir = "/output"
+parser = argparse.ArgumentParser(description='Optional app description')
+parser.add_argument('input_dir', type=str)
+parser.add_argument('output_dir', type=str)
+
+args = parser.parse_args()
+
+input_dir = args.input_dir
+output_dir = args.output_dir
 tmp_dir = path.join(output_dir, "tmp")
 makedirs(path.join(output_dir, "images"), exist_ok=True)
 
@@ -27,7 +34,7 @@ for sample in dataset:
     )
     wall_segmentation = 0
     for side in ["left", "right"]:
-        wall_segmentation += sample[f"{side}_segmentation"][1]
+        wall_segmentation += sample[f"{side}_segmentation"][:1]
     wall_segmentation = np.clip(wall_segmentation, 0, 1)
     writer.set_data_array(wall_segmentation)
     writer.set_metadata({"affine": sample["image"].affine})
