@@ -11,6 +11,7 @@ from carotid.cli import cli
         "heatmap_transform",
         "polar_transform",
         "contour_transform",
+        "segmentation_transform",
         "pipeline_transform",
     ]
 )
