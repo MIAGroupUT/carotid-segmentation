@@ -6,8 +6,13 @@ SCRIPTPATH="$( cd $(dirname "$(dirname "$0")") ; pwd -P )"
 VOLUME_SUFFIX=$RANDOM
 MEM_LIMIT="15g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
 
-rm -r $SCRIPTPATH/tests/tmp
-mkdir $SCRIPTPATH/tests/tmp
+TESTPATH="$SCRIPTPATH/tests/tmp"
+
+if [ -d $TESTPATH ]; then
+  rm -r $TESTPATH
+fi
+
+mkdir $TESTPATH
 
 case $1 in
   'grand-challenge')
@@ -21,7 +26,7 @@ case $1 in
         --shm-size="128m" \
         --pids-limit="256" \
         -v $SCRIPTPATH/tests/raw_dir/:/input/ \
-        -v $SCRIPTPATH/tests/tmp:/output/ \
+        -v $TESTPATH:/output/ \
         --platform="linux/amd64" \
         carotidsegmentation-test-grandchallenge
     ;;
@@ -36,7 +41,7 @@ case $1 in
         --shm-size="128m" \
         --pids-limit="256" \
         -v $SCRIPTPATH/tests/raw_dir/:/input/ \
-        -v $SCRIPTPATH/tests/tmp:/output/ \
+        -v $TESTPATH:/output/ \
         carotidsegmentation-test
     ;;
 esac
