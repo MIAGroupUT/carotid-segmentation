@@ -142,7 +142,7 @@ class ContourTransform:
         all_pred_pt = torch.zeros((len(self.model_paths_list), 2, n_angles))
 
         for model_index, model_path in tqdm(
-            enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
+            enumerate(self.model_paths_list), desc="Predicting contours", leave=False
         ):
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.model.set_mode("eval")
