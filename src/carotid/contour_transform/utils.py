@@ -125,16 +125,16 @@ class ContourTransform:
         lumen_cont = torch.zeros((n_pred, n_angles, 3))
         wall_cont = torch.zeros_like(lumen_cont)
         lumen_cont[:, :, 1] = lumen_dists * torch.cos(angle_vals) + center_pt[1]
-        lumen_cont[:, :, 2] = lumen_dists * torch.sin(angle_vals) + center_pt[2]
+        lumen_cont[:, :, 2] = lumen_dists * torch.sin(angle_vals) + center_pt[0]
         wall_cont[:, :, 1] = wall_dists * torch.cos(angle_vals) + center_pt[1]
-        wall_cont[:, :, 2] = wall_dists * torch.sin(angle_vals) + center_pt[2]
+        wall_cont[:, :, 2] = wall_dists * torch.sin(angle_vals) + center_pt[0]
 
         lumen_cont = lumen_cont.reshape((n_pred * n_angles, 3))
         wall_cont = wall_cont.reshape((n_pred * n_angles, 3))
 
         # Report slice index
-        lumen_cont[:, 0] = center_pt[0]
-        wall_cont[:, 0] = center_pt[0]
+        lumen_cont[:, 0] = center_pt[2]
+        wall_cont[:, 0] = center_pt[2]
 
         return lumen_cont, wall_cont
 
