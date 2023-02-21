@@ -2,9 +2,6 @@ from typing import Dict, Any
 import torch
 
 
-# TODO solve problem of too low / high centerlines for 3D length
-
-
 class PolarTransform:
     def __init__(self, parameters: Dict[str, Any]):
         """
@@ -95,12 +92,12 @@ class PolarTransform:
         y1 = y0 + 1
         z1 = z0 + 1
 
-        x0 = torch.clip(x0, 0, array_pt.shape[2] - 1)
+        x0 = torch.clip(x0, 0, array_pt.shape[0] - 1)
         y0 = torch.clip(y0, 0, array_pt.shape[1] - 1)
-        z0 = torch.clip(z0, 0, array_pt.shape[0] - 1)
-        x1 = torch.clip(x1, 0, array_pt.shape[2] - 1)
+        z0 = torch.clip(z0, 0, array_pt.shape[2] - 1)
+        x1 = torch.clip(x1, 0, array_pt.shape[0] - 1)
         y1 = torch.clip(y1, 0, array_pt.shape[1] - 1)
-        z1 = torch.clip(z1, 0, array_pt.shape[0] - 1)
+        z1 = torch.clip(z1, 0, array_pt.shape[2] - 1)
 
         x = x_indices - x0
         y = y_indices - y0

@@ -21,24 +21,40 @@ class CenterlineExtractor:
         pass
 
     def remove_common_external_centers(self, label_df: pd.DataFrame) -> pd.DataFrame:
-        z = int(label_df.z.min())
+        internal_df = label_df[label_df.label == "internal"]
+        external_df = label_df[label_df.label == "external"]
+
+        min_internal_z = int(internal_df.z.min())
+        min_external_z = int(external_df.z.min())
+
+        z = max(min_internal_z, min_external_z)
         flag = False
         max_z = int(label_df.z.max())
         label_df.set_index(["label", "z"], inplace=True, drop=True)
 
         while z <= max_z and not flag:
-            external_center = label_df.loc[("external", z)].values
-            internal_center = label_df.loc[("internal", z)].values
-            if (
-                np.linalg.norm(internal_center - external_center)
-                > self.parameters["spatial_threshold"]
-            ):
+            try:
+                external_center = label_df.loc[("external", z)].values
+                internal_center = label_df.loc[("internal", z)].values
+                if (
+                    np.linalg.norm(internal_center - external_center)
+                    > self.parameters["spatial_threshold"]
+                ):
+                    flag = True
+                else:
+                    label_df.drop(("external", z), inplace=True)
+            except KeyError:
                 flag = True
-            else:
-                label_df.drop(("external", z), inplace=True)
             z += 1
 
         label_df.reset_index(inplace=True)
+
+        # Change external to common if below internal carotid
+        if min_external_z < min_internal_z:
+            for z in range(min_external_z, min_internal_z):
+                idx = label_df[label_df.z == z].index.item()
+                label_df.loc[idx, "label"] = "internal"
+
         return label_df
 
 
@@ -83,23 +99,23 @@ class OnePassExtractor(CenterlineExtractor):
         slice_shape = heatmap_pt[0, :, :, 0].shape
         mask_pt = heatmap_pt > self.parameters["threshold"]
 
-        # only determine seed points where both internal/external carotids exceed threshold
-        (valid_slice_indices,) = torch.where(mask_pt.any(2).any(1).all(0))
-        min_slice = valid_slice_indices[0].item()
-        max_slice = valid_slice_indices[-1].item()
-        steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])
-
-        seeds_dict = {
-            "internal": torch.zeros((len(steps) + 1, 3)),
-            "external": torch.zeros((len(steps) + 1, 3)),
-        }
+        seeds_dict = dict()
 
         for label_idx, label_name in enumerate(["internal", "external"]):
+
+            # only determine seed points where the given carotid exceed threshold
+            (valid_slice_indices,) = torch.where(mask_pt[label_idx].any(1).any(0))
+            min_slice = valid_slice_indices[0].item()
+            max_slice = valid_slice_indices[-1].item()
+            steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])
+
+            seeds_dict[label_name] = torch.zeros((len(steps) + 1, 3))
+
             # First seed on min_slice
             seed = unravel_index(
                 torch.argmax(heatmap_pt[label_idx, :, :, min_slice]),
                 slice_shape,
-            )  # TODO transpose here
+            )
             seeds_dict[label_name][0] = torch.Tensor([*seed, min_slice])
 
             # Seeds in each 3D section
@@ -107,14 +123,14 @@ class OnePassExtractor(CenterlineExtractor):
                 heatmap_section = heatmap_pt[label_idx, :, :, steps[i] : steps[i + 1]]
                 seed = unravel_index(
                     torch.argmax(heatmap_section), heatmap_section.shape
-                )  # TODO transpose here
+                )
                 seed = torch.Tensor(seed) + torch.Tensor([0, 0, steps[i]])
                 seeds_dict[label_name][i + 1] = seed
 
             # Last seed point on max_slice
             seed = unravel_index(
                 torch.argmax(heatmap_pt[label_idx, :, :, max_slice]), slice_shape
-            )  # TODO transpose here
+            )
             seeds_dict[label_name][-1] = torch.Tensor([*seed, max_slice])
 
         return seeds_dict
