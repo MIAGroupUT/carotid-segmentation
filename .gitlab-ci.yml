@@ -16,6 +16,7 @@ functional-test:
   stage: functional-test
   before_script:
     - pip install -e ./src
+    - make get-reference
   script:
     - pytest ./tests/unit_tests
     - pytest ./tests/test_cli.py
