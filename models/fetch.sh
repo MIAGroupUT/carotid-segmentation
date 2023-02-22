@@ -17,3 +17,12 @@ if [ ! -d "heatmap_transform" ]; then
 else
     echo "models for heatmap_transform already found."
 fi
+
+if [ ! -d "contour_transform_dropout" ]; then
+    # Retrieve heatmap models
+    curl https://surfdrive.surf.nl/files/index.php/s/P9uMnfKWSbenfDx/download -o contour_transform_dropout.tar
+    tar -xvf contour_transform_dropout.tar
+    rm contour_transform_dropout.tar
+else
+    echo "models for contour_transform_dropout already found."
+fi

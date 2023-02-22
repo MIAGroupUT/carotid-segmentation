@@ -27,3 +27,8 @@ test-grand-challenge:
 .PHONY: get-models
 get-models:
 	@sh models/fetch.sh
+
+.PHONY: get-reference
+get-reference:
+	@make get-models
+	@sh tests/get_reference.sh
