@@ -5,7 +5,6 @@ from carotid.utils import (
     write_json,
     read_and_fill_default_toml,
     build_dataset,
-    check_device,
     PolarSerializer,
 )
 from typing import List

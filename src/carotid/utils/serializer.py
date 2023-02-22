@@ -92,7 +92,7 @@ class LoadPolarDird(MapTransform):
                     {
                         "label": label_name,
                         "slice_idx": slice_idx,
-                        "polar_pt": torch.from_numpy(polar_np).float().unsqueeze(0),
+                        "polar_pt": torch.from_numpy(polar_np).float(),
                         "center_pt": torch.from_numpy(center_np).float(),
                     },
                 )

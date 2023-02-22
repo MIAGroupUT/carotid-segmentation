@@ -15,6 +15,7 @@ class ContourTransform:
         self.eval_mode = parameters["eval_mode"]
         self.n_repeats = parameters["n_repeats"]
         self.side_list = ["left", "right"]
+        self.delta_theta = 2 * np.pi * parameters["delta_theta"]
 
         self.model_paths_list = [
             path.join(self.model_dir, filename)
@@ -30,7 +31,7 @@ class ContourTransform:
 
     def __call__(self, sample):
         for side in self.side_list:
-            contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x"])
+            contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x", "deviation"])
             polar_list = sample[f"{side}_polar"]
             orig_shape = sample[f"{side}_polar_meta_dict"]["orig_shape"]
             affine = sample[f"{side}_polar_meta_dict"]["affine"]
@@ -44,10 +45,10 @@ class ContourTransform:
 
                 # Build DataFrames
                 lumen_slice_df = pd.DataFrame(
-                    data=lumen_cont.numpy(), columns=["z", "y", "x"]
+                    data=lumen_cont.numpy(), columns=["z", "y", "x", "deviation"]
                 )
                 wall_slice_df = pd.DataFrame(
-                    data=wall_cont.numpy(), columns=["z", "y", "x"]
+                    data=wall_cont.numpy(), columns=["z", "y", "x", "deviation"]
                 )
                 lumen_slice_df["object"] = "lumen"
                 wall_slice_df["object"] = "wall"
@@ -66,8 +67,8 @@ class ContourTransform:
 
     def _transform(
         self,
-        polar_pt: torch.Tensor,
-        center_pt: torch.Tensor,
+        batch_polar_pt: torch.Tensor,
+        batch_center_pt: torch.Tensor,
         polar_meta_dict: Dict[str, Any],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         n_angles = polar_meta_dict["n_angles"]
@@ -75,62 +76,64 @@ class ContourTransform:
         cartesian_ray = polar_meta_dict["cartesian_ray"]
 
         if self.eval_mode == "dropout":
-            prediction_pt = self.ensemble_dropout(polar_pt)
+            batch_prediction_pt = self.ensemble_dropout(batch_polar_pt)
         else:
-            prediction_pt = self.ensemble_models(polar_pt, n_angles)
+            batch_prediction_pt = self.ensemble_models(batch_polar_pt)
 
         lumen_cloud, wall_cloud = self.pred2cartesian(
-            prediction_pt,
-            center_pt=center_pt,
+            batch_prediction_pt,
+            batch_center_pt=batch_center_pt,
             n_angles=n_angles,
             polar_ray=polar_ray,
             cartesian_ray=cartesian_ray,
         )
 
-        lumen_cont = self.interpolate_contour(lumen_cloud, n_angles)
-        wall_cont = self.interpolate_contour(wall_cloud, n_angles)
+        lumen_cont = self.interpolate_contour(lumen_cloud, n_angles, self.delta_theta)
+        wall_cont = self.interpolate_contour(wall_cloud, n_angles, self.delta_theta)
 
         return lumen_cont, wall_cont
 
     @staticmethod
     def pred2cartesian(
-        prediction_pt: torch.Tensor,
-        center_pt: torch.Tensor,
+        batch_prediction_pt: torch.Tensor,
+        batch_center_pt: torch.Tensor,
         n_angles: int,
         polar_ray: int,
         cartesian_ray: int,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Maps N polar predictions of the CNN to the cartesian space.
+        Maps N batch of polar predictions of the CNN to the cartesian space.
 
         Each polar prediction is of size (2, n_angles):
             - First column corresponds to be the distance between the left border of the image and the lumen.
             - Second column is the wall width.
         Corresponding angles correspond to an equal split of the trigonometrical circle in n_angles.
         """
-        n_pred, n_coords, n_angles_pred = prediction_pt.shape
+        batch_size, n_pred, n_coords, n_angles_pred = batch_prediction_pt.shape
         assert n_coords == 2
         assert n_angles_pred == n_angles
 
-        # First coordinate of prediction is the distance between the border and the lumen
-        lumen_dists = (
-            (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
-        )
-        # Second coordinate of prediction is the wall width
-        wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
-
-        angle_vals = torch.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(
-            1, -1
-        )
-        lumen_cont = torch.zeros((n_pred, n_angles, 3))
+        lumen_cont = torch.zeros((batch_size, n_pred, n_angles, 3))
         wall_cont = torch.zeros_like(lumen_cont)
-        lumen_cont[:, :, 1] = - lumen_dists * torch.sin(angle_vals) + center_pt[1]
-        lumen_cont[:, :, 2] = - lumen_dists * torch.cos(angle_vals) + center_pt[0]
-        wall_cont[:, :, 1] = - wall_dists * torch.sin(angle_vals) + center_pt[1]
-        wall_cont[:, :, 2] = - wall_dists * torch.cos(angle_vals) + center_pt[0]
+        for batch_idx, (prediction_pt, center_pt) in enumerate(zip(batch_prediction_pt, batch_center_pt)):
 
-        lumen_cont = lumen_cont.reshape((n_pred * n_angles, 3))
-        wall_cont = wall_cont.reshape((n_pred * n_angles, 3))
+            # First coordinate of prediction is the distance between the border and the lumen
+            lumen_dists = (
+                (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
+            )
+            # Second coordinate of prediction is the wall width
+            wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
+
+            angle_vals = torch.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(
+                1, -1
+            )
+            lumen_cont[batch_idx, :, :, 1] = - lumen_dists * torch.sin(angle_vals) + center_pt[1]
+            lumen_cont[batch_idx, :, :, 2] = - lumen_dists * torch.cos(angle_vals) + center_pt[0]
+            wall_cont[batch_idx, :, :, 1] = - wall_dists * torch.sin(angle_vals) + center_pt[1]
+            wall_cont[batch_idx, :, :, 2] = - wall_dists * torch.cos(angle_vals) + center_pt[0]
+
+        lumen_cont = lumen_cont.reshape((batch_size * n_pred * n_angles, 3))
+        wall_cont = wall_cont.reshape((batch_size * n_pred * n_angles, 3))
 
         # Report slice index
         lumen_cont[:, 0] = center_pt[2]
@@ -138,8 +141,19 @@ class ContourTransform:
 
         return lumen_cont, wall_cont
 
-    def ensemble_models(self, polar_pt: torch.Tensor, n_angles: int) -> torch.Tensor:
-        all_pred_pt = torch.zeros((len(self.model_paths_list), 2, n_angles))
+    def ensemble_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
+        """
+        Ensemble a batch of polar map corresponding to the same original center according
+        to different models.
+
+        Args:
+            batch_polar_pt: batch of polar maps.
+
+        Returns:
+            batch of prediction of size (batch_size, n_models, 2, n_angles)
+        """
+        batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
+        batch_prediction_pt = torch.zeros((batch_size, len(self.model_paths_list), 2, dn_angles // 2 + 1))
 
         for model_index, model_path in tqdm(
             enumerate(self.model_paths_list), desc="Predicting contours", leave=False
@@ -148,18 +162,18 @@ class ContourTransform:
             self.model.set_mode("eval")
 
             with torch.no_grad():
-                all_pred_pt[model_index] = (
-                    self.model(polar_pt.unsqueeze(0).to(self.device)).squeeze(0).cpu()
+                batch_prediction_pt[:, model_index] = (
+                    self.model(batch_polar_pt.to(self.device)).cpu()
                 )
 
-        return all_pred_pt
+        return batch_prediction_pt
 
-    def ensemble_dropout(self, polar_pt: torch.Tensor) -> torch.Tensor:
+    def ensemble_dropout(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
         Repeats the polar map on a model with dropout to get a point cloud prediction.
 
         Args:
-            polar_pt: tensor corresponding to one single 3D polar map.
+            batch_polar_pt: tensor corresponding to a batch of 3D polar maps.
 
         Returns:
             Values of the prediction
@@ -168,22 +182,25 @@ class ContourTransform:
                 - third dimension is the number of angles per prediction.
         """
         self.model.set_mode("dropout")
+        batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
+        batch_prediction_pt = torch.zeros((batch_size, self.n_repeats, 2, dn_angles // 2))
 
-        repeat_polar_pt = polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
-        with torch.no_grad():
-            all_pred_pt = self.model(repeat_polar_pt).cpu()
+        for repeat_idx in range(self.n_repeats):
+            with torch.no_grad():
+                batch_prediction_pt[:, repeat_idx] = self.model(batch_polar_pt).cpu()
 
-        return all_pred_pt
+        return batch_prediction_pt
 
     @staticmethod
-    def interpolate_contour(contour_pt: torch.Tensor, n_angles: int) -> torch.Tensor:
+    def interpolate_contour(contour_pt: torch.Tensor, n_angles: int, delta_theta: float) -> torch.Tensor:
         """
         Takes a set of points in one unique slice in cartesian coordinates and smooth it to extract one contour point per angle.
         A new center is estimated (barycenter of all points)
 
         Args:
-            contour_pt: noisy point cloud around the contour
-            n_angles: number of points to extract
+            contour_pt: noisy point cloud around the contour.
+            n_angles: number of points to extract.
+            delta_theta: theta range used to compute uncertainty.
 
         Returns:
             smooth contour of n_angles points in cartesian coordinates.
@@ -210,6 +227,25 @@ class ContourTransform:
         x_interp = np.stack((np.cos(angles), np.sin(angles)), axis=1)
         rays = model.predict(x_interp)[:, 0]
 
+        # Compute uncertainty of each new point
+        local_std_pt = torch.zeros(len(angles))
+        for idx_angle, angle in enumerate(angles):
+            min_angle = angle - delta_theta / 2
+            max_angle = angle + delta_theta / 2
+
+            # Find which points in original data should be used in the vicinity of the interpolated one
+            local_indices = (polar_pt[:, 2] < max_angle) & (polar_pt[:, 2] > min_angle)
+            if angle < polar_pt[:, 2].min():
+                local_indices = local_indices | ((polar_pt[:, 2] < max_angle + 2 * np.pi) & (polar_pt[:, 2] > min_angle + 2 * np.pi))
+            elif angle > polar_pt[:, 2].max():
+                local_indices = local_indices | ((polar_pt[:, 2] < max_angle - 2 * np.pi) & (polar_pt[:, 2] > min_angle - 2 * np.pi))
+
+            x_local = x_train[local_indices]
+            y_local = polar_pt[:, 1][local_indices].numpy()
+            estimated_local = model.predict(x_local)[:, 0]
+            local_std = np.sum((y_local - estimated_local)**2) / len(y_local)
+            local_std_pt[idx_angle] = local_std
+
         interp_polar_pt = torch.zeros(n_angles, 3)
         slice_idx = contour_pt[:, 0].unique().item()
         interp_polar_pt[:, 0] = slice_idx
@@ -217,7 +253,7 @@ class ContourTransform:
         interp_polar_pt[:, 2] = torch.from_numpy(angles)
 
         output_pt = polar2cart(interp_polar_pt, center_pt)
-
+        output_pt = torch.hstack((output_pt, local_std_pt.reshape(-1, 1)))
         return output_pt
 
 

@@ -4,8 +4,8 @@ from monai.utils.enums import TraceKeys, PytorchPadMode
 from monai.data.meta_tensor import MetaTensor, get_track_meta
 import torch
 from copy import deepcopy
-
 from torch import Tensor
+from typing import Tuple
 
 
 class ExtractLeftAndRightd(monai.transforms.InvertibleTransform):
@@ -226,3 +226,51 @@ def polar2cart(polar_pt: torch.Tensor, center_pt: torch.Tensor) -> torch.Tensor:
     cart_pt[:, 2] = polar_pt[:, 1] * torch.sin(polar_pt[:, 2]) + center_pt[2]
 
     return cart_pt
+
+
+
+def unravel_indices(
+    indices: torch.LongTensor,
+    shape: Tuple[int, ...],
+) -> torch.LongTensor:
+    r"""Converts flat indices into unraveled coordinates in a target shape.
+    Source: https://github.com/pytorch/pytorch/issues/35674
+
+    Args:
+        indices: A tensor of (flat) indices, (*, N).
+        shape: The targeted shape, (D,).
+
+    Returns:
+        The unraveled coordinates, (*, N, D).
+    """
+
+    coord = []
+
+    for dim in reversed(shape):
+        coord.append(indices % dim)
+        indices = torch.div(indices, dim, rounding_mode="floor")
+
+    coord = torch.stack(coord[::-1], dim=-1).long()
+
+    return coord
+
+
+def unravel_index(
+    indices: torch.LongTensor,
+    shape: Tuple[int, ...],
+) -> Tuple[torch.LongTensor, ...]:
+    r"""Converts flat indices into unraveled coordinates in a target shape.
+    Source: https://github.com/pytorch/pytorch/issues/35674
+
+    This is a `torch` implementation of `numpy.unravel_index`.
+
+    Args:
+        indices: A tensor of (flat) indices, (N,).
+        shape: The targeted shape, (D,).
+
+    Returns:
+        A tuple of unraveled coordinate tensors of shape (D,).
+    """
+
+    coord = unravel_indices(indices, shape)
+    return tuple(coord)

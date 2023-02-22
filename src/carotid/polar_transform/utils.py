@@ -16,6 +16,8 @@ class PolarTransform:
         self.polar_ray = parameters["polar_ray"]
         self.cartesian_ray = parameters["cartesian_ray"]
         self.length = parameters["length"]
+        self.n_centers = parameters["n_centers"]
+        self.label_list = ["internal", "external"]
 
         # construct coordinates of rays
         theta = torch.linspace(0, 2 * torch.pi, self.n_angles + 1)[: self.n_angles]
@@ -41,13 +43,14 @@ class PolarTransform:
                 center_pt = torch.from_numpy(
                     centerline_df.loc[idx, ["x", "y", "z"]].values.astype(float)
                 )
-                polar_pt = self._transform(image_pt, center_pt)
+                batch_center_pt = self._sample_centers(center_pt)
+                batch_polar_pt = self._transform(image_pt, batch_center_pt)
                 sample[f"{side}_polar"].append(
                     {
                         "label": label_name,
                         "slice_idx": int(center_pt[2]),
-                        "polar_pt": polar_pt.unsqueeze(0).float(),
-                        "center_pt": center_pt,
+                        "polar_pt": batch_polar_pt.float(),
+                        "center_pt": batch_center_pt,
                     }
                 )
             sample[f"{side}_polar_meta_dict"] = {
@@ -61,19 +64,47 @@ class PolarTransform:
 
         return sample
 
-    def _transform(self, image_pt: torch.Tensor, center_pt: torch.Tensor):
-        coords = self.coords + center_pt
-        polar_transform = self.fast_trilinear_interpolation(
-            image_pt, coords[:, 0], coords[:, 1], coords[:, 2]
-        ).reshape(self.length, self.polar_ray, self.n_angles)
-        return torch.cat(
-            [
-                polar_transform[:, :, self.n_angles // 2 + 1 :],
-                polar_transform,
-                polar_transform[:, :, : self.n_angles // 2],
-            ],
-            dim=-1,
-        ).transpose(1, 2)
+    @staticmethod
+    def _sample_centers(center_pt: torch.Tensor) -> torch.Tensor:
+        """
+        Samples a list of centers around the original one.
+
+        Args:
+            center_pt: Position of the original center.
+
+        Returns:
+            A tensor corresponding to a batch of centers of size.
+        """
+        batch_center_pt = center_pt.repeat(9, 1)
+        batch_idx = 0
+
+        for x_offset in [-1, 0, 1]:
+            for y_offset in [-1, 0, 1]:
+                batch_center_pt[batch_idx, 0] += x_offset
+                batch_center_pt[batch_idx, 1] += y_offset
+                batch_idx += 1
+
+        return batch_center_pt
+
+    def _transform(self, image_pt: torch.Tensor, batch_center_pt: torch.Tensor) -> torch.Tensor:
+
+        batch_polar_pt = torch.zeros((len(batch_center_pt), 1, self.length, 2 * self.n_angles - 1, self.polar_ray))
+        for center_idx, center_pt in enumerate(batch_center_pt):
+            coords = self.coords + center_pt
+            polar_pt = self.fast_trilinear_interpolation(
+                image_pt, coords[:, 0], coords[:, 1], coords[:, 2]
+            ).reshape(self.length, self.polar_ray, self.n_angles)
+            polar_pt = torch.cat(
+                [
+                    polar_pt[:, :, self.n_angles // 2 + 1 :],
+                    polar_pt,
+                    polar_pt[:, :, : self.n_angles // 2],
+                ],
+                dim=-1,
+            ).transpose(1, 2)
+            batch_polar_pt[center_idx, 0] = polar_pt
+
+        return batch_polar_pt
 
     # TODO: implement more efficient cylindrical interpolation
     @staticmethod
