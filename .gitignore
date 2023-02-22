@@ -3,5 +3,13 @@
 src/carotid.egg-info/*
 *.DS_Store
 models/*_transform/*
+
+# Ignore test data
 tests/tmp
+tests/raw_dir
+tests/models
+tests/*/reference
+tests/*/*.toml
+
+# Ignore build
 CarotidSegmentation*.tar.gz
