@@ -2,7 +2,7 @@
 ***/__pycache__/*
 src/carotid.egg-info/*
 *.DS_Store
-models/*_transform/*
+models/*_transform*/*
 
 # Ignore test data
 tests/tmp
