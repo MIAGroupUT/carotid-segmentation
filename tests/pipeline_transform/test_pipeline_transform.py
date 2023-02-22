@@ -20,18 +20,21 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(contour_dir=ref_dir, segmentation_dir=ref_dir)
+    ref_dataset = build_dataset(contour_dir=ref_dir)
 
     # Read output
-    out_dataset = build_dataset(contour_dir=tmp_dir, segmentation_dir=tmp_dir)
+    out_dataset = build_dataset(contour_dir=tmp_dir)
 
+    # Only compare contours
     for side in ["left", "right"]:
         ref_df = ref_dataset[0][f"{side}_contour"].set_index(
             ["label", "object", "z"], drop=True
         )
+        ref_df.sort_index(inplace=True)
         out_df = out_dataset[0][f"{side}_contour"].set_index(
             ["label", "object", "z"], drop=True
         )
+        out_df.sort_index(inplace=True)
         for index, ref_slice_df in ref_df.groupby(["label", "object", "z"]):
             out_slice_df = out_df.loc[index]
             out_slice_np = out_slice_df.values

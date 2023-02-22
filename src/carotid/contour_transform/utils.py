@@ -183,7 +183,7 @@ class ContourTransform:
         """
         self.model.set_mode("dropout")
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
-        batch_prediction_pt = torch.zeros((batch_size, self.n_repeats, 2, dn_angles // 2))
+        batch_prediction_pt = torch.zeros((batch_size, self.n_repeats, 2, dn_angles // 2 + 1))
 
         for repeat_idx in range(self.n_repeats):
             with torch.no_grad():

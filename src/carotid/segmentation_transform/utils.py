@@ -50,12 +50,13 @@ class SegmentationTransform:
                             slice_cloud = label_cloud[label_cloud[:, 2] == slice_idx][
                                 :, [0, 1]
                             ]
-                            poly = Polygon(slice_cloud)
-                            hull = poly.convex_hull
-                            slice_img = rasterize(
-                                [hull], out_shape=slice_shape, fill=0, default_value=1
-                            ).T
-                            segmentation_np[object_idx, :, :, slice_idx] += slice_img
+                            if len(slice_cloud) > 0:
+                                poly = Polygon(slice_cloud)
+                                hull = poly.convex_hull
+                                slice_img = rasterize(
+                                    [hull], out_shape=slice_shape, fill=0, default_value=1
+                                ).T
+                                segmentation_np[object_idx, :, :, slice_idx] += slice_img
                 segmentation_np = np.clip(segmentation_np, a_min=0, a_max=1)
             sample[f"{side}_segmentation"] = MetaTensor(segmentation_np, affine=affine)
 

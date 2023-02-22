@@ -8,7 +8,7 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "heatmap_transform", "reference")
+    input_dir = path.join(test_dir, "centerline_transform", "input")
     ref_dir = path.join(test_dir, "centerline_transform", "reference")
 
     apply_transform(

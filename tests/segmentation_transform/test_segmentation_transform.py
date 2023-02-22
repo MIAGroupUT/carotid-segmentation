@@ -9,7 +9,7 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "contour_transform", "reference")
+    input_dir = path.join(test_dir, "segmentation_transform", "input")
     ref_dir = path.join(test_dir, "segmentation_transform", "reference")
 
     apply_transform(

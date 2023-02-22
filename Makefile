@@ -9,6 +9,7 @@ export:
 
 .PHONY: test
 test:
+	@make get-reference
 	@sh build/test.sh
 
 .PHONY: build-grand-challenge
@@ -22,6 +23,7 @@ export-grand-challenge:
 
 .PHONY: test-grand-challenge
 test-grand-challenge:
+	@make get-reference
 	@sh build/test.sh grand-challenge
 
 .PHONY: get-models

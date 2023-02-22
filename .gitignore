@@ -9,6 +9,7 @@ tests/tmp
 tests/raw_dir
 tests/models
 tests/*/reference
+tests/*/input
 tests/*/*.toml
 
 # Ignore build
