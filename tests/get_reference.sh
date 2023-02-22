@@ -4,7 +4,7 @@ fi
 
 if [ ! -d "tests/raw_dir" ]; then
     curl https://surfdrive.surf.nl/files/index.php/s/e13O5s7PPTsJNli/download -o test.tar -L
-    tar -xvf test.tar
+    unzip test.tar
     rm test.tar
 
     # Copy raw data
