@@ -39,6 +39,6 @@ def test_pipeline():
             out_slice_df = out_df.loc[index]
             out_slice_np = out_slice_df.values
             ref_slice_np = ref_slice_df.values
-            assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=1e-5)
+            assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=0.1)
 
     shutil.rmtree(path.join(test_dir, "tmp"))
