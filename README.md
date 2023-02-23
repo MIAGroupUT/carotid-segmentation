@@ -1,5 +1,4 @@
-# carotid-segmentation
-
+# Carotid segmentation
 
 
 ## Getting started

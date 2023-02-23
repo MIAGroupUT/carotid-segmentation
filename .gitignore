@@ -11,6 +11,8 @@ tests/models
 tests/*/reference
 tests/*/input
 tests/*/*.toml
+.coverage*
+reports/*
 
 # Ignore build
 CarotidSegmentation*.tar.gz
