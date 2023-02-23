@@ -43,7 +43,7 @@ def test_pipeline():
     shutil.rmtree(tmp_dir)
 
 
-def atest_pipeline_dropout():
+def test_pipeline_dropout():
     tmp_dir = path.join(test_dir, "tmp")
     input_dir = path.join(test_dir, "polar_transform", "reference")
     model_dir = path.join(test_dir, "models", "contour_transform_dropout")

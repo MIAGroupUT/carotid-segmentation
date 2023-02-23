@@ -2,7 +2,7 @@ from os import path
 import torch
 from copy import deepcopy
 from carotid.utils import build_dataset
-from carotid.utils.transforms import ExtractLeftAndRightd, polar2cart, cart2polar
+from carotid.utils.transforms import ExtractLeftAndRightd, polar2cart, cart2polar, Printd
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
@@ -60,7 +60,17 @@ def test_cart2polar():
         center_pt = torch.mean(cart_pt, dim=0)
         polar_pt = cart2polar(cart_pt, center_pt)
         inverse_pt = polar2cart(polar_pt, center_pt)
-        print(cart_pt - inverse_pt)
-        print(cart_pt)
-        print(inverse_pt)
+
         assert torch.allclose(cart_pt, inverse_pt)
+
+
+def test_print():
+    raw_dir = path.join(test_dir, "raw_dir")
+    dataset = build_dataset(raw_dir=raw_dir)
+    transform = Printd(keys=["image"], message="test")
+
+    for sample in dataset:
+        transformed_sample = transform(deepcopy(sample))
+        reconstructed_sample = transform.inverse(deepcopy(transformed_sample))
+        assert torch.equal(sample["image"], transformed_sample["image"])
+        assert torch.equal(sample["image"], reconstructed_sample["image"])
