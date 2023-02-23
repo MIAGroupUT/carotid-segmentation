@@ -21,4 +21,5 @@ src-test:
     - changes:  # Do not test if the changes are only in docs or build
         - docs/*
         - build/*
+        - README.md
       when: never
