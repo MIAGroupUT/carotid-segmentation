@@ -24,7 +24,7 @@ def cli(
     participant,
 ) -> None:
     """
-    Extract centerlines from heatmaps with the Dijkstra algorithm.
+    Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
 
     OUTPUT_DIR is the path to the directory containing the results.
     """

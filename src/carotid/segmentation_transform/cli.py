@@ -24,7 +24,7 @@ def cli(
     participant,
 ) -> None:
     """
-    Extract polar images from raw images based on the centerlines found with centerline_transform.
+    Extract a voxel mask from the point clouds of the contours computed with contour_transform.
 
     OUTPUT_DIR is the path to the directory containing the results.
     """

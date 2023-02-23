@@ -28,7 +28,7 @@ def cli(
     device,
 ) -> None:
     """
-    Extract contours from raw images, polar_images and centerlines found with previous steps.
+    Extract contours from raw images and corresponding polar images computed by polar_transform.
 
     OUTPUT_DIR is the path to the directory containing the results.
 

@@ -24,7 +24,7 @@ def cli(
     device,
 ) -> None:
     """
-    Extract centerlines from heatmaps with the Dijkstra algorithm.
+    Execute the full pipeline from heatmap_transform to segmentation_transform.
 
     RAW_DIR is the path to raw data folder.
 

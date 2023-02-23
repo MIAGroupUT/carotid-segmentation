@@ -5,6 +5,7 @@ from .polar_transform.cli import cli as polar_cli
 from .contour_transform.cli import cli as contour_cli
 from .segmentation_transform.cli import cli as segmentation_cli
 from .pipeline_transform.cli import cli as pipeline_cli
+from .utils.cli_param.decorators import OrderedGroup
 
 
 CONTEXT_SETTINGS = dict(
@@ -15,7 +16,7 @@ CONTEXT_SETTINGS = dict(
 )
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True)
+@click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True, cls=OrderedGroup)
 @click.version_option()
 def cli():
     """carotid-segmentation command line."""
