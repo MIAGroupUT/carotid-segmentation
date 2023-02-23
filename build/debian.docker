@@ -27,8 +27,9 @@ ENV PATH="/home/algorithm/.local/bin:${PATH}"
 RUN python -m pip install --user -U pip
 RUN python -m pip install numpy==1.22.4
 
-COPY --chown=algorithm:algorithm build/docker-requirements.txt /opt/algorithm/
-RUN python -m pip install --user -r docker-requirements.txt
+# Pre-install requirements to cache environment
+COPY --chown=algorithm:algorithm src/requirements.txt /opt/algorithm/
+RUN python -m pip install --user -r requirements.txt
 
 COPY --chown=algorithm:algorithm ./src /opt/algorithm/src/
 RUN python -m pip install --user ./src

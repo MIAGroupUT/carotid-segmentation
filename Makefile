@@ -30,7 +30,8 @@ test-grand-challenge:
 get-models:
 	@sh models/fetch.sh
 
-.PHONY: get-reference
-get-reference:
+.PHONY: prepare-test
+prepare-test:
 	@make get-models
 	@sh tests/get_reference.sh
+	@pip install -r tests/requirements.txt
