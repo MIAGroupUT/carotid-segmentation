@@ -1,9 +1,9 @@
 stages:
-  - functional-test
+  - src-test
 
-functional-test:
+src-test:
   image: python:3.9.7
-  stage: functional-test
+  stage: src-test
   before_script:
     - pip install -e ./src
     - make prepare-test
@@ -17,3 +17,8 @@ functional-test:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+  rules:
+    - changes:  # Do not test if the changes are only in docs or build
+        - docs/*
+        - build/*
+      when: never
