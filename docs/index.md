@@ -11,7 +11,7 @@ on both sides of the neck from 3D black-blood MRI.
 </figure>
 
 The method was originally developed in the team of [Mathematics of Imaging & AI](https://www.utwente.nl/en/eemcs/sacs/people/sort-chair/?category=mia)
-presented in SPIE Medical Imaging ((Alblas et al., 2022))[https://ris.utwente.nl/ws/portalfiles/portal/283040086/120320Y_alblas_brune_wolterink.pdf]
+presented in SPIE Medical Imaging [(Alblas et al., 2022)](https://ris.utwente.nl/ws/portalfiles/portal/283040086/120320Y_alblas_brune_wolterink.pdf)
 
 It mainly consists of two steps:
 1. A centerline is estimated for the external and internal carotids on both sides,
@@ -20,12 +20,6 @@ It mainly consists of two steps:
 ![Illustration of the method](images/global_illustration.png)
 
 ## Installation
-
-Depending on the way you want to execute XXX, you may have to install Python or Docker.
-You don't need to install anything to use the [Grand Challenge platform](#use-grand-challenge-platform).
-
-
-### Execute with Python
 
 You will need a Python environment to run XXX. We advise you to use Miniconda. 
 Miniconda allows you to install, run, and update Python packages and their dependencies. 
@@ -51,12 +45,60 @@ conda activate carotid-segmentation
 pip install XXX
 ```
 
-### Run a docker
+Check that the package is correctly installed by typing the following command in your terminal:
+```console
+carotid --help
+```
+You should obtain the following prompt:
+```console
+Usage: carotid [OPTIONS] COMMAND [ARGS]...
 
-You can also run XXX using its docker. To do so please make sure that [Docker](https://docs.docker.com/engine/install/)
-is correctly installed on your machine.
+  carotid-segmentation command line.
+
+Options:
+  --version   Show the version and exit.
+  -h, --help  Show this message and exit.
+
+Commands:
+  heatmap_transform       Extract heatmaps from raw images using pre-trained U-Nets.
+  centerline_transform    Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
+  polar_transform         Extract polar images from raw images based on the centerlines found with centerline_transform.
+  contour_transform       Extract contours from raw images and corresponding polar images computed by polar_transform.
+  segmentation_transform  Extract a voxel mask from the point clouds of the contours computed with contour_transform.
+  pipeline_transform      Execute the full pipeline from heatmap_transform to segmentation_transform.
+```
+
 
 ## Application to your data set
+
+### Getting the models
+
+- On Mac / Linux:
+
+You can use the following command to fetch all the models:
+```
+make get-models
+```
+
+- On Windows:
+
+Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/DanUvHpx6BXM7dY/download)
+Unzip the tar file and copy the different folders in the `models` folder at the root of the repo.
+
+The final architecture of your repo should be the following:
+```
+carotid-segmentation
+├── models
+│       ├── contour_transform
+│       ├── contour_transform_dropout
+│       └── heatmap_transform
+│               ├── <filename1>.pt
+│               ├── ....
+│               └── <filenameN>.pt
+...
+```
+
+### Data structure
 
 XXX was trained to segment carotids from 3D black-blood MRI volumes. 
 The raw data can be provided as DICOM, MHD or MHA files.
@@ -90,18 +132,63 @@ raw_dir
     Please make sure that your tensor and affine allows to correctly orientate your image.
     The algorithm also assumed that your image has an isotropic resolution in an axial slice.
 
+!!! note
+    Participants will be associated with a `participant_id`. For DICOM files it will correspond
+    to the names of the directories, and for the MHD/MHA files to the filename without the extension.
+
 ### Command line
 
-### API
-
-### Run docker
-
-### Use Grand Challenge platform
+This package is meant to be run with a command line, but an API is also available for each transform.
+To run any of the transform use the following command in your terminal:
+```
+carotid <transform_name> [OPTIONS] [ARGUMENTS]
+```
+More information about each command is available in the documentation. 
 
 ## Test
 
+The package is tested with the CI of Gitlab. You can also run yourself the tests with `pytest`.
+First install the requirements for the tests in your conda environment:
+```
+conda activate carotid-segmentation
+cd <repo-path>
+pip install -r tests/requirements.txt
+```
 
+Then get the data necessary to run the tests.
+- On Mac / Linux:
 
-### Source code
+```
+make prepare-test
+```
+- On Windows:
 
-### Build docker
+Download test data using this [link](https://surfdrive.surf.nl/files/index.php/s/e13O5s7PPTsJNli/download).
+Unzip the downloaded tar file and move the directories in the `tests` folder.
+Create a `models` directory in the `tests` folder and copy one of each of the model contained in your root
+`models` folder (you can also put all the models, but the tests take a longer time).
+
+The final architecture should be the following:
+```console
+tests
+├── centerline_transform
+│       ├── input
+│       ├── reference
+│       ├── test_args.toml
+│       └── test_centerline_transform.py
+...
+├── models
+│       ├── contour_transform
+│       ├── contour_transform_dropout
+│       └── heatmap_transform
+...
+├── raw_dir
+│       ├── 0_P125_U.mha
+│       └── parameters.json
+...
+```
+
+You can now run the tests with pytest:
+```
+pytest tests/
+```

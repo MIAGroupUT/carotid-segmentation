@@ -1,6 +1,6 @@
 from monai.transforms import Compose
 from monai.data import Dataset, CacheDataset
-from typing import List, Dict, Set
+from typing import List, Dict, Set, Any
 
 from .serializer import (
     HeatmapSerializer,
@@ -94,3 +94,14 @@ def build_dataset(
         transform_list.append(serializer.monai_reader)
 
     return CacheDataset(sample_list, transform=Compose(transform_list))
+
+
+def check_equal_parameters(param1: Dict[str, Dict[str, Any]], param2: Dict[str, Dict[str, Any]]):
+    assert param1.keys() == param2.keys()
+    for transform_name in param1.keys():
+        transform1 = param1[transform_name]
+        transform2 = param1[transform_name]
+        assert transform1.keys() == transform2.keys()
+        for param_name in transform1.keys():
+            if "dir" not in param_name:
+                assert transform1[param_name] == transform2[param_name]

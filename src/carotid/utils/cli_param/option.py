@@ -23,3 +23,9 @@ device = click.option(
     default=None,
     help="Device used for deep learning computations.",
 )
+force = click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    help="Force to run the transform even if it was already performed in output_dir."
+)

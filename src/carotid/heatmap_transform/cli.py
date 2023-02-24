@@ -13,6 +13,7 @@ from carotid.utils import cli_param
 @cli_param.option.config_path
 @cli_param.option.participant
 @cli_param.option.device
+@cli_param.option.force
 def cli(
     raw_dir,
     heatmap_model_dir,
@@ -20,6 +21,7 @@ def cli(
     config_path,
     participant,
     device,
+    force,
 ) -> None:
     """
     Extract heatmaps from raw images using pre-trained U-Nets.
@@ -39,6 +41,7 @@ def cli(
         config_path=config_path,
         participant_list=participant,
         device=device,
+        force=force,
     )
 
 

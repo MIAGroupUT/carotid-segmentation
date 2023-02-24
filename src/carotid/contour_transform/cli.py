@@ -19,6 +19,7 @@ from carotid.utils import cli_param
 @cli_param.option.config_path
 @cli_param.option.participant
 @cli_param.option.device
+@cli_param.option.force
 def cli(
     output_dir,
     contour_model_dir,
@@ -26,6 +27,7 @@ def cli(
     config_path,
     participant,
     device,
+    force,
 ) -> None:
     """
     Extract contours from raw images and corresponding polar images computed by polar_transform.
@@ -43,6 +45,7 @@ def cli(
         config_path=config_path,
         participant_list=participant,
         device=device,
+        force=force,
     )
 
 

@@ -1,6 +1,6 @@
 from os import path
 import torch
-from carotid.utils import build_dataset
+from carotid.utils import build_dataset, check_equal_parameters, read_json
 from carotid.heatmap_transform.pipeline import apply_transform
 
 import shutil
@@ -17,6 +17,7 @@ def test_pipeline():
         model_dir=path.join(test_dir, "models", "heatmap_transform"),
         config_path=path.join(test_dir, "heatmap_transform", "test_args.toml"),
         output_dir=tmp_dir,
+        force=True,
     )
 
     # Read reference
@@ -24,6 +25,11 @@ def test_pipeline():
 
     # Read output
     out_dataset = build_dataset(heatmap_dir=tmp_dir)
+
+    # Compare parameters
+    ref_params = read_json(path.join(ref_dir, "parameters.json"))
+    out_params = read_json(path.join(tmp_dir, "parameters.json"))
+    check_equal_parameters(ref_params, out_params)
 
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]

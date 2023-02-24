@@ -52,8 +52,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Pipeline:
-      - Centerline heatmap: Pipeline/Heatmap.md
-      - Centerline trajectory: Pipeline/Centerline.md
-      - Polar transform: Pipeline/Polar.md
-      - Lumen & Wall contours: Pipeline/Contour.md
-      - Lumen & Wall segmentation: Pipeline/Segmentation.md
+      - heatmap_transform: Pipeline/Heatmap.md
+      - centerline_transform: Pipeline/Centerline.md
+      - polar_transform: Pipeline/Polar.md
+      - contour_transform: Pipeline/Contour.md
+      - segmentation_transform: Pipeline/Segmentation.md
+      - pipeline_transform: Pipeline/Pipeline.md
+  - Config file: Configuration.md

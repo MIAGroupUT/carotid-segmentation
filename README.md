@@ -28,33 +28,9 @@ cd carotid-segmentation
 pip install [-e] ./src
 ```
 
-Check that the package is correctly installed by typing the following command in your terminal:
-```console
-carotid --help
-```
-You should obtain the following prompt:
-```console
-Usage: carotid [OPTIONS] COMMAND [ARGS]...
-
-  carotid-segmentation command line.
-
-Options:
-  --version   Show the version and exit.
-  -h, --help  Show this message and exit.
-
-Commands:
-  heatmap_transform       Extract heatmaps from raw images using pre-trained U-Nets.
-  centerline_transform    Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
-  polar_transform         Extract polar images from raw images based on the centerlines found with centerline_transform.
-  contour_transform       Extract contours from raw images and corresponding polar images computed by polar_transform.
-  segmentation_transform  Extract a voxel mask from the point clouds of the contours computed with contour_transform.
-  pipeline_transform      Execute the full pipeline from heatmap_transform to segmentation_transform.
-```
-
-
 ## Usage
 
-This package relies on pre-trained deep learning models that are currently stored on Surfdrive.
+This package relies on pre-trained deep learning models that are currently stored on SurfDrive.
 
 ### Getting the models
 

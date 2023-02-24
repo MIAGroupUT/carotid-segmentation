@@ -1,6 +1,6 @@
 from os import path
 import numpy as np
-from carotid.utils import build_dataset
+from carotid.utils import build_dataset, read_json, check_equal_parameters
 from carotid.pipeline_transform.pipeline import apply_transform
 
 import shutil
@@ -24,6 +24,11 @@ def test_pipeline():
 
     # Read output
     out_dataset = build_dataset(contour_dir=tmp_dir)
+
+    # Compare parameters
+    ref_params = read_json(path.join(ref_dir, "parameters.json"))
+    out_params = read_json(path.join(tmp_dir, "parameters.json"))
+    check_equal_parameters(ref_params, out_params)
 
     # Only compare contours
     for side in ["left", "right"]:

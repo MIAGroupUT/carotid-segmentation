@@ -17,11 +17,13 @@ from carotid.utils import cli_param
 )
 @cli_param.option.config_path
 @cli_param.option.participant
+@cli_param.option.force
 def cli(
     output_dir,
     centerline_dir,
     config_path,
     participant,
+    force,
 ) -> None:
     """
     Extract polar images from raw images based on the centerlines found with centerline_transform.
@@ -35,6 +37,7 @@ def cli(
         centerline_dir=centerline_dir,
         config_path=config_path,
         participant_list=participant,
+        force=force,
     )
 
 

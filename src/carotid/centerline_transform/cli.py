@@ -17,11 +17,13 @@ from carotid.utils import cli_param
 )
 @cli_param.option.config_path
 @cli_param.option.participant
+@cli_param.option.force
 def cli(
     output_dir,
     heatmap_dir,
     config_path,
     participant,
+    force,
 ) -> None:
     """
     Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
@@ -35,6 +37,7 @@ def cli(
         heatmap_dir=heatmap_dir,
         config_path=config_path,
         participant_list=participant,
+        force=force,
     )
 
 

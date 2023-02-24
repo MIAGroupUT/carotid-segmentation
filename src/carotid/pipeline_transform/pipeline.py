@@ -1,3 +1,5 @@
+import shutil
+
 from carotid.heatmap_transform.utils import UNetPredictor
 from carotid.centerline_transform.utils import OnePassExtractor
 from carotid.polar_transform.utils import PolarTransform
@@ -9,12 +11,12 @@ from carotid.utils import (
     read_and_fill_default_toml,
     build_dataset,
     check_device,
+    check_transform_presence,
     HeatmapSerializer,
     CenterlineSerializer,
     ContourSerializer,
     SegmentationSerializer,
 )
-import toml
 from typing import List
 
 pipeline_dir = path.dirname(path.realpath(__file__))
@@ -35,42 +37,37 @@ def apply_transform(
     config_path: str = None,
     participant_list: List[str] = None,
     device: str = None,
+    force: bool = False,
 ):
     # Read parameters
     device = check_device(device=device)
 
-    if config_path is None:
-        config_dir = dict()
-    else:
-        config_dir = toml.load(config_path)
+    pipeline_parameters = read_and_fill_default_toml(config_path)
 
-    for transform in list_transforms:
-        if transform not in config_dir:
-            config_dir[transform] = dict()
-        config_dir[transform] = read_and_fill_default_toml(
-            config_dir[transform],
-            path.join(pipeline_dir, "..", transform, "default_args.toml"),
-        )
-        config_dir[transform]["raw_dir"] = raw_dir
-        config_dir[transform]["device"] = device.type
-        config_dir[transform]["dir"] = output_dir
-
-    config_dir["heatmap_transform"]["model_dir"] = heatmap_model_dir
-    config_dir["contour_transform"]["model_dir"] = contour_model_dir
+    pipeline_parameters["heatmap_transform"]["model_dir"] = heatmap_model_dir
+    pipeline_parameters["heatmap_transform"]["device"] = device.type
+    pipeline_parameters["contour_transform"]["model_dir"] = contour_model_dir
+    pipeline_parameters["contour_transform"]["device"] = device.type
 
     # Write parameters
+    if force:
+        shutil.rmtree(output_dir)
+
     makedirs(output_dir, exist_ok=True)
-    write_json(config_dir, path.join(output_dir, "pipeline_parameters.json"))
+    for transform_name in list_transforms:
+        check_transform_presence(output_dir, transform_name, force=force)
+
+    write_json(pipeline_parameters, path.join(output_dir, "parameters.json"))
 
     # Transforms
-    unet_predictor = UNetPredictor(parameters=config_dir["heatmap_transform"])
+    unet_predictor = UNetPredictor(parameters=pipeline_parameters["heatmap_transform"])
     centerline_extractor = OnePassExtractor(
-        parameters=config_dir["centerline_transform"]
+        parameters=pipeline_parameters["centerline_transform"]
     )
-    polar_transform = PolarTransform(parameters=config_dir["polar_transform"])
-    contour_transform = ContourTransform(parameters=config_dir["contour_transform"])
+    polar_transform = PolarTransform(parameters=pipeline_parameters["polar_transform"])
+    contour_transform = ContourTransform(parameters=pipeline_parameters["contour_transform"])
     segmentation_transform = SegmentationTransform(
-        parameters=config_dir["segmentation_transform"]
+        parameters=pipeline_parameters["segmentation_transform"]
     )
 
     dataset = build_dataset(

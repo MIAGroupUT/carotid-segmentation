@@ -4,13 +4,14 @@ from carotid.utils import (
     read_json,
     write_json,
     read_and_fill_default_toml,
+    check_transform_presence,
     build_dataset,
     check_device,
     ContourSerializer,
 )
 from typing import List
 
-pipeline_dir = path.dirname(path.realpath(__file__))
+transform_name = path.basename(path.dirname(path.realpath(__file__)))
 
 
 def apply_transform(
@@ -20,34 +21,33 @@ def apply_transform(
     config_path: str = None,
     participant_list: List[str] = None,
     device: str = None,
+    force: bool = False,
 ):
     # Read parameters
     device = check_device(device=device)
     if polar_dir is None:
         polar_dir = output_dir
 
-    polar_parameters = read_json(path.join(polar_dir, "polar_parameters.json"))
-    raw_dir = polar_parameters["raw_dir"]
+    pipeline_parameters = read_json(path.join(polar_dir, "parameters.json"))
 
     # Read global default args
-    contour_parameters = read_and_fill_default_toml(
-        config_path, path.join(pipeline_dir, "default_args.toml")
-    )
+    contour_parameters = read_and_fill_default_toml(config_path)[transform_name]
 
     # Write parameters
     makedirs(output_dir, exist_ok=True)
-    contour_parameters["raw_dir"] = raw_dir
+    check_transform_presence(output_dir, transform_name, force=force)
+
     contour_parameters["polar_dir"] = polar_dir
     contour_parameters["model_dir"] = model_dir
     contour_parameters["device"] = device.type
-    write_json(contour_parameters, path.join(output_dir, "contour_parameters.json"))
+    pipeline_parameters[transform_name] = contour_parameters
+    write_json(pipeline_parameters, path.join(output_dir, "parameters.json"))
 
     contour_transform = ContourTransform(
         contour_parameters,
     )
 
     dataset = build_dataset(
-        raw_dir=raw_dir,
         polar_dir=polar_dir,
         participant_list=participant_list,
     )

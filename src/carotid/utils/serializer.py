@@ -15,7 +15,9 @@ from monai.transforms import (
 from monai.config import KeysCollection
 from monai.data import ITKWriter
 from typing import Dict, Any, Union, Optional, List, Set
-from .errors import MissingProcessedObjException, MissingRawArgException
+from .errors import MissingProcessedObjException, MissingRawArgException, TransformAlreadyRun
+
+utils_dir = path.dirname(path.realpath(__file__))
 
 
 def write_json(parameters: Dict[str, Any], json_path: str) -> None:
@@ -25,7 +27,7 @@ def write_json(parameters: Dict[str, Any], json_path: str) -> None:
         f.write(json_data)
 
 
-def read_json(json_path: str) -> Dict[str, Any]:
+def read_json(json_path: str) -> Dict[str, Dict[str, Any]]:
     """Reads JSON file at json_path and returns corresponding dictionary."""
     with open(json_path, "r") as f:
         parameters = json.load(f)
@@ -34,9 +36,19 @@ def read_json(json_path: str) -> Dict[str, Any]:
 
 
 def read_and_fill_default_toml(
-    config_path: Optional[Union[str, Dict[str, Any]]], default_path: str
+    config_path: Optional[Union[str, Dict[str, Any]]]
 ) -> Dict[str, Any]:
-    default_parameters = toml.load(default_path)
+    """
+    Fill missing options in the config dict given by config_path with default values.
+
+    Args:
+        config_path: Path to a TOML file or dictionary containing the parameters of the pipeline.
+
+    Returns:
+        Dictionary of the parameters to apply to each transform
+    """
+
+    default_parameters = toml.load(path.join(utils_dir, "default_args.toml"))
 
     if config_path is None:
         return default_parameters
@@ -50,11 +62,21 @@ def read_and_fill_default_toml(
             f"Current value is {config_path}."
         )
 
-    for param, value in default_parameters.items():
-        if param not in config_parameters:
-            config_parameters[param] = value
+    for transform_name, transform_dict in default_parameters.items():
+        if transform_name not in config_parameters.keys():
+            config_parameters[transform_name] = dict()
+        for param, value in transform_dict.items():
+            if param not in config_parameters[transform_name]:
+                config_parameters[transform_name][param] = value
 
     return config_parameters
+
+
+def check_transform_presence(output_dir: str, transform_name: str, force: bool):
+    if path.exists(path.join(output_dir, "parameters.json")):
+        output_dict = read_json(path.join(output_dir, "parameters.json"))
+        if transform_name in output_dict.keys() and not force:
+            raise TransformAlreadyRun(transform_name, output_dir)
 
 
 ##############

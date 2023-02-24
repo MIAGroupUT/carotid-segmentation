@@ -3,13 +3,14 @@ from os import path, makedirs
 from carotid.utils import (
     write_json,
     read_and_fill_default_toml,
+    check_transform_presence,
     build_dataset,
     check_device,
     HeatmapSerializer,
 )
 from typing import List
 
-pipeline_dir = path.dirname(path.realpath(__file__))
+transform_name = path.basename(path.dirname(path.realpath(__file__)))
 
 
 def apply_transform(
@@ -19,21 +20,23 @@ def apply_transform(
     config_path: str = None,
     participant_list: List[str] = None,
     device: str = None,
+    force: bool = False,
 ):
     # Read parameters
     device = check_device(device=device)
 
     # Read global default args
-    heatmap_parameters = read_and_fill_default_toml(
-        config_path, path.join(pipeline_dir, "default_args.toml")
-    )
+    heatmap_parameters = read_and_fill_default_toml(config_path)[transform_name]
+
+    # Check that pipeline was not already run
+    makedirs(output_dir, exist_ok=True)
+    check_transform_presence(output_dir, transform_name, force=force)
 
     # Write parameters
-    makedirs(output_dir, exist_ok=True)
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
     heatmap_parameters["device"] = device.type
-    write_json(heatmap_parameters, path.join(output_dir, "heatmap_parameters.json"))
+    write_json({transform_name: heatmap_parameters}, path.join(output_dir, "parameters.json"))
 
     unet_predictor = UNetPredictor(parameters=heatmap_parameters)
     dataset = build_dataset(

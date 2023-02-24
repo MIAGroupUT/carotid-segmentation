@@ -1,5 +1,5 @@
 from os import path
-from carotid.utils import build_dataset
+from carotid.utils import build_dataset, read_json, check_equal_parameters
 from carotid.contour_transform.pipeline import apply_transform
 import numpy as np
 import shutil
@@ -17,6 +17,7 @@ def test_pipeline():
         output_dir=tmp_dir,
         polar_dir=input_dir,
         model_dir=model_dir,
+        force=True
     )
 
     # Read reference
@@ -24,6 +25,11 @@ def test_pipeline():
 
     # Read output
     out_dataset = build_dataset(contour_dir=tmp_dir)
+
+    # Compare parameters
+    ref_params = read_json(path.join(ref_dir, "parameters.json"))
+    out_params = read_json(path.join(tmp_dir, "parameters.json"))
+    check_equal_parameters(ref_params, out_params)
 
     for side in ["left", "right"]:
         ref_df = ref_dataset[0][f"{side}_contour"].set_index(
@@ -45,7 +51,7 @@ def test_pipeline():
 
 def test_pipeline_dropout():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "polar_transform", "reference")
+    input_dir = path.join(test_dir, "contour_transform", "input")
     model_dir = path.join(test_dir, "models", "contour_transform_dropout")
     config_path = path.join(test_dir, "contour_transform", "test_args_dropout.toml")
 
