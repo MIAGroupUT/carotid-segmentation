@@ -4,6 +4,11 @@ The first step of the pipeline consists in estimating the position of the center
 Each side of the image (left or right) is treated independently. One heatmap is extracted for each side,
 and have two channels corresponding to each of the carotid (internal or external).
 
+![Illustration of heatmap_transform](../images/heatmap_transform.png)
+<p style="text-align: center;"><b>Example of heatmaps produced by the network. On each side the internal 
+(red) and external (green) carotids are extracted. The common carotid (yellow) corresponds to the intersection
+of the internal and external carotids in the lower part of the volume.</b></p>
+
 ## Prerequisites
 
 Make sure that your data set is correctly structured (see the [data section](../Data.md) for more information).
@@ -30,6 +35,8 @@ For more information on the config file, refer to [this section](../Configuratio
 Default will perform the pipeline on all participants with a raw image.
 - `--device` (`cuda`|`cpu`) is the device that will be used to perform the forward pass of the U-Net.
 Default will try to find `cuda`, and use `cpu` if it is not available.
+- `--force` is a flag that forces the application of the transform in the chosen output directory,
+even if the transform was already performed in this folder.
 
 ## Parameters
 
@@ -46,14 +53,15 @@ is close to this resolution, you can choose to disable resampling to gain comput
 Output structure for participant `participant_id`:
 ```console
 <output_dir>
-├── heatmap_parameters.json
+├── parameters.json
 └── <participant_id>
-        ├── left_heatmap.mha
-        └── right_heatmap.mha
+        └── heatmap_transform
+                ├── left_heatmap.mha
+                └── right_heatmap.mha
 ```
 
 where:
 
-- `heatmap_parameters.json` is a JSON file summarizing the parameters used to perform the transform
+- `parameters.json` is a JSON file summarizing the parameters used to perform this transform and eventually preceding ones.
 - `<side>_heatmap.mha` is a volume with the same spatial size than the corresponding raw input and two channels.
 The first channel corresponds to the heatmap for the internal carotid, the second one corresponds to the external carotid.

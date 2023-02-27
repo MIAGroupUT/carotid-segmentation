@@ -52,10 +52,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Pipeline:
-      - heatmap_transform: Pipeline/Heatmap.md
-      - centerline_transform: Pipeline/Centerline.md
-      - polar_transform: Pipeline/Polar.md
-      - contour_transform: Pipeline/Contour.md
-      - segmentation_transform: Pipeline/Segmentation.md
-      - pipeline_transform: Pipeline/Pipeline.md
+      - Full pipeline: Pipeline/Pipeline.md
+      - Heatmaps: Pipeline/Heatmap.md
+      - Centerlines: Pipeline/Centerline.md
+      - Polar images: Pipeline/Polar.md
+      - Contours: Pipeline/Contour.md
+      - Voxel-mask segmentation: Pipeline/Segmentation.md
   - Config file: Configuration.md

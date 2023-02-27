@@ -16,3 +16,7 @@ reports/*
 
 # Ignore build
 CarotidSegmentation*.tar.gz
+
+# Ignore docs
+docs/images/*.pptx
+docs/images/original/*

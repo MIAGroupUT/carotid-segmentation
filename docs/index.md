@@ -14,6 +14,7 @@ The method was originally developed in the team of [Mathematics of Imaging & AI]
 presented in SPIE Medical Imaging [(Alblas et al., 2022)](https://ris.utwente.nl/ws/portalfiles/portal/283040086/120320Y_alblas_brune_wolterink.pdf)
 
 It mainly consists of two steps:
+
 1. A centerline is estimated for the external and internal carotids on both sides,
 2. The lumen and wall is locally estimated on each axial slice using a patch centered on the previously found centerline.
 
@@ -27,7 +28,7 @@ It can also create environments to isolate your libraries.
 To install Miniconda, open a new terminal and type the following commands:
 
 If you are on Linux:
-```
+```console
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda-installer.sh
 bash /tmp/miniconda-installer.sh
 ```
@@ -127,12 +128,12 @@ raw_dir
 └── <participantN>.mha
 ```
 
-!!! warning
+!!! warning "Orientation"
     The orientation of your volume is crucial for the algorithm.
     Please make sure that your tensor and affine allows to correctly orientate your image.
     The algorithm also assumed that your image has an isotropic resolution in an axial slice.
 
-!!! note
+!!! note "Identification of patients"
     Participants will be associated with a `participant_id`. For DICOM files it will correspond
     to the names of the directories, and for the MHD/MHA files to the filename without the extension.
 
