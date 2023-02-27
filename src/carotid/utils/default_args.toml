@@ -12,7 +12,7 @@ n_angles = 31
 polar_ray = 127
 cartesian_ray = 100
 length = 7
-n_centers = 10
+multiple_centers = false
 
 [contour_transform]
 eval_mode = "eval"

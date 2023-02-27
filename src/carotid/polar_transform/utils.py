@@ -16,14 +16,14 @@ class PolarTransform:
         self.polar_ray = parameters["polar_ray"]
         self.cartesian_ray = parameters["cartesian_ray"]
         self.length = parameters["length"]
-        self.n_centers = parameters["n_centers"]
+        self.multiple_centers = parameters["multiple_centers"]
         self.label_list = ["internal", "external"]
 
         # construct coordinates of rays
         theta = torch.linspace(0, 2 * torch.pi, self.n_angles + 1)[: self.n_angles]
         radii = (
-            torch.linspace(0, float(self.cartesian_ray), self.polar_ray)
-            - float(self.cartesian_ray) / 2
+            torch.linspace(- float(self.cartesian_ray) / 2, float(self.cartesian_ray) / 2, self.polar_ray)
+
         )
         zz = torch.arange(
             -self.length // 2 + self.length % 2, self.length // 2 + 1, dtype=torch.float
@@ -43,7 +43,10 @@ class PolarTransform:
                 center_pt = torch.from_numpy(
                     centerline_df.loc[idx, ["x", "y", "z"]].values.astype(float)
                 )
-                batch_center_pt = self._sample_centers(center_pt)
+                if self.multiple_centers:
+                    batch_center_pt = self._sample_centers(center_pt)
+                else:
+                    batch_center_pt = center_pt.unsqueeze(0)
                 batch_polar_pt = self._transform(image_pt, batch_center_pt)
                 sample[f"{side}_polar"].append(
                     {

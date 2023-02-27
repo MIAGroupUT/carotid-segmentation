@@ -124,13 +124,13 @@ class ContourTransform:
             # Second coordinate of prediction is the wall width
             wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
 
-            angle_vals = torch.linspace(0, 2 * np.pi, (n_angles + 1))[:n_angles].reshape(
+            angle_vals = torch.linspace(-np.pi, np.pi, (n_angles + 1))[:n_angles].reshape(
                 1, -1
             )
-            lumen_cont[batch_idx, :, :, 1] = - lumen_dists * torch.sin(angle_vals) + center_pt[1]
-            lumen_cont[batch_idx, :, :, 2] = - lumen_dists * torch.cos(angle_vals) + center_pt[0]
-            wall_cont[batch_idx, :, :, 1] = - wall_dists * torch.sin(angle_vals) + center_pt[1]
-            wall_cont[batch_idx, :, :, 2] = - wall_dists * torch.cos(angle_vals) + center_pt[0]
+            lumen_cont[batch_idx, :, :, 1] = lumen_dists * torch.sin(angle_vals) + center_pt[1]
+            lumen_cont[batch_idx, :, :, 2] = lumen_dists * torch.cos(angle_vals) + center_pt[0]
+            wall_cont[batch_idx, :, :, 1] = wall_dists * torch.sin(angle_vals) + center_pt[1]
+            wall_cont[batch_idx, :, :, 2] = wall_dists * torch.cos(angle_vals) + center_pt[0]
 
         lumen_cont = lumen_cont.reshape((batch_size * n_pred * n_angles, 3))
         wall_cont = wall_cont.reshape((batch_size * n_pred * n_angles, 3))
