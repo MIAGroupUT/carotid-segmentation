@@ -15,6 +15,7 @@ def test_pipeline():
     apply_transform(
         output_dir=tmp_dir,
         centerline_dir=input_dir,
+        config_path=path.join(test_dir, "polar_transform", "test_args.toml"),
         force=True,
     )
 
