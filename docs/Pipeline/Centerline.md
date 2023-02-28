@@ -48,7 +48,7 @@ even if the transform was already performed in this folder.
 
 ## Default parameters
 
-Three values can be changed in the config file:
+The following values can be chosen by the user:
 
 - `step_size` (int) is the size of the stack of axial slices from which seeds are extracted. Default: `50`.
 - `threshold` (float) is used to determine from which axial slices seeds will be extracted: if the maximum value of

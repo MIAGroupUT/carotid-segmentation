@@ -1,8 +1,19 @@
 # `polar_transform` - Draw 3D polar images
 
-This step generates batches of polar images. Each center found in the previous step is
-associated to a batch of polar images.
+This step generates one polar image per center found in the previous step.
 
+First a local patch around the center is extracted  from the original image. 
+Then a polar transform is applied to this local patch: in the cartesian space
+<code>n_angles</code> rays of size <code>cartesian_ray</code> are drawn. Along each of these rays a number 
+of <code>polar_ray</code> values are interpolated. Each ray is sampled twice, resulting in a 2D polar image of size 
+(`2*n_angles`, <code>polar_ray</code>).
+This operation is done for the `length` neighbouring axial slices, resulting in a 3D polar image of size
+(`1`, `1`, <code>length</code>, `2*n_angles`, <code>polar_ray</code>) after addition of the channel
+and batch dimension.
+
+![Illustration of polar_transform](../images/polar_transform.png)
+<p style="text-align: center;"><b>Example of polar image extracted. The center is highlighted in blue, and 
+an example of ray drawn in the cartesian space is highlighted in orange.</b></p>
 
 ## Prerequisites
 
@@ -12,7 +23,7 @@ The path to raw images is found on the JSON file listing all parameters.
 !!! warning "JSON parameters"
     This step does not only require the centerline TSV files but will try to
     load and update the `parameters.json` file in the directory in which centerlines are
-    stored. Make sure this file exists at the root of the heatmap directory.
+    stored. Make sure this file exists at the root of the centerline directory.
 
 
 ## Running the task
@@ -43,8 +54,8 @@ The following values can be chosen by the user:
 - `polar_ray` (int) Size of the ray in the polar space. Default: `127`. 
 - `cartesian_ray` (int) Size of the ray in the cartesian space. Default: `100`.
 - `length` (int) Number of axial slices used for one polar image. Default: `7`.
-- `multiple_centers` (bool) if `True`, the batch of polar images will include 9 images
-corresponding to the 8 voxels around the original center in the given axial plane + the
+- `multiple_centers` (bool) if `True`, a batch of 3D polar images of size (`9`, `1`, <code>length</code>, `2*n_angles`, <code>polar_ray</code>) will be extracted.
+This 9 images correspond to the polar transform according to the 8 voxels around the original center in the given axial plane + the
 original center. Default is `False`.
 
 ## Outputs
