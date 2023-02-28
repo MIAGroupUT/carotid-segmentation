@@ -9,13 +9,12 @@ import pandas as pd
 from carotid.utils.transforms import unravel_index
 
 
-side_list = ["left", "right"]
-
 
 class CenterlineExtractor:
     def __init__(self, parameters: Dict[str, Any]):
         self.parameters = parameters
         self.label_list = ["internal", "external"]
+        self.side_list = ["left", "right"]
 
     @abc.abstractmethod
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -81,10 +80,10 @@ class OnePassExtractor(CenterlineExtractor):
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
         seedpoints = {
-            side: self.get_seedpoints(sample[f"{side}_heatmap"]["mean"]) for side in side_list
+            side: self.get_seedpoints(sample[f"{side}_heatmap"]["mean"]) for side in self.side_list
         }
 
-        for side in side_list:
+        for side in self.side_list:
             centerline_dict = self.get_centerline(
                 seedpoints[side], sample[f"{side}_heatmap"]["mean"]
             )
