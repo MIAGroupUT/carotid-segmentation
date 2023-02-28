@@ -38,6 +38,8 @@ This step relies on the outputs of `polar_transform`.
     load and update the `parameters.json` file in the directory in which polar images are
     stored. Make sure this file exists at the root of the polar images directory.
 
+You also need to provide one (or several models) for contour regression stored in the same directory.
+
 ## Running the task
 
 The task can be run with the following command line:
@@ -73,12 +75,27 @@ This repetition is performed only if `dropout` is set to `True`. Default: `20`
 
 ## Outputs
 
+Output structure for participant `participant_id`:
 ```console
 <output_dir>
 ├── parameters.json
 └── <participant_id>
         └── contour_transform
                 ├── left_contour.tsv
-                ├── parameters.json
-                └── right_contour.tsv
+                ├── right_contour.tsv
+                └── spatial_metadata.json
 ```
+
+
+where:
+
+- `parameters.json` is a JSON file summarizing the parameters used to perform this transform and eventually preceding ones.
+- `spatial_metadata.json` is a JSON file storing the spatial metadata of the corresponding raw image (size and affine).
+- `<side>_contour.tsv` is a TSV file including all the points of all contours with the following structure:
+
+| label    | object | x    | y   | z   | deviation |
+|----------|--------|------|-----|-----|-----------|
+| internal | lumen  | 130  | 80  | 340 | 2.490     |
+| internal | lumen  | 131  | 80  | 341 | 3.051     |
+| ...      | ...    | ...  | ... | ... | ...       |
+| external | wall   | 420  | 57  | 413 | 1.613     |

@@ -24,7 +24,7 @@ carotid heatmap_transform RAW_DIR HEATMAP_MODEL_DIR OUTPUT_DIR
 where:
 
 - `RAW_DIR` (str) is the path to the directory containing the raw data.
-- `HEATMAP_MODEL_DIR` (str) is the path to the directory containing the weights of the pre-trained U-Nets.
+- `HEATMAP_MODEL_DIR` (str) is the path to the directory containing the weights of the pre-trained U-Net(s).
 - `OUTPUT_DIR` (str) is the path to the directory containing the outputs.
 
 Options:
