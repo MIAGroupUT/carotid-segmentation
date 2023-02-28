@@ -1,5 +1,6 @@
 stages:
   - src-test
+  - docs
 
 src-test:
   image: python:3.9.7
@@ -17,3 +18,11 @@ src-test:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+
+docs:
+  image: python:3.9.7
+  stage: docs
+  before_script:
+    - pip install -r ./docs/requirements.txt
+  script:
+    - mkdocs build --clean --site-dir html --config-file mkdocs.yml
