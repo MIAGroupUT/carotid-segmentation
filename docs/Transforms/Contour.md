@@ -27,7 +27,7 @@ and the rays that are estimated by the model for the corresponding angle.
 ![Illustration of contour uncertainty](../images/contour_uncertainty.png)
 <p style="text-align: center;"><b>Evaluation of the uncertainty in the polar domain. Each point in the point cloud is transformed
 in polar coordinates using a new center (mean of all points in the point cloud). The deviation between observed and estimated rays
-in the interval <code>&Delta;&theta;</code></b></p> are used to measure the uncertainty of the final contour. 
+in the interval <code>&Delta;&theta;</code> are used to measure the uncertainty of the final contour.</b></p> 
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ This step relies on the outputs of `polar_transform`.
 !!! warning "JSON parameters"
     This step does not only require the polar images but will try to
     load and update the `parameters.json` file in the directory in which polar images are
-    stored. Make sure this file exists at the root of the polar images directory.
+    stored. Make sure this file exists at the root of the directory containing polar images.
 
 You also need to provide one (or several models) for contour regression stored in the same directory.
 
