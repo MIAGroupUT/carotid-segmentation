@@ -17,6 +17,8 @@ def test_pipeline():
         heatmap_model_dir=path.join(test_dir, "models", "heatmap_transform"),
         contour_model_dir=path.join(test_dir, "models", "contour_transform"),
         output_dir=tmp_dir,
+        config_path=path.join(test_dir, "pipeline_transform", "test_args.toml"),
+        force=True,
     )
 
     # Read reference
@@ -24,6 +26,11 @@ def test_pipeline():
 
     # Read output
     out_dataset = build_dataset(contour_dir=tmp_dir)
+
+    # Compare parameters
+    ref_params = read_json(path.join(ref_dir, "parameters.json"))
+    out_params = read_json(path.join(tmp_dir, "parameters.json"))
+    check_equal_parameters(ref_params, out_params)
 
     # Compare parameters
     ref_params = read_json(path.join(ref_dir, "parameters.json"))
@@ -44,6 +51,7 @@ def test_pipeline():
             out_slice_df = out_df.loc[index]
             out_slice_np = out_slice_df.values
             ref_slice_np = ref_slice_df.values
+            print(np.max(np.abs(out_slice_np - ref_slice_np)))
             assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=0.1)
 
     shutil.rmtree(path.join(test_dir, "tmp"))
