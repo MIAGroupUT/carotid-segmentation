@@ -1,13 +1,14 @@
-# Documentation of the XXX method
+# Documentation of the carotid-segmentation package
 
-This documentation describes how to install, use and test the source code of XXX, the winning algorithm 
+This documentation describes how to install, use and test the source code of `carotid-segmentation`, the winning algorithm 
 of the MICCAI Grand Challenge [Carotid Artery Vessel Wall Segmentation Challenge](https://vessel-wall-segmentation.grand-challenge.org/).
 This algorithm computes the contours of the lumens and walls of the internal and external carotids 
 on both sides of the neck from 3D black-blood MRI.
 
 <figure>
 <img src="images/anatomical_description.png" alt="Illustration of the wall and lumen contours on an axial slice" style="width:100%">
-<figcaption align = "center"><b>Figure originally created by the Grand Challenge organisers</b></figcaption>
+<figcaption align = "center"><b>Figure originally created by the Grand Challenge organisers: lumen (red) and outer
+wall (blue) contours of a popliteal vessel.</b></figcaption>
 </figure>
 
 The method was originally developed in the team of [Mathematics of Imaging & AI](https://www.utwente.nl/en/eemcs/sacs/people/sort-chair/?category=mia)
@@ -15,14 +16,19 @@ presented in SPIE Medical Imaging [(Alblas et al., 2022)](https://ris.utwente.nl
 
 It mainly consists of two steps:
 
-1. A centerline is estimated for the external and internal carotids on both sides,
-2. The lumen and wall is locally estimated on each axial slice using a patch centered on the previously found centerline.
+1. A *centerline* is estimated for the external and internal carotids on both sides,
+2. The *lumen* and *wall* is locally estimated on each axial slice using a patch centered on the previously found centerline.
 
-![Illustration of the method](images/global_illustration.png)
+<figure>
+<img src="images/global_illustration.png" alt="Illustration of the method" style="width:100%">
+<figcaption align = "center"><b>Figure illustrating how the algorithm works: the external (green)
+and internal (red) centerlines of the carotids are extracted, then patches are locally extracted around
+the centerlines to estimate the contours of the lumen and wall.</b></figcaption>
+</figure>
 
 ## Installation
 
-You will need a Python environment to run XXX. We advise you to use Miniconda. 
+You will need a Python environment to run `carotid-segmentation`. We advise you to use Miniconda. 
 Miniconda allows you to install, run, and update Python packages and their dependencies. 
 It can also create environments to isolate your libraries. 
 To install Miniconda, open a new terminal and type the following commands:
@@ -43,7 +49,7 @@ The method is distributed as a PyPi package and can be installed with the follow
 ```
 conda create -n carotid-segmentation python=3.9
 conda activate carotid-segmentation
-pip install XXX
+pip install carotid-segmentation
 ```
 
 Check that the package is correctly installed by typing the following command in your terminal:
@@ -72,72 +78,8 @@ Commands:
 
 ## Application to your data set
 
-### Getting the models
-
-- On Mac / Linux:
-
-You can use the following command to fetch all the models:
-```
-make get-models
-```
-
-- On Windows:
-
-Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/DanUvHpx6BXM7dY/download)
-Unzip the tar file and copy the different folders in the `models` folder at the root of the repo.
-
-The final architecture of your repo should be the following:
-```
-carotid-segmentation
-├── models
-│       ├── contour_transform
-│       ├── contour_transform_dropout
-│       └── heatmap_transform
-│               ├── <filename1>.pt
-│               ├── ....
-│               └── <filenameN>.pt
-...
-```
-
-### Data structure
-
-XXX was trained to segment carotids from 3D black-blood MRI volumes. 
-The raw data can be provided as DICOM, MHD or MHA files.
-
-Structure of the raw directory for DICOM files:
-
-```console
-raw_dir
-├── <participant1>
-│       ├── <filename1>.dcm
-│       ...
-│       └── <filenameN>.dcm
-...
-└── <participantN>
-        ├── <filename1>.dcm
-        ...
-        └── <filenameN>.dcm
-```
-
-Structure of the raw directory for MHA/MHD files:
-
-```console
-raw_dir
-├── <participant1>.mha
-...
-└── <participantN>.mha
-```
-
-!!! warning "Orientation"
-    The orientation of your volume is crucial for the algorithm.
-    Please make sure that your tensor and affine allows to correctly orientate your image.
-    The algorithm also assumed that your image has an isotropic resolution in an axial slice.
-
-!!! note "Identification of patients"
-    Participants will be associated with a `participant_id`. For DICOM files it will correspond
-    to the names of the directories, and for the MHD/MHA files to the filename without the extension.
-
-### Command line
+Refer to the [data](Environment/Data.md) and [models](Environment/Models.md) sections
+to correctly prepare your environment.
 
 This package is meant to be run with a command line, but an API is also available for each transform.
 To run any of the transform use the following command in your terminal:

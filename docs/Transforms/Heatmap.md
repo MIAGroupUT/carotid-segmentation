@@ -11,7 +11,7 @@ of the internal and external carotids in the lower part of the volume.</b></p>
 
 ## Prerequisites
 
-Make sure that your data set is correctly structured (see the [data section](../Data.md) for more information).
+Make sure that your data set is correctly structured (see the [data section](../Environment/Data.md) for more information).
 
 You also need to provide one (or several models) stored in the same directory.
 
@@ -30,7 +30,7 @@ where:
 Options:
 
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
-For more information on the config file, refer to [this section](../Configuration.md).
+For more information on the config file, refer to [this section](../Environment/Configuration.md).
 - `--participant` (List[str]) restricts the application of the transform to this list of participant IDs. 
 Default will perform the pipeline on all participants with a raw image.
 - `--device` (`cuda`|`cpu`) is the device that will be used to perform the forward pass of the U-Net.
