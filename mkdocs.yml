@@ -1,5 +1,5 @@
 # Project information
-site_name: Deep Carotid Segmentation Documentation
+site_name: Carotid Segmentation Documentation
 # site_author: contributors
 # site_url: https://XXX.readthedocs.io/
 site_description: >-
@@ -51,11 +51,14 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Pipeline:
-      - Full pipeline: Pipeline/Pipeline.md
-      - Heatmaps: Pipeline/Heatmap.md
-      - Centerlines: Pipeline/Centerline.md
-      - Polar images: Pipeline/Polar.md
-      - Contours: Pipeline/Contour.md
-      - Voxel-mask segmentation: Pipeline/Segmentation.md
-  - Config file: Configuration.md
+  - Environment:
+      - Data structure: Environment/Data.md
+      - Deep learning models: Environment/Models.md
+      - Config file: Environment/Configuration.md
+  - Transforms:
+      - Heatmaps: Transforms/Heatmap.md
+      - Centerlines: Transforms/Centerline.md
+      - Polar images: Transforms/Polar.md
+      - Contours: Transforms/Contour.md
+      - Voxel-mask segmentation: Transforms/Segmentation.md
+      - Full pipeline: Transforms/Pipeline.md
