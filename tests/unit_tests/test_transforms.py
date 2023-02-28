@@ -38,6 +38,8 @@ def test_repro_extract_left_right_transform():
     dataset = build_dataset(heatmap_dir=heatmap_dir, raw_dir=raw_dir)
 
     for sample in dataset:
+        for side in ["left", "right"]:
+            sample[f"{side}_heatmap"] = sample[f"{side}_heatmap"]["mean"]
         transformed_sample = transform(deepcopy(sample))
         reconstructed_sample = transform.inverse(deepcopy(transformed_sample))
         compare_left_and_right(sample, transformed_sample, reconstructed_sample)

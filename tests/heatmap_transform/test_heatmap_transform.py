@@ -28,12 +28,9 @@ def test_pipeline():
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]
 
-    assert (
-        torch.max(torch.abs(ref_sample["left_heatmap"] - out_sample["left_heatmap"]))
-        < 1e-3
-    )
-    assert (
-        torch.max(torch.abs(ref_sample["right_heatmap"] - out_sample["right_heatmap"]))
-        < 1e-3
-    )
+    for side in ["left", "right"]:
+        assert (
+            torch.max(torch.abs(ref_sample[f"{side}_heatmap"] - out_sample[f"{side}_heatmap"]))
+            < 1e-3
+        )
     shutil.rmtree(path.join(test_dir, "tmp"))
