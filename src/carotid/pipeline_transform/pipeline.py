@@ -50,7 +50,7 @@ def apply_transform(
     pipeline_parameters["contour_transform"]["device"] = device.type
 
     # Write parameters
-    if force:
+    if force and path.exists(output_dir):
         shutil.rmtree(output_dir)
 
     makedirs(output_dir, exist_ok=True)

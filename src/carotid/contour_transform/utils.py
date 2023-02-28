@@ -1,3 +1,4 @@
+import warnings
 from typing import Dict, Any, Tuple, List, Union
 from carotid.utils.transforms import polar2cart, cart2polar
 import pandas as pd
@@ -12,7 +13,7 @@ class ContourTransform:
     def __init__(self, parameters: Dict[str, Any]):
         self.model_dir = parameters["model_dir"]
         self.device = parameters["device"]
-        self.eval_mode = parameters["eval_mode"]
+        self.dropout = parameters["dropout"]
         self.n_repeats = parameters["n_repeats"]
         self.side_list = ["left", "right"]
         self.delta_theta = 2 * np.pi * parameters["delta_theta"]
@@ -22,12 +23,25 @@ class ContourTransform:
             for filename in listdir(self.model_dir)
             if filename.endswith(".pt")
         ]
-        self.model = CONV3D(dropout=0.2 if self.eval_mode == "dropout" else 0).to(
-            self.device
-        )
-        self.model.load_state_dict(
-            torch.load(self.model_paths_list[0], map_location=self.device)
-        )
+        try:
+            self.model = CONV3D(dropout=True).to(self.device)
+            self.model.load_state_dict(
+                torch.load(self.model_paths_list[0], map_location=self.device)
+            )
+        except RuntimeError:
+            self.model = CONV3D(dropout=False).to(self.device)
+            self.model.load_state_dict(
+                torch.load(self.model_paths_list[0], map_location=self.device)
+            )
+            if self.dropout:
+                warnings.warn("Dropout resampling was activated but the models do not contain "
+                              "dropout layers. The dropout resampling is deactivated.")
+                self.dropout = False
+
+        if not self.dropout:
+            self.n_repeats = 1
+
+        self.model.set_mode("dropout" if self.dropout else "eval")
 
     def __call__(self, sample):
         for side in self.side_list:
@@ -75,10 +89,10 @@ class ContourTransform:
         polar_ray = polar_meta_dict["polar_ray"]
         cartesian_ray = polar_meta_dict["cartesian_ray"]
 
-        if self.eval_mode == "dropout":
-            batch_prediction_pt = self.ensemble_dropout(batch_polar_pt)
+        if len(self.model_paths_list) > 1:
+            batch_prediction_pt = self.sample_models(batch_polar_pt)
         else:
-            batch_prediction_pt = self.ensemble_models(batch_polar_pt)
+            batch_prediction_pt = self.sample_dropout(batch_polar_pt)
 
         lumen_cloud, wall_cloud = self.pred2cartesian(
             batch_prediction_pt,
@@ -141,34 +155,34 @@ class ContourTransform:
 
         return lumen_cont, wall_cont
 
-    def ensemble_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
+    def sample_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
-        Ensemble a batch of polar map corresponding to the same original center according
-        to different models.
+        Ensemble a batch of polar map corresponding to a batch of centers center according
+        to different models, eventually repeated for dropout sampling.
 
         Args:
             batch_polar_pt: batch of polar maps.
 
         Returns:
-            batch of prediction of size (batch_size, n_models, 2, n_angles)
+            batch of prediction of size (batch_size, n_models * n_repeats, 2, n_angles)
         """
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
-        batch_prediction_pt = torch.zeros((batch_size, len(self.model_paths_list), 2, dn_angles // 2 + 1))
+        batch_prediction_pt = torch.zeros((len(self.model_paths_list), batch_size, self.n_repeats, 2, dn_angles // 2 + 1))
 
         for model_index, model_path in tqdm(
             enumerate(self.model_paths_list), desc="Predicting contours", leave=False
         ):
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.set_mode("eval")
+            self.model.set_mode("dropout" if self.dropout else "eval")
 
             with torch.no_grad():
-                batch_prediction_pt[:, model_index] = (
-                    self.model(batch_polar_pt.to(self.device)).cpu()
-                )
+                batch_prediction_pt[model_index] = self.sample_models(batch_polar_pt)
+
+        batch_prediction_pt = batch_prediction_pt.transpose(0, 1).reshape(batch_size, -1, 2, dn_angles // 2 + 1)
 
         return batch_prediction_pt
 
-    def ensemble_dropout(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
+    def sample_dropout(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
         Repeats the polar map on a model with dropout to get a point cloud prediction.
 
@@ -176,20 +190,18 @@ class ContourTransform:
             batch_polar_pt: tensor corresponding to a batch of 3D polar maps.
 
         Returns:
-            Values of the prediction
-                - first dimension corresponds to the number of contours predicted,
-                - second dimension differentiate the objects (lumen or wall),
-                - third dimension is the number of angles per prediction.
+            batch of prediction of size (batch_size, n_repeats, 2, n_angles)
         """
         self.model.set_mode("dropout")
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
-        batch_prediction_pt = torch.zeros((batch_size, self.n_repeats, 2, dn_angles // 2 + 1))
+        repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
 
-        for repeat_idx in range(self.n_repeats):
-            with torch.no_grad():
-                batch_prediction_pt[:, repeat_idx] = self.model(batch_polar_pt).cpu()
+        with torch.no_grad():
+            batch_prediction_pt = self.model(repeat_polar_pt).cpu().reshape(
+                self.n_repeats, batch_size, 2, dn_angles // 2 + 1
+            )
 
-        return batch_prediction_pt
+        return batch_prediction_pt.transpose(0, 1)
 
     @staticmethod
     def interpolate_contour(contour_pt: torch.Tensor, n_angles: int, delta_theta: float) -> torch.Tensor:
@@ -258,8 +270,10 @@ class ContourTransform:
 
 
 class CONV3D(nn.Module):
-    def __init__(self, hidden_size: int = 16, dropout: float = 0.2):
+    def __init__(self, hidden_size: int = 16, dropout: bool = False):
         super(CONV3D, self).__init__()
+        self.dropout_value = 0.2
+
         model = [
             nn.Conv3d(1, hidden_size, kernel_size=3),
             nn.BatchNorm3d(hidden_size),
@@ -311,8 +325,8 @@ class CONV3D(nn.Module):
         x = self.model(x)
         return x.squeeze(-3).squeeze(-1)
 
-    @staticmethod
     def compute_module_list(
+        self,
         in_channels: int,
         out_channels: int,
         kernel_size: Tuple[int, int, int],
@@ -327,8 +341,8 @@ class CONV3D(nn.Module):
                 dilation=dilation,
             )
         ]
-        if 0 < dropout < 1:
-            module_list.append(nn.Dropout(p=dropout))
+        if dropout:
+            module_list.append(nn.Dropout(p=self.dropout_value))
         module_list += [nn.BatchNorm3d(out_channels), nn.ReLU()]
 
         return module_list

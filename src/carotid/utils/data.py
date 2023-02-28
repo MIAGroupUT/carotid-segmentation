@@ -100,7 +100,7 @@ def check_equal_parameters(param1: Dict[str, Dict[str, Any]], param2: Dict[str, 
     assert param1.keys() == param2.keys()
     for transform_name in param1.keys():
         transform1 = param1[transform_name]
-        transform2 = param1[transform_name]
+        transform2 = param2[transform_name]
         assert transform1.keys() == transform2.keys()
         for param_name in transform1.keys():
             if "dir" not in param_name:
