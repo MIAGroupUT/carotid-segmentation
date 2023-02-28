@@ -33,5 +33,5 @@ get-models:
 .PHONY: prepare-test
 prepare-test:
 	@make get-models
-	@sh tests/get_reference.sh
+	@sh tests/prepare-test.sh
 	@pip install -r tests/requirements.txt
