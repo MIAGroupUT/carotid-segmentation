@@ -157,8 +157,8 @@ class ContourTransform:
 
     def sample_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
-        Ensemble a batch of polar map corresponding to a batch of centers center according
-        to different models, eventually repeated for dropout sampling.
+        Ensemble a batch of polar map corresponding to a batch of centers using
+        different models, eventually repeated for dropout sampling.
 
         Args:
             batch_polar_pt: batch of polar maps.
@@ -167,7 +167,9 @@ class ContourTransform:
             batch of prediction of size (batch_size, n_models * n_repeats, 2, n_angles)
         """
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
-        batch_prediction_pt = torch.zeros((len(self.model_paths_list), batch_size, self.n_repeats, 2, dn_angles // 2 + 1))
+        batch_prediction_pt = torch.zeros(
+            (len(self.model_paths_list), batch_size, self.n_repeats, 2, dn_angles // 2 + 1)
+        )
 
         for model_index, model_path in tqdm(
             enumerate(self.model_paths_list), desc="Predicting contours", leave=False
@@ -206,8 +208,8 @@ class ContourTransform:
     @staticmethod
     def interpolate_contour(contour_pt: torch.Tensor, n_angles: int, delta_theta: float) -> torch.Tensor:
         """
-        Takes a set of points in one unique slice in cartesian coordinates and smooth it to extract one contour point per angle.
-        A new center is estimated (barycenter of all points)
+        Takes a set of points in one unique slice in cartesian coordinates and smooth it to extract one
+        contour point per angle. A new center is estimated (barycenter of all points)
 
         Args:
             contour_pt: noisy point cloud around the contour.
@@ -248,9 +250,13 @@ class ContourTransform:
             # Find which points in original data should be used in the vicinity of the interpolated one
             local_indices = (polar_pt[:, 2] < max_angle) & (polar_pt[:, 2] > min_angle)
             if angle < polar_pt[:, 2].min():
-                local_indices = local_indices | ((polar_pt[:, 2] < max_angle + 2 * np.pi) & (polar_pt[:, 2] > min_angle + 2 * np.pi))
+                local_indices = local_indices | (
+                        (polar_pt[:, 2] < max_angle + 2 * np.pi) & (polar_pt[:, 2] > min_angle + 2 * np.pi)
+                )
             elif angle > polar_pt[:, 2].max():
-                local_indices = local_indices | ((polar_pt[:, 2] < max_angle - 2 * np.pi) & (polar_pt[:, 2] > min_angle - 2 * np.pi))
+                local_indices = local_indices | (
+                        (polar_pt[:, 2] < max_angle - 2 * np.pi) & (polar_pt[:, 2] > min_angle - 2 * np.pi)
+                )
 
             x_local = x_train[local_indices]
             y_local = polar_pt[:, 1][local_indices].numpy()

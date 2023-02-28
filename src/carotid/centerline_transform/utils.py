@@ -9,7 +9,6 @@ import pandas as pd
 from carotid.utils.transforms import unravel_index
 
 
-
 class CenterlineExtractor:
     def __init__(self, parameters: Dict[str, Any]):
         self.parameters = parameters
