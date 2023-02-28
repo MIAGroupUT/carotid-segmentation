@@ -2,7 +2,7 @@ import torch
 from tqdm import tqdm
 from os import path, listdir
 from typing import Dict, Any
-from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd
+from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd, unravel_indices
 
 from monai.transforms import Spacingd, Compose, InvertibleTransform, Orientationd
 from monai.networks.nets import UNet
@@ -48,20 +48,18 @@ class UNetPredictor:
         image_pt = sample["image"].clone()
         # Put the sample in the working space of the U-Net
         unet_sample = self.transforms(sample)
-        pred_dict = {
-            side: torch.zeros_like(unet_sample[f"{side}_heatmap"])
-            for side in self.side_list
-        }
 
-        # Compute sum of heatmaps for both sides
-        for index, model_path in tqdm(
-            enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
-        ):
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.eval()
+        for side in self.side_list:
+            unet_shape = unet_sample[f"{side}_heatmap"].shape
+            pred_tensor = torch.zeros(len(self.model_paths_list), *unet_shape)
 
-            # Sides cannot be combined in the same batch as left and right images may have different dimensions
-            for side in self.side_list:
+            for model_idx, model_path in tqdm(
+                enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
+            ):
+                self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+                self.model.eval()
+
+                # Sides cannot be combined in the same batch as left and right images may have different dimensions
                 with torch.no_grad():
                     prediction = (
                         self.inferer(
@@ -71,22 +69,28 @@ class UNetPredictor:
                         .squeeze(0)
                         .cpu()
                     )
-                    pred_dict[side] += prediction
+                    pred_tensor[model_idx] = prediction
 
-        # Replace current label by model output
-        for side in self.side_list:
-            unet_sample[f"{side}_heatmap"] = pred_dict[side] / len(
-                self.model_paths_list
-            )
+            unet_sample[f"{side}_heatmap"] += pred_tensor.reshape(len(self.model_paths_list) * 2, *unet_shape[1::])
 
         orig_sample = self.transforms.inverse(unet_sample)
+
+        for side in self.side_list:
+            batch_heatmap_pt = orig_sample[f"{side}_heatmap"].reshape(len(self.model_paths_list), 2, *image_pt.shape[1::])
+            orig_sample[f"{side}_heatmap"] = {
+                "mean": torch.mean(batch_heatmap_pt, dim=0),
+                "std": torch.std(batch_heatmap_pt, dim=0),
+            }
+            flat_heatmap_pt = batch_heatmap_pt.reshape(len(self.model_paths_list), 2, -1, image_pt.shape[-1])
+            flat_indices = torch.argmax(flat_heatmap_pt, dim=-2)
+            indices = unravel_indices(flat_indices, image_pt.shape[1:3])
+            orig_sample[f"{side}_heatmap"]["max_indices"] = indices
         orig_sample["image"] = image_pt
 
         return orig_sample
 
-    @staticmethod
     def get_transforms(
-        spacing: bool = False,
+        self, spacing: bool = False,
     ) -> InvertibleTransform:
         """
         Outputs a series of invertible transforms to go from the original space to the
@@ -95,7 +99,7 @@ class UNetPredictor:
 
         key_list = ["image", "left_heatmap", "right_heatmap"]
         transforms = [
-            BuildEmptyHeatmapd(image_key="image"),
+            BuildEmptyHeatmapd(image_key="image", n_channels=len(self.model_paths_list) * 2),
             Orientationd(keys=key_list, axcodes="SPL"),
         ]
         if spacing:

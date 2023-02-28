@@ -15,6 +15,7 @@ side_list = ["left", "right"]
 class CenterlineExtractor:
     def __init__(self, parameters: Dict[str, Any]):
         self.parameters = parameters
+        self.label_list = ["internal", "external"]
 
     @abc.abstractmethod
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
@@ -57,6 +58,20 @@ class CenterlineExtractor:
 
         return label_df
 
+    def compute_uncertainty(self, label_df: pd.DataFrame, heatmap_dict: Dict[str, torch.Tensor]) -> pd.DataFrame:
+
+        for idx in label_df.index.values:
+            label_name = label_df.loc[idx, "label"]
+            label_idx = self.label_list.index(label_name)
+            x, y, z = label_df.loc[idx, ["x", "y", "z"]].astype(int)
+            label_df.loc[idx, "mean_value"] = heatmap_dict["mean"][label_idx, x, y, z].item()
+            label_df.loc[idx, "std_value"] = heatmap_dict["std"][label_idx, x, y, z].item()
+            batch_max_indices = heatmap_dict["max_indices"][:, label_idx, z]
+            batch_distances = torch.linalg.norm(batch_max_indices - torch.Tensor([x, y]), dim=1)
+            label_df.loc[idx, "max_distances"] = torch.mean(batch_distances).item()
+
+        return label_df
+
 
 class OnePassExtractor(CenterlineExtractor):
     """
@@ -66,12 +81,12 @@ class OnePassExtractor(CenterlineExtractor):
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
         seedpoints = {
-            side: self.get_seedpoints(sample[f"{side}_heatmap"]) for side in side_list
+            side: self.get_seedpoints(sample[f"{side}_heatmap"]["mean"]) for side in side_list
         }
 
         for side in side_list:
             centerline_dict = self.get_centerline(
-                seedpoints[side], sample[f"{side}_heatmap"]
+                seedpoints[side], sample[f"{side}_heatmap"]["mean"]
             )
             centerline_df = pd.DataFrame(columns=["label", "x", "y", "z"])
             for label_name in centerline_dict.keys():
@@ -82,6 +97,7 @@ class OnePassExtractor(CenterlineExtractor):
                 centerline_df = pd.concat([centerline_df, label_df])
             centerline_df = self.remove_common_external_centers(centerline_df)
             centerline_df.dropna(inplace=True)
+            centerline_df = self.compute_uncertainty(centerline_df, sample[f"{side}_heatmap"])
             sample[f"{side}_centerline"] = centerline_df
 
         return sample

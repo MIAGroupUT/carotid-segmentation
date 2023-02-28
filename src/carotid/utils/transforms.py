@@ -148,14 +148,16 @@ class BuildEmptyHeatmapd(monai.transforms.Transform):
         self,
         image_key: str = "image",
         meta_key_postfix: str = "meta_dict",
+        n_channels: int = 2
     ):
         self.image_key = image_key
         self.meta_key_postfix = meta_key_postfix
+        self.n_channels = n_channels
 
     def __call__(self, data):
         d = dict(data)
 
-        zero_meta_tensor = data[f"{self.image_key}"].repeat((2, 1, 1, 1))
+        zero_meta_tensor = data[f"{self.image_key}"].repeat((self.n_channels, 1, 1, 1))
         zero_meta_tensor[:] = 0
 
         for side in ["left", "right"]:
@@ -228,9 +230,8 @@ def polar2cart(polar_pt: torch.Tensor, center_pt: torch.Tensor) -> torch.Tensor:
     return cart_pt
 
 
-
 def unravel_indices(
-    indices: torch.LongTensor,
+    indices: torch.Tensor,
     shape: Tuple[int, ...],
 ) -> torch.LongTensor:
     r"""Converts flat indices into unraveled coordinates in a target shape.
@@ -256,7 +257,7 @@ def unravel_indices(
 
 
 def unravel_index(
-    indices: torch.LongTensor,
+    indices: torch.Tensor,
     shape: Tuple[int, ...],
 ) -> Tuple[torch.LongTensor, ...]:
     r"""Converts flat indices into unraveled coordinates in a target shape.

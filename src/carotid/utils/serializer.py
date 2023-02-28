@@ -8,6 +8,7 @@ import pandas as pd
 from monai.transforms import (
     MapTransform,
     LoadImaged,
+    LoadImage,
     ScaleIntensityRangePercentilesd,
     Orientationd,
     Compose,
@@ -82,6 +83,25 @@ def check_transform_presence(output_dir: str, transform_name: str, force: bool):
 ##############
 # TRANSFORMS #
 ##############
+class LoadHeatmapDird(MapTransform):
+    def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
+        super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
+        self.itk_loader = LoadImage(ensure_channel_first=True, reader="itkreader")
+
+    def __call__(self, data):
+        d = dict(data)
+        for key in self.key_iterator(d):
+            dir_path = d[key]
+            d[key] = {
+                "mean": self.itk_loader(path.join(dir_path, "mean.mha"))[0],
+                "std": self.itk_loader(path.join(dir_path, "std.mha"))[0],
+                "max_indices": torch.from_numpy(
+                    np.load(path.join(dir_path, "max_indices.npy"), allow_pickle=True).astype(int)
+                )
+            }
+        return d
+
+
 class LoadPolarDird(MapTransform):
     def __init__(self, keys: KeysCollection, allow_missing_keys: bool = False):
         super().__init__(keys=keys, allow_missing_keys=allow_missing_keys)
@@ -171,6 +191,9 @@ class LoadMetaJSONd(MapTransform):
         return d
 
 
+###############
+# SERIALIZERS #
+###############
 class Serializer:
     def __init__(
         self,
@@ -288,19 +311,29 @@ class HeatmapSerializer(Serializer):
         super().__init__(
             dir_path=dir_path,
             transform_name="heatmap",
-            file_ext="mha",
-            monai_reader=LoadImaged(
-                keys=["left_heatmap", "right_heatmap"],
-                reader="itkreader",
-                ensure_channel_first=True,
-            ),
+            file_ext=None,
+            monai_reader=LoadHeatmapDird(keys=["left_heatmap", "right_heatmap"]),
         )
-        self.writer = ITKWriter()
+        self.itk_writer = ITKWriter()
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        self.writer.set_data_array(sample[key])
-        self.writer.set_metadata(sample[key].__dict__)
-        self.writer.write(output_path)
+        makedirs(output_path, exist_ok=True)
+
+        # Write mean
+        self.itk_writer.set_data_array(sample[key]["mean"])
+        self.itk_writer.set_metadata(sample[key]["mean"].__dict__)
+        self.itk_writer.write(path.join(output_path, "mean.mha"))
+
+        # Write std
+        self.itk_writer.set_data_array(sample[key]["std"])
+        self.itk_writer.set_metadata(sample[key]["std"].__dict__)
+        self.itk_writer.write(path.join(output_path, "std.mha"))
+
+        # Write max indices
+        np.save(
+            path.join(output_path, "max_indices.npy"),
+            sample[key]["max_indices"]
+        )
 
 
 class CenterlineSerializer(Serializer):

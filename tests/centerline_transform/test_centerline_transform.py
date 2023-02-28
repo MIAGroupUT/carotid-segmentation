@@ -30,8 +30,8 @@ def test_pipeline():
     check_equal_parameters(ref_params, out_params)
 
     for side in ["left", "right"]:
-        ref_df = ref_dataset[0][f"{side}_centerline"]
-        out_df = out_dataset[0][f"{side}_centerline"]
+        ref_df = ref_dataset[0][f"{side}_centerline"][["label", "x", "y", "z"]]
+        out_df = out_dataset[0][f"{side}_centerline"][["label", "x", "y", "z"]]
         assert ref_df.equals(out_df)
 
     shutil.rmtree(tmp_dir)
