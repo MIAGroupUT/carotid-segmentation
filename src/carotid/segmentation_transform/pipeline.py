@@ -31,7 +31,7 @@ def apply_transform(
     pipeline_parameters = read_json(path.join(contour_dir, "parameters.json"))
 
     # Read global default args
-    segmentation_parameters = read_and_fill_default_toml(config_path)
+    segmentation_parameters = read_and_fill_default_toml(config_path)[transform_name]
 
     # Write parameters
     makedirs(output_dir, exist_ok=True)

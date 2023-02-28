@@ -341,7 +341,7 @@ class ContourSerializer(Serializer):
             monai_reader=Compose(
                 [
                     LoadMetaJSONd(
-                        keys=["left_contour", "right_contour"], parent_dir=True
+                        keys=["left_contour", "right_contour"], parent_dir=True, json_name="spatial_metadata.json"
                     ),
                     LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
                 ],
@@ -352,7 +352,7 @@ class ContourSerializer(Serializer):
         sample[key].to_csv(output_path, sep="\t", index=False)
         write_json(
             sample[f"{key}_meta_dict"],
-            path.join(path.dirname(output_path), "parameters.json"),
+            path.join(path.dirname(output_path), "spatial_metadata.json"),
         )
 
 
