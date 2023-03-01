@@ -9,13 +9,13 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "polar_transform", "input")
-    ref_dir = path.join(test_dir, "polar_transform", "reference")
+    input_dir = path.join(test_dir, "polar", "input")
+    ref_dir = path.join(test_dir, "polar", "reference")
 
     apply_transform(
         output_dir=tmp_dir,
         centerline_dir=input_dir,
-        config_path=path.join(test_dir, "polar_transform", "test_args.toml"),
+        config_path=path.join(test_dir, "polar", "test_args.toml"),
         force=True,
     )
 

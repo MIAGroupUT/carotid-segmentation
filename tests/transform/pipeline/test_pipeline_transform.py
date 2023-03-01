@@ -9,14 +9,14 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    ref_dir = path.join(test_dir, "pipeline_transform", "reference")
+    ref_dir = path.join(test_dir, "pipeline", "reference")
 
     apply_transform(
-        raw_dir=path.join(test_dir, "raw_dir"),
-        heatmap_model_dir=path.join(test_dir, "models", "heatmap_transform"),
-        contour_model_dir=path.join(test_dir, "models", "contour_transform"),
+        raw_dir=path.join(test_dir, "..", "raw_dir"),
+        heatmap_model_dir=path.join(test_dir, "..",  "models", "heatmap_transform"),
+        contour_model_dir=path.join(test_dir, "..", "models", "contour_transform"),
         output_dir=tmp_dir,
-        config_path=path.join(test_dir, "pipeline_transform", "test_args.toml"),
+        config_path=path.join(test_dir, "pipeline", "test_args.toml"),
         force=True,
     )
 

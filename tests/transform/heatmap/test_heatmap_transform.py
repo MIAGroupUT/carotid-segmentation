@@ -10,12 +10,12 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    ref_dir = path.join(test_dir, "heatmap_transform", "reference")
+    ref_dir = path.join(test_dir, "heatmap", "reference")
 
     apply_transform(
-        raw_dir=path.join(test_dir, "raw_dir"),
-        model_dir=path.join(test_dir, "models", "heatmap_transform"),
-        config_path=path.join(test_dir, "heatmap_transform", "test_args.toml"),
+        raw_dir=path.join(test_dir, "..", "raw_dir"),
+        model_dir=path.join(test_dir, "..", "models", "heatmap_transform"),
+        config_path=path.join(test_dir, "heatmap", "test_args.toml"),
         output_dir=tmp_dir,
         force=True,
     )

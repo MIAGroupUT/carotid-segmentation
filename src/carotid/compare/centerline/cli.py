@@ -25,9 +25,13 @@ def cli(
     output_path,
 ) -> None:
     """
-    Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
+    Compare the centerlines in two output directories of `carotid transform centerline`.
 
-    OUTPUT_DIR is the path to the directory containing the results.
+    TRANSFORM1_DIR is the path to the first directory to compare.
+
+    TRANSFORM2_DIR is the path to the second directory to compare.
+
+    OUTPUT_PATH is the path to the output TSV file.
     """
     from .pipeline import compare
 

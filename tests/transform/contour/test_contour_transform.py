@@ -9,9 +9,9 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 def test_pipeline():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "contour_transform", "input")
-    ref_dir = path.join(test_dir, "contour_transform", "reference")
-    model_dir = path.join(test_dir, "models", "contour_transform")
+    input_dir = path.join(test_dir, "contour", "input")
+    ref_dir = path.join(test_dir, "contour", "reference")
+    model_dir = path.join(test_dir, "..",  "models", "contour_transform")
 
     apply_transform(
         output_dir=tmp_dir,

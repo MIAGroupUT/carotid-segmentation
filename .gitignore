@@ -5,7 +5,7 @@ src/carotid.egg-info/*
 models/*_transform*/*
 
 # Ignore test data
-tests/tmp
+***/tmp
 tests/raw_dir
 tests/models
 tests/***/reference
