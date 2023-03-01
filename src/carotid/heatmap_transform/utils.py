@@ -51,7 +51,7 @@ class UNetPredictor:
 
         for side in self.side_list:
             unet_shape = unet_sample[f"{side}_heatmap"].shape
-            pred_tensor = torch.zeros(len(self.model_paths_list), *unet_shape)
+            pred_tensor = torch.zeros(len(self.model_paths_list), 2, *unet_shape[1::])
 
             for model_idx, model_path in tqdm(
                 enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
