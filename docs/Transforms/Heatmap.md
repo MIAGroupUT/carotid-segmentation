@@ -42,8 +42,8 @@ even if the transform was already performed in this folder.
 
 Two values can be changed in the config file:
 
-- `roi_size` (Tuple[int, int, int]) is the size of the window used to infer the whole heatmap. The order of the coordinates is (X, Y, Z). 
-Default: `(64, 64, 160)`. 
+- `roi_size` (Tuple[int, int, int]) is the size of the window used to infer the whole heatmap. The order of the coordinates is (Z, Y, X). 
+Default: `(368, 64, 320)`. 
 - `spacing` (bool) indicates if the image should be resamples to the resolution used by the network [0.5, 0.5, 0.5]. If the resolution of your image
 is close to this resolution, you can choose to disable resampling to gain computational time and avoid image distortion. Default: `True`.
 
