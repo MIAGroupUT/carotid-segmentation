@@ -1,7 +1,5 @@
 import click
 from carotid.utils.cli_param.decorators import OrderedGroup
-from carotid.transforms.cli import cli as transform_cli
-from carotid.compare.cli import cli as compare_cli
 
 
 CONTEXT_SETTINGS = dict(
@@ -12,15 +10,11 @@ CONTEXT_SETTINGS = dict(
 )
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True, cls=OrderedGroup)
-@click.version_option()
+@click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True, cls=OrderedGroup, name="compare")
 def cli():
-    """carotid-segmentation command line."""
+    """Compare the outputs of two different settings of the same transform."""
     pass
 
-
-cli.add_command(transform_cli)
-cli.add_command(compare_cli)
 
 if __name__ == "__main__":
     cli()

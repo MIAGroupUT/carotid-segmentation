@@ -1,10 +1,10 @@
-# `heatmap_transform` - Compute heatmaps with pre-trained U-Nets
+# `heatmap` - Compute heatmaps with pre-trained U-Nets
 
 The first step of the pipeline consists in estimating the position of the centerlines of each carotid.
 Each side of the image (left or right) is treated independently. One heatmap is extracted for each side,
 and have two channels corresponding to each of the carotid (internal or external).
 
-![Illustration of heatmap_transform](../images/heatmap_transform.png)
+![Illustration of heatmap transform](../images/heatmap_transform.png)
 <p style="text-align: center;"><b>Example of heatmaps produced by the network. On each side the internal 
 (red) and external (green) carotids are extracted. The common carotid (yellow) corresponds to the intersection
 of the internal and external carotids in the lower part of the volume.</b></p>
@@ -19,7 +19,7 @@ You also need to provide one (or several models) stored in the same directory.
 
 The task can be run with the following command line:
 ```
-carotid heatmap_transform RAW_DIR HEATMAP_MODEL_DIR OUTPUT_DIR
+carotid transform heatmap RAW_DIR HEATMAP_MODEL_DIR OUTPUT_DIR
 ```
 where:
 

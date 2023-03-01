@@ -1,4 +1,4 @@
-# `polar_transform` - Draw 3D polar images
+# `polar` - Draw 3D polar images
 
 This step generates one polar image per center found in the previous step.
 
@@ -11,13 +11,13 @@ This operation is done for the `length` neighbouring axial slices, resulting in 
 (`1`, `1`, <code>length</code>, `2*n_angles`, <code>polar_ray</code>) after addition of the channel
 and batch dimension.
 
-![Illustration of polar_transform](../images/polar_transform.png)
+![Illustration of polar transform](../images/polar_transform.png)
 <p style="text-align: center;"><b>Example of polar image extracted. The center is highlighted in blue, and 
 an example of ray drawn in the cartesian space is highlighted in orange.</b></p>
 
 ## Prerequisites
 
-This step relies on the outputs of `centerline_transform` and raw images.
+This step relies on the outputs of `transform centerline` and raw images.
 The path to raw images is found on the JSON file listing all parameters.
 
 !!! warning "JSON parameters"
@@ -30,7 +30,7 @@ The path to raw images is found on the JSON file listing all parameters.
 
 The task can be run with the following command line:
 ```
-carotid polar_transform OUTPUT_DIR
+carotid transform polar OUTPUT_DIR
 ```
 where:
 
@@ -39,7 +39,7 @@ where:
 Options:
 
 - `--centerline_dir` (str) is the path to a different directory in which the centerlines are stored.
-Default will assume that `centerline_transform` was run in the output directory.
+Default will assume that `transform centerline` was run in the output directory.
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
 - `--participant` (List[str]) restricts the application of the transform to this list of participant IDs. 
 Default will perform the pipeline on all participants with a raw image.

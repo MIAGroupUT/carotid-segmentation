@@ -67,12 +67,8 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  heatmap_transform       Extract heatmaps from raw images using pre-trained U-Nets.
-  centerline_transform    Extract centerlines from heatmaps computed with heatmap_transform with the Dijkstra algorithm.
-  polar_transform         Extract polar images from raw images based on the centerlines found with centerline_transform.
-  contour_transform       Extract contours from raw images and corresponding polar images computed by polar_transform.
-  segmentation_transform  Extract a voxel mask from the point clouds of the contours computed with contour_transform.
-  pipeline_transform      Execute the full pipeline from heatmap_transform to segmentation_transform.
+  transform  Transform 3D black-blood MRI in different steps of the carotid segmentation algorithm.
+  compare    Compare the outputs of two different settings of the same transform.
 ```
 
 
@@ -84,7 +80,7 @@ to correctly prepare your environment.
 This package is meant to be run with a command line, but an API is also available for each transform.
 To run any of the transform use the following command in your terminal:
 ```
-carotid <transform_name> [OPTIONS] [ARGUMENTS]
+carotid transform <transform_name> [OPTIONS] [ARGUMENTS]
 ```
 More information about each command is available in the documentation. 
 

@@ -33,6 +33,7 @@ if [ ! -d $MODELPATH ]; then
     mkdir $MODELPATH
     mkdir $MODELPATH/contour_transform
     cp models/contour_transform/model_0* $MODELPATH/contour_transform
+    cp models/contour_transform/model_1* $MODELPATH/contour_transform
     mkdir $MODELPATH/heatmap_transform
     cp models/heatmap_transform/model_0* $MODELPATH/heatmap_transform
     cp -r models/contour_transform_dropout $MODELPATH

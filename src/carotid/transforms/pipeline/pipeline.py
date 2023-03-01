@@ -1,10 +1,10 @@
 import shutil
 
-from carotid.heatmap_transform.utils import UNetPredictor
-from carotid.centerline_transform.utils import OnePassExtractor
-from carotid.polar_transform.utils import PolarTransform
-from carotid.contour_transform.utils import ContourTransform
-from carotid.segmentation_transform.utils import SegmentationTransform
+from carotid.transforms.heatmap.utils import UNetPredictor
+from carotid.transforms.centerline.utils import OnePassExtractor
+from carotid.transforms.polar.utils import PolarTransform
+from carotid.transforms.contour.utils import ContourTransform
+from carotid.transforms.segmentation.utils import SegmentationTransform
 from os import path, makedirs
 from carotid.utils import (
     write_json,

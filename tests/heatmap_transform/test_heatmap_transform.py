@@ -1,7 +1,7 @@
 from os import path
 import torch
 from carotid.utils import build_dataset
-from carotid.heatmap_transform.pipeline import apply_transform
+from carotid.transforms.heatmap.pipeline import apply_transform
 
 import shutil
 

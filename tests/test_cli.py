@@ -7,12 +7,8 @@ from carotid.cli import cli
 # Test for the first level at the command line
 @pytest.fixture(
     params=[
-        "centerline_transform",
-        "heatmap_transform",
-        "polar_transform",
-        "contour_transform",
-        "segmentation_transform",
-        "pipeline_transform",
+        "transform",
+        "compare",
     ]
 )
 def cli_args_first_lv(request):
@@ -25,4 +21,27 @@ def test_first_lv(cli_args_first_lv):
     task = cli_args_first_lv
     print(f"Testing input cli {task}")
     result = runner.invoke(cli, f"{task} -h")
+    assert result.exit_code == 0
+
+
+@pytest.fixture(
+    params=[
+        "centerline",
+        "heatmap",
+        "polar",
+        "contour",
+        "segmentation",
+        "pipeline",
+    ]
+)
+def cli_args_transform_lv(request):
+    task = request.param
+    return task
+
+
+def test_transform_lv(cli_args_transform_lv):
+    runner = CliRunner()
+    task = cli_args_transform_lv
+    print(f"Testing input cli {task}")
+    result = runner.invoke(cli, f"transform {task} -h")
     assert result.exit_code == 0

@@ -1,13 +1,13 @@
-# `segmentation_transform` - Compute binary voxel masks from contours
+# `segmentation` - Compute binary voxel masks from contours
 
 This transform relies on the Python packages `shapely` and `rasterio`.
 The external and internal carotids are combined after this transform. 
 
-![Illustration of segmentation_transform](../images/segmentation_transform.png)
+![Illustration of segmentation transform](../images/segmentation_transform.png)
 
 ## Prerequisites
 
-This step relies on the outputs of `contour_transform`.
+This step relies on the outputs of `transform contour`.
 
 !!! warning "JSON parameters"
     This step does not only require the contour TSV files but will try to
@@ -18,7 +18,7 @@ This step relies on the outputs of `contour_transform`.
 
 The task can be run with the following command line:
 ```
-carotid segmentation_transform OUTPUT_DIR
+carotid transform segmentation OUTPUT_DIR
 ```
 where:
 
@@ -27,7 +27,7 @@ where:
 Options:
 
 - `--contour_dir` (str) is the path to a different directory in which the contours are stored.
-Default will assume that `contour_transform` was run in the output directory.
+Default will assume that `transform contour` was run in the output directory.
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
 - `--participant` (List[str]) restricts the application of the transform to this list of participant IDs. 
 Default will perform the pipeline on all participants with a raw image.

@@ -11,7 +11,7 @@ from carotid.utils import (
 )
 from typing import List
 
-transform_name = path.basename(path.dirname(path.realpath(__file__)))
+transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
 
 
 def apply_transform(

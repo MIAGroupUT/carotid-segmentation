@@ -13,8 +13,3 @@ class OrderedGroup(click.Group):
 
     def list_commands(self, ctx):
         return self.commands
-
-
-@click.group(cls=OrderedGroup)
-def entire_group():
-    """Entire Group"""

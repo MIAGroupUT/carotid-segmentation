@@ -12,6 +12,7 @@ tests/*/reference
 tests/*/input
 tests/*/*.toml
 .coverage*
+coverage*
 reports/*
 
 # Ignore build

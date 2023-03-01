@@ -1,4 +1,4 @@
-# `contour_transform` - Extract contours of the lumen and wall for each axial slice
+# `contour` - Extract contours of the lumen and wall for each axial slice
 
 This step outputs 2 contours per polar image computed during the previous step: the contour of
 the lumen and the contour of the wall of the vessel.
@@ -31,7 +31,7 @@ in the interval <code>&Delta;&theta;</code> are used to measure the uncertainty 
 
 ## Prerequisites
 
-This step relies on the outputs of `polar_transform`.
+This step relies on the outputs of `transform polar`.
 
 !!! warning "JSON parameters"
     This step does not only require the polar images but will try to
@@ -44,7 +44,7 @@ You also need to provide one (or several models) for contour regression stored i
 
 The task can be run with the following command line:
 ```
-carotid contour_transform OUTPUT_DIR CONTOUR_MODEL_DIR
+carotid transform contour OUTPUT_DIR CONTOUR_MODEL_DIR
 ```
 where:
 
@@ -54,7 +54,7 @@ where:
 Options:
 
 - `--polar_dir` (str) is the path to a different directory in which the polar images are stored.
-Default will assume that `polar_transform` was run in the output directory.
+Default will assume that `transform polar` was run in the output directory.
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
 - `--participant` (List[str]) restricts the application of the transform to this list of participant IDs. 
 Default will perform the pipeline on all participants with a raw image.

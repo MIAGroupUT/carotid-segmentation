@@ -3,7 +3,7 @@ from carotid.utils import cli_param
 
 
 @click.command(
-    "segmentation_transform",
+    "segmentation",
     no_args_is_help=True,
     context_settings={"show_default": True},
 )
@@ -39,7 +39,3 @@ def cli(
         participant_list=participant,
         force=force,
     )
-
-
-if __name__ == "__main__":
-    cli()

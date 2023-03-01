@@ -1,4 +1,4 @@
-# `centerline_transform` - Compute centerlines from heatmaps
+# `centerline` - Compute centerlines from heatmaps
 
 The second step of the pipeline consists in extracting the position of one center per
 axial slice from the previously obtained heatmaps.
@@ -11,7 +11,7 @@ The current procedure includes three steps:
 to the internal ones are removed until a difference is found.
 
 
-![Illustration of centerline_transform](../images/centerline_transform.png)
+![Illustration of centerline transform](../images/centerline_transform.png)
 <p style="text-align: center;"><b>Example of heatmaps produced by the network. 
 On each side the internal (red) and external (green) carotids are extracted. 
 The common carotid (yellow) corresponds to the intersection of the internal 
@@ -19,7 +19,7 @@ and external carotids in the lower part of the volume</b></p>
 
 ## Prerequisites
 
-This step relies on the outputs of `heatmap_transform`.
+This step relies on the outputs of `transform heatmap`.
 
 !!! warning "JSON parameters"
     This step does not only require the heatmap volumes but will try to
@@ -30,7 +30,7 @@ This step relies on the outputs of `heatmap_transform`.
 
 The task can be run with the following command line:
 ```
-carotid centerline_transform 
+carotid transform centerline OUTPUT_DIR
 ```
 where:
 
@@ -39,7 +39,7 @@ where:
 Options:
 
 - `--heatmap_dir` (str) is the path to a different directory in which the heatmaps are stored.
-Default will assume that `heatmap_transform` was run in the output directory.
+Default will assume that `transform heatmap` was run in the output directory.
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
 - `--participant` (List[str]) restricts the application of the transform to this list of participant IDs. 
 Default will perform the pipeline on all participants with a raw image.

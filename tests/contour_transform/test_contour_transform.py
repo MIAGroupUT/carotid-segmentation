@@ -1,6 +1,6 @@
 from os import path
 from carotid.utils import build_dataset, read_json, check_equal_parameters
-from carotid.contour_transform.pipeline import apply_transform
+from carotid.transforms.contour.pipeline import apply_transform
 import numpy as np
 import shutil
 

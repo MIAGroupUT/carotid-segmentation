@@ -1,4 +1,3 @@
-import abc
 import warnings
 import numpy as np
 import torch
@@ -15,10 +14,6 @@ class CenterlineExtractor:
         self.label_list = ["internal", "external"]
         self.side_list = ["left", "right"]
 
-    @abc.abstractmethod
-    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        pass
-
     def remove_common_external_centers(self, label_df: pd.DataFrame) -> pd.DataFrame:
         internal_df = label_df[label_df.label == "internal"]
         external_df = label_df[label_df.label == "external"]
@@ -33,8 +28,8 @@ class CenterlineExtractor:
 
         while z <= max_z and not flag:
             try:
-                external_center = label_df.loc[("external", z)].values
-                internal_center = label_df.loc[("internal", z)].values
+                external_center = label_df.loc[("external", z), ["x", "y"]].values
+                internal_center = label_df.loc[("internal", z), ["x", "y"]].values
                 if (
                     np.linalg.norm(internal_center - external_center)
                     > self.parameters["spatial_threshold"]
@@ -51,6 +46,7 @@ class CenterlineExtractor:
         # Change external to common if below internal carotid
         if min_external_z < min_internal_z:
             for z in range(min_external_z, min_internal_z):
+                print(z)
                 idx = label_df[label_df.z == z].index.item()
                 label_df.loc[idx, "label"] = "internal"
 

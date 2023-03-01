@@ -8,7 +8,7 @@ This transform execute the following series of transforms:
 4. [Inference of contours](./Contour.md)
 5. [Computation of binary voxel masks](./Segmentation.md)
 
-![Illustration of pipeline_transform](../images/pipeline_transform.png)
+![Illustration of pipeline transform](../images/pipeline_transform.png)
 <p style="text-align: center;"><b>Illustration of the application of the pipeline. For more information
 on each intermediate step, please refer to the corresponding documentation. </b></p>
 
@@ -25,7 +25,7 @@ You need to prepare two directories:
 
 The task can be run with the following command line:
 ```
-carotid pipeline_transform RAW_DIR HEATMAP_MODEL_DIR CONTOUR_MODEL_DIR OUTPUT_DIR
+carotid transform pipeline RAW_DIR HEATMAP_MODEL_DIR CONTOUR_MODEL_DIR OUTPUT_DIR
 ```
 where:
 
@@ -81,7 +81,7 @@ There are no parameters for the [computation of binary voxel masks](./Segmentati
 
 ## Outputs
 
-The outputs of all transforms except [`polar_transform`](./Polar.md) are saved:
+The outputs of all transforms except [`transform polar`](./Polar.md) are saved:
 
 ```console
 <output_dir>
