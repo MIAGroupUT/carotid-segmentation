@@ -1,5 +1,6 @@
 import click
 from carotid.utils.cli_param.decorators import OrderedGroup
+from carotid.compare.centerline.cli import cli as centerline_cli
 
 
 CONTEXT_SETTINGS = dict(
@@ -16,5 +17,4 @@ def cli():
     pass
 
 
-if __name__ == "__main__":
-    cli()
+cli.add_command(centerline_cli)
