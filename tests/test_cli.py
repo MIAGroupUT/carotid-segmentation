@@ -45,3 +45,21 @@ def test_transform_lv(cli_args_transform_lv):
     print(f"Testing input cli {task}")
     result = runner.invoke(cli, f"transform {task} -h")
     assert result.exit_code == 0
+
+
+@pytest.fixture(
+    params=[
+        "centerline",
+    ]
+)
+def cli_args_compare_lv(request):
+    task = request.param
+    return task
+
+
+def test_compare_lv(cli_args_compare_lv):
+    runner = CliRunner()
+    task = cli_args_compare_lv
+    print(f"Testing input cli {task}")
+    result = runner.invoke(cli, f"compare {task} -h")
+    assert result.exit_code == 0
