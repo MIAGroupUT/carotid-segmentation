@@ -51,9 +51,9 @@ def test_pipeline():
 
 def test_pipeline_dropout():
     tmp_dir = path.join(test_dir, "tmp")
-    input_dir = path.join(test_dir, "contour_transform", "input")
-    model_dir = path.join(test_dir, "models", "contour_transform_dropout")
-    config_path = path.join(test_dir, "contour_transform", "test_args_dropout.toml")
+    input_dir = path.join(test_dir, "contour", "input")
+    model_dir = path.join(test_dir, "..",  "models", "contour_transform_dropout")
+    config_path = path.join(test_dir, "contour", "test_args_dropout.toml")
 
     apply_transform(
         output_dir=tmp_dir,

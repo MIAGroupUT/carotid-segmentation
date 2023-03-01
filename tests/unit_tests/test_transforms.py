@@ -30,7 +30,7 @@ def compare_left_and_right(original_sample, transformed_sample, reconstructed_sa
 
 def test_repro_extract_left_right_transform():
     raw_dir = path.join(test_dir, "raw_dir")
-    heatmap_dir = path.join(test_dir, "heatmap_transform", "reference")
+    heatmap_dir = path.join(test_dir, "transform", "heatmap", "reference")
 
     transform = ExtractLeftAndRightd(split_keys=["heatmap"], keys=["image", "heatmap"])
 
@@ -47,7 +47,7 @@ def test_repro_extract_left_right_transform():
 
 def test_cart2polar():
     dataset = build_dataset(
-        contour_dir=path.join(test_dir, "contour_transform", "reference")
+        contour_dir=path.join(test_dir, "transform", "contour",  "reference")
     )
 
     sample = dataset[0]
