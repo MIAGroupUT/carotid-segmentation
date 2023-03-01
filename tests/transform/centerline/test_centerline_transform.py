@@ -1,6 +1,6 @@
 from os import path
 from carotid.utils import build_dataset, read_json, check_equal_parameters
-from carotid.transforms.centerline.pipeline import apply_transform
+from carotid.transform.centerline.pipeline import apply_transform
 import shutil
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))

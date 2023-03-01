@@ -1,10 +1,10 @@
 import click
-from carotid.transforms.heatmap.cli import cli as heatmap_cli
-from carotid.transforms.centerline.cli import cli as centerline_cli
-from carotid.transforms.polar.cli import cli as polar_cli
-from carotid.transforms.contour.cli import cli as contour_cli
-from carotid.transforms.segmentation.cli import cli as segmentation_cli
-from carotid.transforms.pipeline.cli import cli as pipeline_cli
+from carotid.transform.heatmap.cli import cli as heatmap_cli
+from carotid.transform.centerline.cli import cli as centerline_cli
+from carotid.transform.polar.cli import cli as polar_cli
+from carotid.transform.contour.cli import cli as contour_cli
+from carotid.transform.segmentation.cli import cli as segmentation_cli
+from carotid.transform.pipeline.cli import cli as pipeline_cli
 from carotid.utils.cli_param.decorators import OrderedGroup
 
 

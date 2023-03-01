@@ -8,9 +8,9 @@ models/*_transform*/*
 tests/tmp
 tests/raw_dir
 tests/models
-tests/*/reference
-tests/*/input
-tests/*/*.toml
+tests/***/reference
+tests/****/input
+tests/****/*.toml
 .coverage*
 coverage*
 reports/*

@@ -1,4 +1,4 @@
-from carotid.transforms.centerline.utils import CenterlineExtractor
+from carotid.transform.centerline.utils import CenterlineExtractor
 import pandas as pd
 
 

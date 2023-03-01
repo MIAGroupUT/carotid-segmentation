@@ -1,7 +1,7 @@
 from os import path
 import torch
 from carotid.utils import build_dataset, read_json, check_equal_parameters
-from carotid.transforms.polar.pipeline import apply_transform
+from carotid.transform.polar.pipeline import apply_transform
 import shutil
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))

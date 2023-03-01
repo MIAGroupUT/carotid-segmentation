@@ -1,5 +1,5 @@
-if [ -d "tests/tmp" ]; then
-    rm -r "tests/tmp"
+if [ -d "tests/transform/tmp" ]; then
+    rm -r "tests/transform/tmp"
 fi
 
 if [ ! -d "tests/raw_dir" ]; then
@@ -10,19 +10,19 @@ if [ ! -d "tests/raw_dir" ]; then
     # Copy raw data
     cp -r v1/raw_dir tests
     # Copy transforms data
-    for transform in centerline_transform contour_transform heatmap_transform pipeline_transform polar_transform segmentation_transform
+    for transform in centerline contour heatmap pipeline polar segmentation
     do
-      if [ -d "tests/$transform/reference" ]; then
-          rm -r tests/$transform/reference
+      if [ -d "tests/transform/$transform/reference" ]; then
+          rm -r tests/transform/$transform/reference
       fi
 
-      if [ -d "tests/$transform/input" ]; then
-          rm -r tests/$transform/input
+      if [ -d "tests/transform/$transform/input" ]; then
+          rm -r tests/transform/$transform/input
       fi
-      cp -r v1/$transform/* tests/$transform
+      cp -r v1/transform/$transform/* tests/transform/$transform
     done
 
-    rm -r v1
+    # rm -r v1
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"
 fi
