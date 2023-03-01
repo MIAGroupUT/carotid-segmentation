@@ -70,12 +70,12 @@ Output structure for participant `participant_id`:
 where:
 
 - `parameters.json` is a JSON file summarizing the parameters used to perform this transform and eventually preceding ones.
-- `<side>_centerline.tsv` is a TSV file including all the centers described by 4 columns: the first one gives the label (internal or external)
-and the three last columns are the x, y, z coordinates of one center:
+- `<side>_centerline.tsv` is a TSV file including all the centers described by 7 columns: the first one gives the label (internal or external)
+and the next three columns are the x, y, z coordinates of one center, the last three gives measurements to evaluate the uncertainty of the points:
 
-| label    | x   | y   | z   |
-|----------|-----|-----|-----|
-| internal | 130 | 80  | 340 |
-| internal | 131 | 80  | 341 |
-| ...      | ... | ... | ... |
-| external | 420 | 57  | 413 |
+| label    | x   | y   | z   | mean_value | std_value | max_distances |
+|----------|-----|-----|-----|------------|-----------|---------------|
+| internal | 130 | 80  | 340 | 134.1      | 245.2     | 10.3          |
+| internal | 131 | 80  | 341 | 154.3      | 156.2     | 8.4           |
+| ...      | ... | ... | ... | ...        | ...       | ...           |
+| external | 420 | 57  | 413 | 120.3      | 345.5     | 13.4          |

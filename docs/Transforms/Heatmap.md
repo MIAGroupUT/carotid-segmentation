@@ -56,12 +56,22 @@ Output structure for participant `participant_id`:
 ├── parameters.json
 └── <participant_id>
         └── heatmap_transform
-                ├── left_heatmap.mha
-                └── right_heatmap.mha
+            ├── left_heatmap
+            │   ├── max_indices.npy
+            │   ├── mean.mha
+            │   └── std.mha
+            └── right_heatmap
+                ├── max_indices.npy
+                ├── mean.mha
+                └── std.mha
 ```
 
 where:
 
 - `parameters.json` is a JSON file summarizing the parameters used to perform this transform and eventually preceding ones.
-- `<side>_heatmap.mha` is a volume with the same spatial size than the corresponding raw input and two channels.
-The first channel corresponds to the heatmap for the internal carotid, the second one corresponds to the external carotid.
+- `<side>_heatmap` is a folder containing data about the series of heatmaps extracted. Volumes have the same spatial size 
+than the corresponding raw input and two channels: the first channel corresponds to the heatmap for the internal carotid, 
+the second one corresponds to the external carotid.
+  - `mean.mha` is the mean volume of the series.
+  - `std.mha` is the standard deviation of the series.
+  - `max_indices.npy` contains the list of maximum values in each heatmap and each axial slice.
