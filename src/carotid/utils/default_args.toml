@@ -1,5 +1,5 @@
 [heatmap_transform]
-roi_size = [64, 64, 160]
+roi_size = [368, 64, 320]
 spacing = true
 
 [centerline_transform]

@@ -17,6 +17,7 @@ def test_pipeline():
         model_dir=path.join(test_dir, "models", "heatmap_transform"),
         config_path=path.join(test_dir, "heatmap_transform", "test_args.toml"),
         output_dir=tmp_dir,
+        force=True,
     )
 
     # Read reference
