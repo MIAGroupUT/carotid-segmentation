@@ -1,6 +1,7 @@
 [heatmap_transform]
 roi_size = [368, 64, 320]
 spacing = true
+overlap = 0.6
 
 [centerline_transform]
 step_size = 50

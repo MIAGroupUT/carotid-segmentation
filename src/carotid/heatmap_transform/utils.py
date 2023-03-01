@@ -21,6 +21,7 @@ class UNetPredictor:
         self.spacing = parameters["spacing"]
         self.device = parameters["device"]
         self.roi_size = parameters["roi_size"]
+        self.overlap = parameters["overlap"]
 
         # Create useful objects
         self.model_paths_list = [
@@ -39,7 +40,7 @@ class UNetPredictor:
         ).to(self.device)
 
         self.transforms = self.get_transforms(spacing=self.spacing)
-        self.inferer = SlidingWindowInferer(roi_size=self.roi_size, overlap=0.8)
+        self.inferer = SlidingWindowInferer(roi_size=self.roi_size, overlap=self.overlap)
         self.side_list = ["left", "right"]
 
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
