@@ -24,7 +24,7 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
 
     common_id_set = set(dataset1_id_list) & set(dataset2_id_list)
 
-    cols = ["side", "label", "slice_idx", "euclidean_distance"]
+    cols = ["participant_id", "side", "label", "slice_idx", "euclidean_distance"]
     output_df = pd.DataFrame(columns=cols)
 
     for participant_id in common_id_set:
@@ -45,7 +45,7 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
                     center1 = centerline1_df.loc[(label_name, slice_idx), ["x", "y"]]
                     center2 = centerline2_df.loc[(label_name, slice_idx), ["x", "y"]]
                     distance = np.linalg.norm(center1 - center2)
-                    row_df = pd.DataFrame([[side, label_name, slice_idx, distance]], columns=cols)
+                    row_df = pd.DataFrame([[participant_id, side, label_name, slice_idx, distance]], columns=cols)
                     output_df = pd.concat((output_df, row_df))
 
                 except KeyError:
