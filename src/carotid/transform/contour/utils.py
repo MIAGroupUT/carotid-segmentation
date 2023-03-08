@@ -17,6 +17,7 @@ class ContourTransform:
         self.n_repeats = parameters["n_repeats"]
         self.side_list = ["left", "right"]
         self.delta_theta = 2 * np.pi * parameters["delta_theta"]
+        self.single_center = parameters["single_center"]
 
         self.model_paths_list = [
             path.join(self.model_dir, filename)
@@ -51,9 +52,16 @@ class ContourTransform:
             affine = sample[f"{side}_polar_meta_dict"]["affine"]
             for polar_dict in polar_list:
                 label = polar_dict["label"]
+                if self.single_center:
+                    batch_polar_pt = polar_dict["polar_pt"][:1:]
+                    batch_center_pt = polar_dict["center_pt"][:1:]
+                else:
+                    batch_polar_pt = polar_dict["polar_pt"]
+                    batch_center_pt = polar_dict["center_pt"]
+
                 lumen_cont, wall_cont = self._transform(
-                    polar_dict["polar_pt"],
-                    polar_dict["center_pt"],
+                    batch_polar_pt,
+                    batch_center_pt,
                     sample[f"{side}_polar_meta_dict"],
                 )
 

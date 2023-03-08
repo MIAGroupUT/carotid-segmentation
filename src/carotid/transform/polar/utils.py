@@ -81,8 +81,8 @@ class PolarTransform:
         batch_center_pt = center_pt.repeat(9, 1)
         batch_idx = 0
 
-        for x_offset in [-1, 0, 1]:
-            for y_offset in [-1, 0, 1]:
+        for x_offset in [0, -1, 1]:
+            for y_offset in [0, -1, 1]:
                 batch_center_pt[batch_idx, 0] += x_offset
                 batch_center_pt[batch_idx, 1] += y_offset
                 batch_idx += 1
