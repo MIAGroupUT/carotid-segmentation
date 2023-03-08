@@ -382,7 +382,13 @@ class ContourSerializer(Serializer):
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
-        sample[key].to_csv(output_path, sep="\t", index=False)
+        out_df = sample[key]
+        if "deviation" not in out_df:
+            out_df["deviation"] = np.nan
+
+        out_df.to_csv(
+            output_path, sep="\t", index=False, columns=["label", "object", "x", "y", "z", "deviation"]
+        )
         write_json(
             sample[f"{key}_meta_dict"],
             path.join(path.dirname(output_path), "spatial_metadata.json"),
