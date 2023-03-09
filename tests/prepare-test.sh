@@ -35,7 +35,7 @@ if [ ! -d "tests/raw_dir" ]; then
       cp -r v1/compare/$transform/* tests/compare/$transform
     done
 
-    # rm -r v1
+    rm -r v1
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"
 fi
