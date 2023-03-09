@@ -186,7 +186,7 @@ class ContourTransform:
             self.model.set_mode("dropout" if self.dropout else "eval")
 
             with torch.no_grad():
-                batch_prediction_pt[model_index] = self.sample_dropout(batch_polar_pt)
+                batch_prediction_pt[model_index] = self.sample_dropout(batch_polar_pt.to(self.device)).cpu()
 
         batch_prediction_pt = batch_prediction_pt.transpose(0, 1).reshape(batch_size, -1, 2, dn_angles // 2 + 1)
 
