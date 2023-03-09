@@ -60,6 +60,7 @@ def test_pipeline_dropout():
         polar_dir=input_dir,
         model_dir=model_dir,
         config_path=config_path,
+        force=True
     )
 
     shutil.rmtree(tmp_dir)

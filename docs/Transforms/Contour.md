@@ -69,8 +69,10 @@ The parameters available are linked to the computation of the uncertainty:
 
 - `dropout` (bool) if `True`, the dropout layers will be activated Default: `False`.
 - `n_repeats` (int) is the number of times each polar image is processed by each network.
-This repetition is performed only if `dropout` is set to `True`. Default: `20`
-- `delta_theta` (float) Default: `0.0625`
+This repetition is performed only if `dropout` is set to `True`. Default: `20`.
+- `delta_theta` (float) Default: `0.0625`.
+- `single_center` (bool) if True, only the first element of the batch of polar images will be considered (which
+corresponds to using the original center only). Default: `False`.
 
 
 ## Outputs
