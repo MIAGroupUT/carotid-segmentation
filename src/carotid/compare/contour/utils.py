@@ -49,11 +49,9 @@ def compute_point_distance(
     reference_df.sort_index(inplace=True)
 
     for label_name, object_name, slice_idx in output_df.index.unique():
-        print(label_name, object_name, slice_idx)
         try:
             transform_contour_np = output_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
             reference_contour_np = reference_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
-            print(transform_contour_np)
             min_distances = np.min(cdist(transform_contour_np, reference_contour_np), axis=1)
             output_df.loc[(label_name, object_name, slice_idx), "min_distance"] = min_distances
 

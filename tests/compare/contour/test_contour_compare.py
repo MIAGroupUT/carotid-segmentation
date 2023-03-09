@@ -18,8 +18,8 @@ def test_pipeline():
     )
 
     for filename in ["compare_contour_dice.tsv", "compare_contour_points.tsv"]:
-        ref_df = pd.read_csv(path.join(ref_path, filename), sep="\t")
-        out_df = pd.read_csv(path.join(tmp_path, filename), sep="\t")
+        ref_df = pd.read_csv(path.join(ref_path, filename), sep="\t").sort_index(axis=1)
+        out_df = pd.read_csv(path.join(tmp_path, filename), sep="\t").sort_index(axis=1)
         assert ref_df.equals(out_df)
 
     shutil.rmtree(tmp_path)

@@ -70,7 +70,9 @@ def compare(
                 except KeyError:
                     pass
 
-    dice_df.to_csv(path.join(output_dir, dice_filename), sep="\t", index=False)
-    point_df.to_csv(path.join(output_dir, point_filename), sep="\t", index=False,
-                    columns=["participant_id", "side", "label", "object", "z", "y", "x", "deviation", "min_distance"]
-                    )
+    dice_df.set_index(["participant_id", "side", "label", "z", "object"], inplace=True)
+    dice_df.sort_index(inplace=True)
+    dice_df.to_csv(path.join(output_dir, dice_filename), sep="\t")
+    point_df.set_index(["participant_id", "side", "label", "z", "object"], inplace=True)
+    point_df.sort_index(inplace=True)
+    point_df.to_csv(path.join(output_dir, point_filename), sep="\t")
