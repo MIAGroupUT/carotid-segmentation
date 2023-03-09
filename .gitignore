@@ -8,7 +8,7 @@ models/*_transform*/*
 ***/tmp
 tests/raw_dir
 tests/models
-tests/***/reference
+tests/****/reference
 tests/****/input
 tests/****/*.toml
 .coverage*

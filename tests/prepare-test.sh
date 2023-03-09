@@ -3,7 +3,7 @@ if [ -d "tests/transform/tmp" ]; then
 fi
 
 if [ ! -d "tests/raw_dir" ]; then
-    curl https://surfdrive.surf.nl/files/index.php/s/e13O5s7PPTsJNli/download -o test.tar -L
+    curl https://surfdrive.surf.nl/files/index.php/s/I2yC3oFbtQaZwei/download -o test.tar -L
     unzip test.tar
     rm test.tar
 
@@ -22,7 +22,20 @@ if [ ! -d "tests/raw_dir" ]; then
       cp -r v1/transform/$transform/* tests/transform/$transform
     done
 
-    rm -r v1
+    # Copy comparison data
+    for transform in centerline contour
+    do
+      if [ -d "tests/compare/$transform/reference.tsv" ]; then
+          rm tests/compare/$transform/reference.tsv
+      fi
+
+      if [ -d "tests/compare/$transform/input" ]; then
+          rm -r tests/compare/$transform/input
+      fi
+      cp -r v1/compare/$transform/* tests/compare/$transform
+    done
+
+    # rm -r v1
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"
 fi

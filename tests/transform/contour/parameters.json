@@ -1,0 +1,39 @@
+{
+    "heatmap_transform": {
+        "spacing": false,
+        "roi_size": [
+            64,
+            64,
+            160
+        ],
+        "raw_dir": "tests/raw_dir",
+        "model_dir": "tests/models/heatmap_transform",
+        "device": "cpu"
+    },
+    "centerline_transform": {
+        "step_size": 10,
+        "threshold": 50,
+        "spatial_threshold": 5,
+        "dir": "tests/tmp",
+        "heatmap_dir": "tests/centerline_transform/input"
+    },
+    "polar_transform": {
+        "n_angles": 31,
+        "polar_ray": 127,
+        "cartesian_ray": 100,
+        "length": 7,
+        "n_centers": 10,
+        "raw_dir": "tests/raw_dir",
+        "centerline_dir": "tests/polar_transform/input",
+        "dir": "tests/tmp"
+    },
+    "contour_transform": {
+        "dropout": false,
+        "n_repeats": 20,
+        "delta_theta": 0.0625,
+        "single_center": false,
+        "polar_dir": "tests/contour_transform/input",
+        "model_dir": "tests/models/contour_transform",
+        "device": "cpu"
+    }
+}

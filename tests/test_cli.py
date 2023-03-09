@@ -50,6 +50,7 @@ def test_transform_lv(cli_args_transform_lv):
 @pytest.fixture(
     params=[
         "centerline",
+        "contour",
     ]
 )
 def cli_args_compare_lv(request):

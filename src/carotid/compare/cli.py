@@ -1,6 +1,7 @@
 import click
 from carotid.utils.cli_param.decorators import OrderedGroup
 from carotid.compare.centerline.cli import cli as centerline_cli
+from carotid.compare.contour.cli import cli as contour_cli
 
 
 CONTEXT_SETTINGS = dict(
@@ -18,3 +19,4 @@ def cli():
 
 
 cli.add_command(centerline_cli)
+cli.add_command(contour_cli)

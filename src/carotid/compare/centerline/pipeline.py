@@ -9,7 +9,7 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
     dataset2 = build_dataset(centerline_dir=transform2_dir)
 
     if path.isdir(output_path):
-        output_path = path.join(output_path, "results.tsv")
+        output_path = path.join(output_path, "compare_centerline.tsv")
     elif not output_path.endswith(".tsv"):
         output_path = f"{output_path}.tsv"
 
@@ -24,7 +24,7 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
 
     common_id_set = set(dataset1_id_list) & set(dataset2_id_list)
 
-    cols = ["participant_id", "side", "label", "slice_idx", "euclidean_distance"]
+    cols = ["participant_id", "side", "label", "z", "euclidean_distance"]
     output_df = pd.DataFrame(columns=cols)
 
     for participant_id in common_id_set:
