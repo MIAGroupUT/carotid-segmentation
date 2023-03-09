@@ -98,9 +98,9 @@ class ContourTransform:
         cartesian_ray = polar_meta_dict["cartesian_ray"]
 
         if len(self.model_paths_list) > 1:
-            batch_prediction_pt = self.sample_models(batch_polar_pt)
+            batch_prediction_pt = self.predict_multiple_models(batch_polar_pt)
         else:
-            batch_prediction_pt = self.sample_dropout(batch_polar_pt)
+            batch_prediction_pt = self.sample_single_models(batch_polar_pt)
 
         lumen_cloud, wall_cloud = self.pred2cartesian(
             batch_prediction_pt,
@@ -163,7 +163,7 @@ class ContourTransform:
 
         return lumen_cont, wall_cont
 
-    def sample_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
+    def predict_multiple_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
         Ensemble a batch of polar map corresponding to a batch of centers using
         different models, eventually repeated for dropout sampling.
@@ -186,13 +186,13 @@ class ContourTransform:
             self.model.set_mode("dropout" if self.dropout else "eval")
 
             with torch.no_grad():
-                batch_prediction_pt[model_index] = self.sample_dropout(batch_polar_pt.to(self.device)).cpu()
+                batch_prediction_pt[model_index] = self.sample_single_models(batch_polar_pt)
 
         batch_prediction_pt = batch_prediction_pt.transpose(0, 1).reshape(batch_size, -1, 2, dn_angles // 2 + 1)
 
         return batch_prediction_pt
 
-    def sample_dropout(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
+    def sample_single_models(self, batch_polar_pt: torch.Tensor) -> torch.Tensor:
         """
         Repeats the polar map on a model with dropout to get a point cloud prediction.
 
@@ -202,12 +202,12 @@ class ContourTransform:
         Returns:
             batch of prediction of size (batch_size, n_repeats, 2, n_angles)
         """
-        self.model.set_mode("dropout")
+        self.model.set_mode("dropout" if self.dropout else "eval")
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
         repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
 
         with torch.no_grad():
-            batch_prediction_pt = self.model(repeat_polar_pt).cpu().reshape(
+            batch_prediction_pt = self.model(repeat_polar_pt.to(self.device)).cpu().reshape(
                 self.n_repeats, batch_size, 2, dn_angles // 2 + 1
             )
 
