@@ -42,8 +42,8 @@ def test_pipeline():
         out_df.sort_index(inplace=True)
         for index, ref_slice_df in ref_df.groupby(["label", "object", "z"]):
             out_slice_df = out_df.loc[index]
-            out_slice_np = out_slice_df.values
-            ref_slice_np = ref_slice_df.values
+            out_slice_np = out_slice_df[["x", "y", "deviation"]].values
+            ref_slice_np = ref_slice_df[["x", "y", "deviation"]].values
             assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=0.1)
 
     shutil.rmtree(tmp_dir)
