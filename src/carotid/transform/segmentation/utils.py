@@ -29,11 +29,11 @@ class SegmentationTransform:
             slice_shape = (orig_shape[1], orig_shape[0])
 
             # Create new segmentation array
-            segmentation_np = np.zeros((2, *orig_shape))
+            segmentation_np = np.zeros((2, 2, *orig_shape))
 
             for object_idx, object_name in enumerate(self.object_list):
                 object_df = contour_df[contour_df.object == object_name]
-                for label_name in self.label_list:
+                for label_idx, label_name in enumerate(self.label_list):
                     label_cloud = object_df[object_df.label == label_name][
                         ["x", "y", "z"]
                     ].values
@@ -56,8 +56,9 @@ class SegmentationTransform:
                                 slice_img = rasterize(
                                     [hull], out_shape=slice_shape, fill=0, default_value=1
                                 ).T
-                                segmentation_np[object_idx, :, :, slice_idx] += slice_img
+                                segmentation_np[label_idx, object_idx, :, :, slice_idx] += slice_img
                 segmentation_np = np.clip(segmentation_np, a_min=0, a_max=1)
+                segmentation_np = segmentation_np.reshape((4, *orig_shape))
             sample[f"{side}_segmentation"] = MetaTensor(segmentation_np, affine=affine)
 
             # Remove lumen segmentation from wall segmentation

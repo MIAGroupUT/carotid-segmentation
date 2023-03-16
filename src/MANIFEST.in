@@ -1,6 +1,2 @@
-include carotid/centerline_transform/default_args.toml
-include carotid/heatmap_transform/default_args.toml
-include carotid/polar_transform/default_args.toml
-include carotid/segmentation_transform/default_args.toml
-include carotid/contour_transform/default_args.toml
+include carotid/utils/default_args.toml
 include carotid/utils/default_raw.toml

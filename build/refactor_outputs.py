@@ -13,7 +13,7 @@ args = parser.parse_args()
 input_dir = args.input_dir
 output_dir = args.output_dir
 tmp_dir = path.join(output_dir, "tmp")
-makedirs(path.join(output_dir, "images"), exist_ok=True)
+makedirs(path.join(output_dir, "images", "carotid-segmentation"), exist_ok=True)
 
 writer = ITKWriter(output_dtype="uint8")
 dataset = build_dataset(raw_dir=input_dir, segmentation_dir=tmp_dir)
@@ -21,11 +21,22 @@ pipeline_dict = read_json(path.join(tmp_dir, "pipeline_parameters.json"))
 write_json(pipeline_dict, path.join(output_dir, "results.json"))
 for sample in dataset:
     participant_id = sample["participant_id"]
-    wall_segmentation = 0
-    for side in ["left", "right"]:
-        wall_segmentation += sample[f"{side}_segmentation"][1:]
-    wall_segmentation = np.clip(wall_segmentation, 0, 1)
-    writer.set_data_array(wall_segmentation)
+    segmentation_np = np.zeros_like(sample["image"])
+    for side_idx, side in enumerate(["left", "right"]):
+        for channel_idx in range(3, -1, -1):
+            mask_np = sample[f"{side}_segmentation"][channel_idx]
+            if channel_idx == 0:  # internal lumen
+                value = 1 + 2 * side_idx
+            elif channel_idx == 1:  # internal wall
+                value = 5 + 2 * side_idx
+            elif channel_idx == 2:  # external lumen
+                value = 2 + 2 * side_idx
+            else:  # external wall
+                value = 6 + 2 * side_idx
+
+            segmentation_np[0][mask_np == 1] = value
+
+    writer.set_data_array(segmentation_np)
     writer.set_metadata({"affine": sample["image"].affine})
-    writer.write(path.join(output_dir, "images", f"{participant_id}.mha"))
+    writer.write(path.join(output_dir, "images", "carotid-segmentation", f"{participant_id}.mha"))
 
