@@ -6,6 +6,7 @@ from scipy.interpolate import interp1d
 from typing import Dict, Any
 import pandas as pd
 from carotid.utils.transforms import unravel_index
+from carotid.utils.errors import NoValidSlice
 
 
 class CenterlineExtractor:
@@ -115,6 +116,10 @@ class OnePassExtractor(CenterlineExtractor):
 
             # only determine seed points where the given carotid exceed threshold
             (valid_slice_indices,) = torch.where(mask_pt[label_idx].any(1).any(0))
+            if len(valid_slice_indices) == 0:
+                raise NoValidSlice(f"No valid slices were found for the {label_name} carotid.\n"
+                                   f"Please try to lower the threshold "
+                                   f"(current value: {self.parameters['threshold']}).")
             min_slice = valid_slice_indices[0].item()
             max_slice = valid_slice_indices[-1].item()
             steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])

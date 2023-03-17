@@ -11,3 +11,7 @@ class TransformAlreadyRun(Exception):
         message = f"Transform {transform_name} was already performed in {output_dir}.\n" \
                   f"Use --force option to overwrite it."
         super().__init__(message)
+
+
+class NoValidSlice(Exception):
+    pass
