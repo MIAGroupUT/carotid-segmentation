@@ -57,13 +57,7 @@ class SegmentationTransform:
                                     [hull], out_shape=slice_shape, fill=0, default_value=1
                                 ).T
                                 segmentation_np[label_idx, object_idx, :, :, slice_idx] += slice_img
-                segmentation_np = np.clip(segmentation_np, a_min=0, a_max=1)
-                segmentation_np = segmentation_np.reshape((4, *orig_shape))
+            segmentation_np = segmentation_np.reshape((4, *orig_shape))
             sample[f"{side}_segmentation"] = MetaTensor(segmentation_np, affine=affine)
-
-            # Remove lumen segmentation from wall segmentation
-            sample[f"{side}_segmentation"][1] = (
-                sample[f"{side}_segmentation"][1] - sample[f"{side}_segmentation"][0]
-            )
 
         return sample

@@ -32,6 +32,13 @@ def test_pipeline():
     for side in ["left", "right"]:
         ref_np = ref_dataset[0][f"{side}_segmentation"]
         out_np = out_dataset[0][f"{side}_segmentation"]
-        assert np.all(ref_np == out_np)
+
+        # Lumen
+        out_lumen_np = (out_np[0] + out_np[2]).clip(0, 1)
+        assert np.all(ref_np[0] == out_lumen_np)
+
+        # Wall comparison
+        out_wall_np = (out_np[1] + out_np[3]).clip(0, 1)
+        assert np.all(ref_np[0] + ref_np[1] == out_wall_np)
 
     shutil.rmtree(tmp_dir)
