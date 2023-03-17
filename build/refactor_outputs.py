@@ -17,7 +17,7 @@ makedirs(path.join(output_dir, "images", "carotid-segmentation"), exist_ok=True)
 
 writer = ITKWriter(output_dtype="uint8")
 dataset = build_dataset(raw_dir=input_dir, segmentation_dir=tmp_dir)
-pipeline_dict = read_json(path.join(tmp_dir, "pipeline_parameters.json"))
+pipeline_dict = read_json(path.join(tmp_dir, "parameters.json"))
 write_json(pipeline_dict, path.join(output_dir, "results.json"))
 for sample in dataset:
     participant_id = sample["participant_id"]
