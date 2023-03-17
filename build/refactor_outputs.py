@@ -23,7 +23,7 @@ for sample in dataset:
     participant_id = sample["participant_id"]
     segmentation_np = np.zeros_like(sample["image"])
     for side_idx, side in enumerate(["left", "right"]):
-        for channel_idx in range(3, -1, -1):
+        for channel_idx in [3, 1, 2, 0]:
             mask_np = sample[f"{side}_segmentation"][channel_idx]
             if channel_idx == 0:  # internal lumen
                 value = 1 + 2 * side_idx
