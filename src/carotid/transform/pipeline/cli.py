@@ -15,6 +15,30 @@ from carotid.utils import cli_param
 @cli_param.option.participant
 @cli_param.option.device
 @cli_param.option.force
+@click.option(
+    "--write_heatmap",
+    "-wheat",
+    is_flag=True,
+    help="If given the heatmaps will be written."
+)
+@click.option(
+    "--write_centerline",
+    "-wcent",
+    is_flag=True,
+    help="If given the centerlines will be written."
+)
+@click.option(
+    "--write_polar",
+    "-wpol",
+    is_flag=True,
+    help="If given the polar images will be written."
+)
+@click.option(
+    "--write_contours",
+    "-wcont",
+    is_flag=True,
+    help="If given the contours will be written."
+)
 def cli(
     raw_dir,
     heatmap_model_dir,
@@ -24,9 +48,14 @@ def cli(
     participant,
     device,
     force,
+    write_heatmap,
+    write_centerline,
+    write_polar,
+    write_contours,
 ) -> None:
     """
-    Execute the full pipeline from heatmap_transform to segmentation_transform.
+    Execute the full pipeline from heatmap_transform to segmentation_transform. Default only writes the result
+    of segmentation_transform.
 
     RAW_DIR is the path to raw data folder.
 
@@ -47,4 +76,8 @@ def cli(
         participant_list=participant,
         device=device,
         force=force,
+        write_heatmap=write_heatmap,
+        write_centerline=write_centerline,
+        write_polar=write_polar,
+        write_contours=write_contours,
     )

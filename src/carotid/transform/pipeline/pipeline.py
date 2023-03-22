@@ -14,6 +14,7 @@ from carotid.utils import (
     check_transform_presence,
     HeatmapSerializer,
     CenterlineSerializer,
+    PolarSerializer,
     ContourSerializer,
     SegmentationSerializer,
 )
@@ -38,6 +39,10 @@ def apply_transform(
     participant_list: List[str] = None,
     device: str = None,
     force: bool = False,
+    write_heatmap: bool = False,
+    write_centerline: bool = False,
+    write_polar: bool = False,
+    write_contours: bool = False,
 ):
     # Read parameters
     device = check_device(device=device)
@@ -74,20 +79,23 @@ def apply_transform(
         raw_dir=raw_dir,
         participant_list=participant_list,
     )
-    heatmap_serializer = HeatmapSerializer(dir_path=output_dir)
-    centerline_serializer = CenterlineSerializer(dir_path=output_dir)
-    contour_serializer = ContourSerializer(dir_path=output_dir)
-    segmentation_serializer = SegmentationSerializer(dir_path=output_dir)
+    serializers_list = [SegmentationSerializer(dir_path=output_dir)]
+    if write_heatmap:
+        serializers_list.append(HeatmapSerializer(dir_path=output_dir))
+    if write_centerline:
+        serializers_list.append(CenterlineSerializer(dir_path=output_dir))
+    if write_polar:
+        serializers_list.append(PolarSerializer(dir_path=output_dir))
+    if write_contours:
+        serializers_list.append(ContourSerializer(dir_path=output_dir))
 
     for sample in dataset:
         participant_id = sample["participant_id"]
         print(f"Pipeline transform {participant_id}...")
         sample = unet_predictor(sample)
-        heatmap_serializer.write(sample)
         sample = centerline_extractor(sample)
-        centerline_serializer.write(sample)
         sample = polar_transform(sample)
         sample = contour_transform(sample)
-        contour_serializer.write(sample)
         sample = segmentation_transform(sample)
-        segmentation_serializer.write(sample)
+        for serializer in serializers_list:
+            serializer.write(sample)

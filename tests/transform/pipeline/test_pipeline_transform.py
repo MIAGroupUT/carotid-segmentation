@@ -21,7 +21,7 @@ def test_pipeline():
     )
 
     # Read reference
-    ref_dataset = build_dataset(contour_dir=ref_dir)
+    # ref_dataset = build_dataset(contour_dir=ref_dir)
 
     # Read output
     out_dataset = build_dataset(contour_dir=tmp_dir)
@@ -53,4 +53,4 @@ def test_pipeline():
     #         print(np.max(np.abs(out_slice_np - ref_slice_np)))
     #         assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=0.1)
 
-    shutil.rmtree(path.join(test_dir, "tmp"))
+    shutil.rmtree(tmp_dir)
