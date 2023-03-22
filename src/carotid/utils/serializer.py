@@ -322,12 +322,12 @@ class HeatmapSerializer(Serializer):
         # Write mean
         self.itk_writer.set_data_array(sample[key]["mean"])
         self.itk_writer.set_metadata(sample[key]["mean"].__dict__)
-        self.itk_writer.write(path.join(output_path, "mean.mha"))
+        self.itk_writer.write(path.join(output_path, "mean.mha"), compression=True)
 
         # Write std
         self.itk_writer.set_data_array(sample[key]["std"])
         self.itk_writer.set_metadata(sample[key]["std"].__dict__)
-        self.itk_writer.write(path.join(output_path, "std.mha"))
+        self.itk_writer.write(path.join(output_path, "std.mha"), compression=True)
 
         # Write max indices
         np.save(
@@ -422,7 +422,7 @@ class SegmentationSerializer(Serializer):
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
         self.writer.set_data_array(sample[key])
         self.writer.set_metadata(sample[key].__dict__)
-        self.writer.write(output_path)
+        self.writer.write(output_path, compression=True)
 
 
 class RawReader:
