@@ -15,7 +15,7 @@ def check_device(device=None):
     test_pt = torch.Tensor([0])
     try:
         test_pt.to(device)
-    except AssertionError:
+    except (AssertionError, RuntimeError):
         raise DeviceError(
             f"Device {device} could not be found by pytorch."
             f"If this device was automatically found, please set explicitly which device"
