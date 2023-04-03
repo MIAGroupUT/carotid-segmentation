@@ -18,7 +18,7 @@ def check_device(device=None):
     except AssertionError:
         raise DeviceError(
             f"Device {device} could not be found by pytorch."
-            f"If this device was manually found, please set explicitly which device"
+            f"If this device was automatically found, please set explicitly which device"
             f"should be used."
         )
 
