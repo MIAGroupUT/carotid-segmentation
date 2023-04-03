@@ -25,14 +25,10 @@ for sample in dataset:
     for side_idx, side in enumerate(["left", "right"]):
         for channel_idx in [3, 1, 2, 0]:
             mask_np = sample[f"{side}_segmentation"][channel_idx]
-            if channel_idx == 0:  # internal lumen
+            if channel_idx in [0, 2]:  # internal and external lumen
                 value = 1 + 2 * side_idx
-            elif channel_idx == 1:  # internal wall
-                value = 5 + 2 * side_idx
-            elif channel_idx == 2:  # external lumen
+            else:  # internal and external wall
                 value = 2 + 2 * side_idx
-            else:  # external wall
-                value = 6 + 2 * side_idx
 
             segmentation_np[0][mask_np == 1] = value
 
