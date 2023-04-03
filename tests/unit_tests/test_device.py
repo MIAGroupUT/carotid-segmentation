@@ -1,5 +1,6 @@
 import torch
 from carotid.utils.device import check_device, DeviceError
+import pytest
 
 
 def test_check_device():
@@ -8,8 +9,5 @@ def test_check_device():
 
     assert check_device() == torch.device("cpu")
     assert check_device("cpu") == torch.device("cpu")
-    try:
+    with pytest.raises(DeviceError):
         check_device("cuda")
-        assert False
-    except DeviceError:
-        pass
