@@ -4,7 +4,7 @@ SCRIPTPATH="$( cd $(dirname "$(dirname "$0")") ; pwd -P )"
 
 # Generate random number to name the temporary output volume
 VOLUME_SUFFIX=$RANDOM
-MEM_LIMIT="15g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
+MEM_LIMIT="30g"  # Maximum is currently 30g, configurable in your algorithm image settings on grand challenge
 
 TESTPATH="$SCRIPTPATH/tests/tmp"
 
