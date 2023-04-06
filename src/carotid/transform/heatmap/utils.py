@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+import sys
 from os import path, listdir
 from typing import Dict, Any
 from carotid.utils.transforms import ExtractLeftAndRightd, BuildEmptyHeatmapd, unravel_indices
@@ -55,7 +56,7 @@ class UNetPredictor:
             pred_tensor = torch.zeros(len(self.model_paths_list), 2, *unet_shape[1::])
 
             for model_idx, model_path in tqdm(
-                enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False
+                enumerate(self.model_paths_list), desc="Predicting heatmaps", leave=False, file=sys.stdout,
             ):
                 self.model.load_state_dict(torch.load(model_path, map_location=self.device))
                 self.model.eval()

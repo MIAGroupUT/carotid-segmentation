@@ -73,6 +73,7 @@ def build_dataset(
     contour_dir: str = None,
     segmentation_dir: str = None,
     participant_list: List[str] = None,
+    show_progress: bool = False,
 ) -> Dataset:
 
     serializer_list = compute_serializer_list(
@@ -93,7 +94,7 @@ def build_dataset(
     for serializer in serializer_list:
         transform_list.append(serializer.monai_reader)
 
-    return CacheDataset(sample_list, transform=Compose(transform_list))
+    return CacheDataset(sample_list, transform=Compose(transform_list), progress=show_progress)
 
 
 def check_equal_parameters(param1: Dict[str, Dict[str, Any]], param2: Dict[str, Dict[str, Any]]):
