@@ -207,8 +207,7 @@ class ContourTransform:
         repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
 
         with torch.no_grad():
-            batch_prediction_pt = self.model(repeat_polar_pt.to(self.device)).cpu().reshape(self.n_repeats, batch_size, 2, dn_angles // 2 + 1
-            )
+            batch_prediction_pt = self.model(repeat_polar_pt.to(self.device)).cpu().reshape(self.n_repeats, batch_size, 2, dn_angles // 2 + 1)
 
         return batch_prediction_pt.transpose(0, 1)
 
@@ -280,8 +279,6 @@ class ContourTransform:
         output_pt = polar2cart(interp_polar_pt, center_pt)
         output_pt = torch.hstack((output_pt, local_std_pt.reshape(-1, 1)))
         return output_pt
-
-
 
 
 class CONV3D(nn.Module):
