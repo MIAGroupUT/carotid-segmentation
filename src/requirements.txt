@@ -12,7 +12,7 @@ torchio==0.18.91
 torchvision==0.15.2
 scikit-image==0.19.3
 toml==0.10.2
-torch==2.0
+torch==2.0.1
 black==22.3.0
 itk==5.3.0
 shapely==2.0.1
