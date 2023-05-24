@@ -3,6 +3,7 @@
 src/carotid.egg-info/*
 *.DS_Store
 models/*_transform*/*
+src/*.eggs
 
 # Ignore test data
 ***/tmp

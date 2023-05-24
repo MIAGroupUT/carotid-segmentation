@@ -69,7 +69,7 @@ def test_pipeline_dropout():
 def test_pipeline_single_center():
     tmp_dir = path.join(test_dir, "tmp")
     input_dir = path.join(test_dir, "contour", "input")
-    model_dir = path.join(test_dir, "..",  "models", "contour_transform_single_center")
+    model_dir = path.join(test_dir, "..",  "models", "contour_transform")
     config_path = path.join(test_dir, "contour", "test_args_single_center.toml")
 
     apply_transform(

@@ -153,9 +153,9 @@ class ContourTransform:
             polar_ray=polar_ray,
             cartesian_ray=cartesian_ray,
         )
-        std_pred_pt = torch.std(batch_prediction_pt, dim=1)
-        lumen_pt = torch.hstack((mean_lumen_pt, std_pred_pt[:, 0, :]))
-        wall_pt = torch.hstack((mean_wall_pt, std_pred_pt[:, 1, :]))
+        std_pred_pt = torch.std(batch_prediction_pt, dim=1).unsqueeze(-1)
+        lumen_pt = torch.hstack((mean_lumen_pt[0], std_pred_pt[0, 0, :]))
+        wall_pt = torch.hstack((mean_wall_pt[0], std_pred_pt[0, 1, :]))
 
         return lumen_pt, wall_pt
 
