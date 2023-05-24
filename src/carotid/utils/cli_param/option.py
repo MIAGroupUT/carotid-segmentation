@@ -19,7 +19,7 @@ participant = click.option(
 device = click.option(
     "--device",
     "-d",
-    type=click.Choice(["cpu", "cuda"]),
+    type=click.Choice(["cpu", "cuda", "mps"]),
     default=None,
     help="Device used for deep learning computations.",
 )
