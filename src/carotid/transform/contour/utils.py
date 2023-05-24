@@ -18,6 +18,10 @@ class ContourTransform:
         self.side_list = ["left", "right"]
         self.delta_theta = 2 * np.pi * parameters["delta_theta"]
         self.single_center = parameters["single_center"]
+        if self.single_center:
+            self.interpolation_method = parameters["interpolation_method"]
+        else:
+            self.interpolation_method = "polynomial"
 
         self.model_paths_list = [
             path.join(self.model_dir, filename)
@@ -102,21 +106,109 @@ class ContourTransform:
         else:
             batch_prediction_pt = self.sample_single_models(batch_polar_pt)
 
-        lumen_cloud, wall_cloud = self.pred2cartesian(
-            batch_prediction_pt,
-            batch_center_pt=batch_center_pt,
+        if self.interpolation_method == "polynomial":
+            lumen_cloud, wall_cloud = self.pred2cartesian_batch(
+                batch_prediction_pt,
+                batch_center_pt=batch_center_pt,
+                n_angles=n_angles,
+                polar_ray=polar_ray,
+                cartesian_ray=cartesian_ray,
+            )
+
+            lumen_cont = self.interpolate_contour(lumen_cloud, n_angles, self.delta_theta)
+            wall_cont = self.interpolate_contour(wall_cloud, n_angles, self.delta_theta)
+        else:
+            lumen_cont, wall_cont = self.mean_distance_per_angle(
+                batch_prediction_pt,
+                batch_center_pt=batch_center_pt,
+                n_angles=n_angles,
+                polar_ray=polar_ray,
+                cartesian_ray=cartesian_ray,
+            )
+
+        return lumen_cont, wall_cont
+
+    def mean_distance_per_angle(
+        self,
+        batch_prediction_pt: torch.Tensor,
+        batch_center_pt: torch.Tensor,
+        n_angles: int,
+        polar_ray: int,
+        cartesian_ray: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Reduces several contours with the same center to one contour with an uncertainty estimation
+        corresponding to the standard deviation of the distances.
+        """
+        batch_size, n_pred, n_coords, n_angles_pred = batch_prediction_pt.shape
+        assert n_coords == 2
+        assert n_angles_pred == n_angles
+        assert batch_size == 1
+
+        mean_pred_pt = torch.mean(batch_prediction_pt, dim=1)
+        mean_lumen_pt, mean_wall_pt = self.pred2cartesian_single(
+            mean_pred_pt,
+            batch_center_pt.squeeze(),
             n_angles=n_angles,
             polar_ray=polar_ray,
             cartesian_ray=cartesian_ray,
         )
+        std_pred_pt = torch.std(batch_prediction_pt, dim=1)
+        lumen_pt = torch.hstack((mean_lumen_pt, std_pred_pt[:, 0, :]))
+        wall_pt = torch.hstack((mean_wall_pt, std_pred_pt[:, 1, :]))
 
-        lumen_cont = self.interpolate_contour(lumen_cloud, n_angles, self.delta_theta)
-        wall_cont = self.interpolate_contour(wall_cloud, n_angles, self.delta_theta)
+        return lumen_pt, wall_pt
+
+    @staticmethod
+    def pred2cartesian_single(
+        prediction_pt,
+        center_pt,
+        n_angles: int,
+        polar_ray: int,
+        cartesian_ray: int,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Transforms a set of n_pred predictions corresponding to one single center in points in cartesian coordinates.
+
+        Args:
+            prediction_pt: tensor of size (n_pred, 2, n_angles).
+            center_pt: single center, tensor of size (3,).
+            n_angles: number of angles to check the validity of the input.
+            polar_ray: length of the polar ray.
+            cartesian_ray: length of the cartesian ray.
+
+        Returns:
+            lumen_cont: contour of the lumen in cartesian coordinates (n_pred, n_angles, 3)
+            wall_cont: contour of the wall in cartesian coordinates (n_pred, n_angles, 3)
+        """
+        n_pred, n_coords, n_angles_pred = prediction_pt.shape
+        assert n_coords == 2
+        assert n_angles_pred == n_angles
+
+        lumen_cont = torch.zeros((n_pred, n_angles, 3))
+        wall_cont = torch.zeros_like(lumen_cont)
+
+        # First coordinate of prediction is the distance between the border and the lumen
+        lumen_dists = (
+                (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
+        )
+        # Second coordinate of prediction is the wall width
+        wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
+
+        angle_vals = torch.linspace(-np.pi, np.pi, (n_angles + 1))[:n_angles].reshape(
+            1, -1
+        )
+        lumen_cont[:, :, 0] = center_pt[2]
+        lumen_cont[:, :, 1] = lumen_dists * torch.sin(angle_vals) + center_pt[1]
+        lumen_cont[:, :, 2] = lumen_dists * torch.cos(angle_vals) + center_pt[0]
+        wall_cont[:, :, 0] = center_pt[2]
+        wall_cont[:, :, 1] = wall_dists * torch.sin(angle_vals) + center_pt[1]
+        wall_cont[:, :, 2] = wall_dists * torch.cos(angle_vals) + center_pt[0]
 
         return lumen_cont, wall_cont
 
     @staticmethod
-    def pred2cartesian(
+    def pred2cartesian_batch(
         batch_prediction_pt: torch.Tensor,
         batch_center_pt: torch.Tensor,
         n_angles: int,
@@ -138,28 +230,12 @@ class ContourTransform:
         lumen_cont = torch.zeros((batch_size, n_pred, n_angles, 3))
         wall_cont = torch.zeros_like(lumen_cont)
         for batch_idx, (prediction_pt, center_pt) in enumerate(zip(batch_prediction_pt, batch_center_pt)):
-
-            # First coordinate of prediction is the distance between the border and the lumen
-            lumen_dists = (
-                (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
+            lumen_cont[batch_idx], wall_cont[batch_idx] = ContourTransform.pred2cartesian_single(
+                prediction_pt, center_pt, n_angles=n_angles, polar_ray=polar_ray, cartesian_ray=cartesian_ray
             )
-            # Second coordinate of prediction is the wall width
-            wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
-
-            angle_vals = torch.linspace(-np.pi, np.pi, (n_angles + 1))[:n_angles].reshape(
-                1, -1
-            )
-            lumen_cont[batch_idx, :, :, 1] = lumen_dists * torch.sin(angle_vals) + center_pt[1]
-            lumen_cont[batch_idx, :, :, 2] = lumen_dists * torch.cos(angle_vals) + center_pt[0]
-            wall_cont[batch_idx, :, :, 1] = wall_dists * torch.sin(angle_vals) + center_pt[1]
-            wall_cont[batch_idx, :, :, 2] = wall_dists * torch.cos(angle_vals) + center_pt[0]
 
         lumen_cont = lumen_cont.reshape((batch_size * n_pred * n_angles, 3))
         wall_cont = wall_cont.reshape((batch_size * n_pred * n_angles, 3))
-
-        # Report slice index
-        lumen_cont[:, 0] = center_pt[2]
-        wall_cont[:, 0] = center_pt[2]
 
         return lumen_cont, wall_cont
 
