@@ -82,6 +82,11 @@ To run any of the transform use the following command in your terminal:
 ```
 carotid transform <transform_name> [OPTIONS] [ARGUMENTS]
 ```
+You can also compare the results obtained with annotations using the comparison tools:
+```
+carotid compare <transform_name> [OPTIONS] [ARGUMENTS]
+```
+
 More information about each command is available in the documentation. 
 
 ## Test
