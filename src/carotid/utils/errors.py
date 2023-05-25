@@ -15,3 +15,7 @@ class TransformAlreadyRun(Exception):
 
 class NoValidSlice(Exception):
     pass
+
+
+class InvalidArgException(Exception):
+    pass

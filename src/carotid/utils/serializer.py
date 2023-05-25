@@ -16,7 +16,7 @@ from monai.transforms import (
 from monai.config import KeysCollection
 from monai.data import ITKWriter
 from typing import Dict, Any, Union, Optional, List, Set
-from .errors import MissingProcessedObjException, MissingRawArgException, TransformAlreadyRun
+from .errors import MissingProcessedObjException, MissingRawArgException, TransformAlreadyRun, InvalidArgException
 
 utils_dir = path.dirname(path.realpath(__file__))
 
@@ -69,6 +69,13 @@ def read_and_fill_default_toml(
         for param, value in transform_dict.items():
             if param not in config_parameters[transform_name]:
                 config_parameters[transform_name][param] = value
+
+    # Check arguments validity
+    if "contour_transform" in config_parameters:
+        interpolation_method = config_parameters["contour_transform"]["interpolation_method"]
+        if interpolation_method not in ["polynomial", "mean"]:
+            raise InvalidArgException(f"Interpolation method {interpolation_method} should be in "
+                                      f"['polynomial', 'mean'].")
 
     return config_parameters
 

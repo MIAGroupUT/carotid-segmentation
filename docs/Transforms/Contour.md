@@ -73,6 +73,10 @@ This repetition is performed only if `dropout` is set to `True`. Default: `20`.
 - `delta_theta` (float) Default: `0.0625`.
 - `single_center` (bool) if True, only the first element of the batch of polar images will be considered (which
 corresponds to using the original center only). Default: `False`.
+- `interpolation_method` (`polynomial`|`mean`) is the interpolation method chosen to find the final contour from the
+set of contours as well as the uncertainty of each point. If there is more than one center, `polynomial` it will be 
+polynomial and corresponds to the method described in the introduction. If `mean` is chosen, each angle will be
+associated with the mean (final contour) and standard deviation (uncertainty) of its distances,.
 
 
 ## Outputs
