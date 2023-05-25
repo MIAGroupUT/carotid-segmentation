@@ -3,7 +3,7 @@ stages:
   - docs
 
 src-test:
-  image: python:3.10.11
+  image: python:3.9.7
   stage: src-test
   before_script:
     - pip install -e ./src
