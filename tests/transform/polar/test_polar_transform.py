@@ -35,6 +35,7 @@ def test_pipeline():
         out_list = out_dataset[0][f"{side}_polar"]
         assert len(ref_list) == len(out_list)
         for idx in range(len(ref_list)):
+            print(torch.max(torch.abs(ref_list[idx]["polar_pt"] - out_list[idx]["polar_pt"])))
             assert torch.allclose(
                 ref_list[idx]["polar_pt"],
                 out_list[idx]["polar_pt"],
