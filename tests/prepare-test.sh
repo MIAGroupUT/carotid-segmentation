@@ -3,12 +3,12 @@ if [ -d "tests/transform/tmp" ]; then
 fi
 
 if [ ! -d "tests/raw_dir" ]; then
-    curl https://surfdrive.surf.nl/files/index.php/s/I2yC3oFbtQaZwei/download -o test.tar -L
+    curl https://surfdrive.surf.nl/files/index.php/s/TPiBlOHT1ndSd8z/download -o test.tar -L
     unzip test.tar
     rm test.tar
 
     # Copy raw data
-    cp -r v1/raw_dir tests
+    cp -r v2/raw_dir tests
     # Copy transforms data
     for transform in centerline contour heatmap pipeline polar segmentation
     do
@@ -19,7 +19,7 @@ if [ ! -d "tests/raw_dir" ]; then
       if [ -d "tests/transform/$transform/input" ]; then
           rm -r tests/transform/$transform/input
       fi
-      cp -r v1/transform/$transform/* tests/transform/$transform
+      cp -r v2/transform/$transform/* tests/transform/$transform
     done
 
     # Copy comparison data
@@ -32,10 +32,10 @@ if [ ! -d "tests/raw_dir" ]; then
       if [ -d "tests/compare/$transform/input" ]; then
           rm -r tests/compare/$transform/input
       fi
-      cp -r v1/compare/$transform/* tests/compare/$transform
+      cp -r v2/compare/$transform/* tests/compare/$transform
     done
 
-    rm -r v1
+    rm -r v2
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"
 fi
