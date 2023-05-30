@@ -1,6 +1,8 @@
 from os import path
-from carotid.utils import build_dataset, read_json, check_equal_parameters
+import pandas as pd
+from carotid.utils import read_json, check_equal_parameters
 from carotid.transform.pipeline.pipeline import apply_transform
+from carotid.compare.contour.pipeline import compare
 
 import shutil
 
@@ -18,39 +20,26 @@ def test_pipeline():
         output_dir=tmp_dir,
         config_path=path.join(test_dir, "pipeline", "test_args.toml"),
         force=True,
+        write_contours=True,
     )
 
-    # Read reference
-    # ref_dataset = build_dataset(contour_dir=ref_dir)
-
-    # Read output
-    out_dataset = build_dataset(contour_dir=tmp_dir)
-
-    # Compare parameters
-    ref_params = read_json(path.join(ref_dir, "parameters.json"))
-    out_params = read_json(path.join(tmp_dir, "parameters.json"))
-    check_equal_parameters(ref_params, out_params)
+    compare(
+        transform_dir=tmp_dir,
+        reference_dir=ref_dir,
+        output_dir=tmp_dir,
+    )
 
     # Compare parameters
     ref_params = read_json(path.join(ref_dir, "parameters.json"))
     out_params = read_json(path.join(tmp_dir, "parameters.json"))
     check_equal_parameters(ref_params, out_params)
 
-    # Only compare contours
-    # for side in ["left", "right"]:
-    #     ref_df = ref_dataset[0][f"{side}_contour"].set_index(
-    #         ["label", "object", "z"], drop=True
-    #     )
-    #     ref_df.sort_index(inplace=True)
-    #     out_df = out_dataset[0][f"{side}_contour"].set_index(
-    #         ["label", "object", "z"], drop=True
-    #     )
-    #     out_df.sort_index(inplace=True)
-    #     for index, ref_slice_df in ref_df.groupby(["label", "object", "z"]):
-    #         out_slice_df = out_df.loc[index]
-    #         out_slice_np = out_slice_df.values
-    #         ref_slice_np = ref_slice_df.values
-    #         print(np.max(np.abs(out_slice_np - ref_slice_np)))
-    #         assert np.allclose(ref_slice_np, out_slice_np, rtol=1e-3, atol=0.1)
+    # Compare parameters
+    ref_params = read_json(path.join(ref_dir, "parameters.json"))
+    out_params = read_json(path.join(tmp_dir, "parameters.json"))
+    check_equal_parameters(ref_params, out_params)
+
+    dice_df = pd.read_csv(path.join(tmp_dir, "compare_contour_dice.tsv"), sep="\t")
+    assert (dice_df.dice_score > 0.999).all()
 
     shutil.rmtree(tmp_dir)
