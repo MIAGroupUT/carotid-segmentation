@@ -63,5 +63,5 @@ nav:
       - Voxel-mask segmentation: Transforms/Segmentation.md
       - Full pipeline: Transforms/Pipeline.md
   - Compare:
-      - Centerlines: Compare/Centerlines.md
-      - Contours: Compare/Contours.md
+      - Centerlines: Compare/Centerline.md
+      - Contours: Compare/Contour.md

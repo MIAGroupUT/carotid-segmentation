@@ -23,12 +23,13 @@ the file `compare_centerline.tsv` there.
 
 ## Outputs
 
-The TSV file
-participant_id", "side", "label", "z", "euclidean_distance
+This pipeline writes one TSV file with the following structure:
 
-| participant_id | side  | label    | z   | euclidean distance |
+| participant_id | side  | label    | z   | euclidean_distance |
 |----------------|-------|----------|-----|--------------------|
 | Anon450        | left  | internal | 340 | 3.5                | 
 | Anon450        | left  | internal | 341 | 3.4                | 
 | ...            | ...   | ...      | ... | ...                | 
 | Anon062        | right | external | 413 | 0.0                | 
+
+Each row corresponds to one center in the centerline.
