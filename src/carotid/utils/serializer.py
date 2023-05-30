@@ -28,7 +28,7 @@ def write_json(parameters: Dict[str, Any], json_path: str) -> None:
         f.write(json_data)
 
 
-def read_json(json_path: str) -> Dict[str, Dict[str, Any]]:
+def read_json(json_path: str) -> Dict[str, Any]:
     """Reads JSON file at json_path and returns corresponding dictionary."""
     with open(json_path, "r") as f:
         parameters = json.load(f)
