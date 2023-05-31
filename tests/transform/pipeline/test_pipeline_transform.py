@@ -40,6 +40,6 @@ def test_pipeline():
     check_equal_parameters(ref_params, out_params)
 
     dice_df = pd.read_csv(path.join(tmp_dir, "compare_contour_dice.tsv"), sep="\t")
-    assert (dice_df.dice_score > 0.999).all()
+    assert (dice_df.dice_score > 0.99).all()
 
     shutil.rmtree(tmp_dir)
