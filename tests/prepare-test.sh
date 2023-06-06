@@ -35,6 +35,15 @@ if [ ! -d "tests/raw_dir" ]; then
       cp -r v2/compare/$transform/* tests/compare/$transform
     done
 
+    # Copy comparison data
+    for transform in contour
+    do
+      if [ -d "tests/train/$transform/input" ]; then
+          rm -r tests/train/$transform/input
+      fi
+      cp -r v2/train/$transform/* tests/train/$transform
+    done
+
     rm -r v2
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"

@@ -6,7 +6,14 @@ config_path = click.option(
     "-c",
     type=click.Path(exists=True),
     default=None,
-    help="Path to a TOML file to set parameters.",
+    help="Path to a TOML file to set transforms parameters.",
+)
+train_config_path = click.option(
+    "--train_config_path",
+    "-tc",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to a TOML file to set training parameters.",
 )
 participant = click.option(
     "--participant",

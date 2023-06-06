@@ -9,6 +9,7 @@ from carotid.cli import cli
     params=[
         "transform",
         "compare",
+        "train",
     ]
 )
 def cli_args_first_lv(request):
@@ -63,4 +64,22 @@ def test_compare_lv(cli_args_compare_lv):
     task = cli_args_compare_lv
     print(f"Testing input cli {task}")
     result = runner.invoke(cli, f"compare {task} -h")
+    assert result.exit_code == 0
+
+
+@pytest.fixture(
+    params=[
+        "contour",
+    ]
+)
+def cli_args_train_lv(request):
+    task = request.param
+    return task
+
+
+def test_train_lv(cli_args_train_lv):
+    runner = CliRunner()
+    task = cli_args_transform_lv
+    print(f"Testing input cli {task}")
+    result = runner.invoke(cli, f"train {task} -h")
     assert result.exit_code == 0

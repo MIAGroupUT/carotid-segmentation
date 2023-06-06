@@ -37,19 +37,21 @@ def read_json(json_path: str) -> Dict[str, Any]:
 
 
 def read_and_fill_default_toml(
-    config_path: Optional[Union[str, Dict[str, Any]]]
+    config_path: Optional[Union[str, Dict[str, Any]]],
+    default_filename: str = "default_args.toml",
 ) -> Dict[str, Any]:
     """
     Fill missing options in the config dict given by config_path with default values.
 
     Args:
         config_path: Path to a TOML file or dictionary containing the parameters of the pipeline.
+        default_filename: Name of the TOML file containing the default arguments.
 
     Returns:
         Dictionary of the parameters to apply to each transform
     """
 
-    default_parameters = toml.load(path.join(utils_dir, "default_args.toml"))
+    default_parameters = toml.load(path.join(utils_dir, default_filename))
 
     if config_path is None:
         return default_parameters
@@ -71,7 +73,7 @@ def read_and_fill_default_toml(
                 config_parameters[transform_name][param] = value
 
     # Check arguments validity
-    if "contour_transform" in config_parameters:
+    if "contour_transform" in config_parameters and "interpolation_method" in config_parameters["contour_transform"]:
         interpolation_method = config_parameters["contour_transform"]["interpolation_method"]
         if interpolation_method not in ["polynomial", "mean"]:
             raise InvalidArgException(f"Interpolation method {interpolation_method} should be in "

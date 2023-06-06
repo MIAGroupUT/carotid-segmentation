@@ -2,6 +2,7 @@ import click
 from carotid.utils.cli_param.decorators import OrderedGroup
 from carotid.transform.cli import cli as transform_cli
 from carotid.compare.cli import cli as compare_cli
+from carotid.train.cli import cli as train_cli
 
 
 CONTEXT_SETTINGS = dict(
@@ -21,6 +22,7 @@ def cli():
 
 cli.add_command(transform_cli)
 cli.add_command(compare_cli)
+cli.add_command(train_cli)
 
 if __name__ == "__main__":
     cli()
