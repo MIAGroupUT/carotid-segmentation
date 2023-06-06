@@ -128,6 +128,9 @@ def train(
         model.load_state_dict(
             torch.load(path.join(split_dir, "model.pt"), map_location=device)["model"]
         )
+        train_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, train_df, polar_config_dict, augmentation=False)
+        train_loader = DataLoader(train_dataset, batch_size=train_config_dict["batch_size"], shuffle=False)
+
         prediction_loop(
             split_dir,
             model=model,
