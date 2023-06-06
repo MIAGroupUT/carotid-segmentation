@@ -56,16 +56,15 @@ class AnnotatedPolarDataset(monai.data.Dataset):
     def __getitem__(self, idx: int):
         participant_id = self.contour_df.loc[idx, "participant_id"]
         side = self.contour_df.loc[idx, "side"]
+        label = self.contour_df.loc[idx, "label"]
+        slice_idx = self.contour_df.loc[idx, "z"]
 
         participant_idx = self.participant_list.index(participant_id)
         sample = self.cache_dataset[participant_idx]
         assert sample["participant_id"] == participant_id
 
         side_df = sample[f"{side}_contour"]
-        contour_df = side_df[
-            (side_df.label == self.contour_df.loc[idx, "label"]) &
-            (side_df.z == self.contour_df.loc[idx, "z"])
-        ]
+        contour_df = side_df[(side_df.label == label) & (side_df.z == slice_idx)]
         raw_image_pt = sample["image"][0]
 
         polar_image_pt, annotations_pt = self.compute_polar(
@@ -74,7 +73,11 @@ class AnnotatedPolarDataset(monai.data.Dataset):
         )
 
         return {
-            "image": polar_image_pt,
+            "participant_id": participant_id,
+            "side": side,
+            "label": label,
+            "z": slice_idx,
+            "image": polar_image_pt.unsqueeze(0).float(),
             "labels": annotations_pt,
         }
 

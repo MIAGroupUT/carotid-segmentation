@@ -52,8 +52,8 @@ def train(
         makedirs(split_dir, exist_ok=True)
 
         # Create train and validation loaders
-        train_df = contour_df[contour_df.participant_id.isin(train_participants_idx)]
-        valid_df = contour_df[contour_df.participant_id.isin(valid_participants_idx)]
+        train_df = contour_df[contour_df.participant_id.isin(participants[train_participants_idx])].reset_index(drop=True)
+        valid_df = contour_df[contour_df.participant_id.isin(participants[valid_participants_idx])].reset_index(drop=True)
 
         train_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, train_df, polar_config_dict, augmentation=True)
         valid_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, valid_df, polar_config_dict, augmentation=False)
@@ -81,7 +81,7 @@ def train(
             # Training
             for train_batch in train_loader:
                 optimizer.zero_grad()
-                outputs = model(train_batch["image"].to(device))
+                outputs = model(train_batch["image"].to(device)).transpose(1, 2)
                 target = train_batch["labels"].to(device)
                 loss = loss_fn(outputs, target)
                 loss.backward()
@@ -92,7 +92,7 @@ def train(
             for validation_batch in valid_loader:
                 model.eval()
                 with torch.no_grad():
-                    output = model(validation_batch["image"].to(device))
+                    output = model(validation_batch["image"].to(device)).transpose(1, 2)
                 target = validation_batch["labels"].to(device)
                 loss = loss_fn(output, target)
                 validation_loss += loss.item() * len(target)
@@ -126,7 +126,7 @@ def train(
 
         model = CONV3D(dropout=train_config_dict["dropout"]).to(device)
         model.load_state_dict(
-            torch.load(path.join(split_dir, "model.pt"), map_location=device)
+            torch.load(path.join(split_dir, "model.pt"), map_location=device)["model"]
         )
         prediction_loop(
             split_dir,

@@ -14,13 +14,6 @@ from carotid.utils import cli_param
     type=click.Path(exists=True)
 )
 @click.option(
-    "--polar_dir",
-    "-pdir",
-    type=click.Path(exists=True),
-    default=None,
-    help="Path to the output directory of polar_transform, if different from output_dir.",
-)
-@click.option(
     "--contour_tsv", "-ctsv",
     type=click.Path(exists=True),
     default=None,
@@ -45,7 +38,10 @@ def cli(
 
     OUTPUT_DIR is the path to the directory containing the results.
 
-    CONTOUR_MODEL_DIR is the path to a directory where the models for contour extraction are stored.
+    RAW_DIR is the path to raw data folder.
+
+    CONTOUR_DIR is the path to the data folder containing contour annotations.
+
     """
     from .pipeline import train
 
