@@ -1,7 +1,6 @@
 import warnings
 from typing import Dict, Any, Tuple, List, Union
 from carotid.utils.transforms import polar2cart, cart2polar
-from carotid.utils import read_json
 import pandas as pd
 from torch import nn
 import torch
@@ -44,14 +43,25 @@ class ContourTransform:
         # Choose model architecture
         try:
             self.model = CONV3D(dropout=True).to(self.device)
-            self.model.load_state_dict(
-                torch.load(self.model_paths_list[0], map_location=self.device)
-            )
+            if self.version == 1:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)
+                )
+            else:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                )
+
         except RuntimeError:
             self.model = CONV3D(dropout=False).to(self.device)
-            self.model.load_state_dict(
-                torch.load(self.model_paths_list[0], map_location=self.device)
-            )
+            if self.version == 1:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)
+                )
+            else:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                )
             if self.dropout:
                 warnings.warn("Dropout resampling was activated but the models do not contain "
                               "dropout layers. The dropout resampling is deactivated.")
@@ -281,7 +291,14 @@ class ContourTransform:
         for model_index, model_path in tqdm(
             enumerate(self.model_paths_list), desc="Predicting contours", leave=False
         ):
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            if self.version == 1:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)
+                )
+            else:
+                self.model.load_state_dict(
+                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                )
             self.model.set_mode("dropout" if self.dropout else "eval")
 
             with torch.no_grad():
