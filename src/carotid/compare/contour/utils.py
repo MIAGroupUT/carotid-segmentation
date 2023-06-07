@@ -57,6 +57,6 @@ def compute_point_distance(
             output_df.loc[(label_name, object_name, slice_idx), "min_distance"] = min_distances
 
         except KeyError:
-            output_df.pop((label_name, object_name, slice_idx))
+            output_df.drop((label_name, object_name, slice_idx), inplace=True)
 
     return output_df.reset_index()
