@@ -209,7 +209,7 @@ class Serializer:
         dir_path: str,
         transform_name: str,
         file_ext: Optional[str],
-        monai_reader: Union[MapTransform, Compose],
+        monai_reader: List[MapTransform],
     ):
         self.dir_path = dir_path
         self.transform_name = transform_name
@@ -276,12 +276,10 @@ class PolarSerializer(Serializer):
             dir_path,
             "polar",
             file_ext=None,
-            monai_reader=Compose(
-                [
-                    LoadMetaJSONd(keys=["left_polar", "right_polar"], parent_dir=False),
-                    LoadPolarDird(keys=["left_polar", "right_polar"]),
-                ],
-            ),
+            monai_reader=[
+                LoadMetaJSONd(keys=["left_polar", "right_polar"], parent_dir=False),
+                LoadPolarDird(keys=["left_polar", "right_polar"]),
+            ],
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
@@ -321,7 +319,7 @@ class HeatmapSerializer(Serializer):
             dir_path=dir_path,
             transform_name="heatmap",
             file_ext=None,
-            monai_reader=LoadHeatmapDird(keys=["left_heatmap", "right_heatmap"]),
+            monai_reader=[LoadHeatmapDird(keys=["left_heatmap", "right_heatmap"])],
         )
         self.itk_writer = ITKWriter()
 
@@ -356,9 +354,9 @@ class CenterlineSerializer(Serializer):
             dir_path=dir_path,
             transform_name="centerline",
             file_ext="tsv",
-            monai_reader=LoadCSVd(
+            monai_reader=[LoadCSVd(
                 keys=["left_centerline", "right_centerline"], sep="\t"
-            ),
+            )],
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
@@ -380,14 +378,12 @@ class ContourSerializer(Serializer):
             dir_path=dir_path,
             transform_name="contour",
             file_ext="tsv",
-            monai_reader=Compose(
-                [
-                    LoadMetaJSONd(
-                        keys=["left_contour", "right_contour"], parent_dir=True, json_name="spatial_metadata.json"
-                    ),
-                    LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
-                ],
-            ),
+            monai_reader=[
+                LoadMetaJSONd(
+                    keys=["left_contour", "right_contour"], parent_dir=True, json_name="spatial_metadata.json"
+                ),
+                LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
+            ],
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
@@ -419,11 +415,11 @@ class SegmentationSerializer(Serializer):
             dir_path=dir_path,
             transform_name="segmentation",
             file_ext="mha",
-            monai_reader=LoadImaged(
+            monai_reader=[LoadImaged(
                 keys=["left_segmentation", "right_segmentation"],
                 reader="itkreader",
                 ensure_channel_first=True,
-            ),
+            )],
         )
         self.object_list = ["lumen", "wall"]
         self.writer = ITKWriter()
@@ -442,7 +438,7 @@ class RawReader:
     def __init__(self, dir_path: str):
         self.dir_path = dir_path
         self.parameters = self.compute_raw_description(dir_path)
-        self.monai_reader = Compose(self.get_transforms())
+        self.monai_reader = self.get_transforms()
 
     def get_transforms(self) -> List[MapTransform]:
         """

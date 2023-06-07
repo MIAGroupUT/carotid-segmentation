@@ -185,39 +185,38 @@ class PolarTransform:
 
     @staticmethod
     def fast_trilinear_interpolation(
-            array_pt: torch.Tensor,
-            x_indices: torch.Tensor,
-            y_indices: torch.Tensor,
-            z_indices: torch.Tensor,
-        ) -> torch.Tensor:
-            # interpolate the image for given input coordinates.
+        array_pt: torch.Tensor,
+        x_indices: torch.Tensor,
+        y_indices: torch.Tensor,
+        z_indices: torch.Tensor,
+    ) -> torch.Tensor:
 
-            x0 = x_indices.long()
-            y0 = y_indices.long()
-            z0 = z_indices.long()
-            x1 = x0 + 1
-            y1 = y0 + 1
-            z1 = z0 + 1
+        x0 = x_indices.long()
+        y0 = y_indices.long()
+        z0 = z_indices.long()
+        x1 = x0 + 1
+        y1 = y0 + 1
+        z1 = z0 + 1
 
-            x0 = torch.clip(x0, 0, array_pt.shape[0] - 1)
-            y0 = torch.clip(y0, 0, array_pt.shape[1] - 1)
-            z0 = torch.clip(z0, 0, array_pt.shape[2] - 1)
-            x1 = torch.clip(x1, 0, array_pt.shape[0] - 1)
-            y1 = torch.clip(y1, 0, array_pt.shape[1] - 1)
-            z1 = torch.clip(z1, 0, array_pt.shape[2] - 1)
+        x0 = torch.clip(x0, 0, array_pt.shape[0] - 1)
+        y0 = torch.clip(y0, 0, array_pt.shape[1] - 1)
+        z0 = torch.clip(z0, 0, array_pt.shape[2] - 1)
+        x1 = torch.clip(x1, 0, array_pt.shape[0] - 1)
+        y1 = torch.clip(y1, 0, array_pt.shape[1] - 1)
+        z1 = torch.clip(z1, 0, array_pt.shape[2] - 1)
 
-            x = x_indices - x0
-            y = y_indices - y0
-            z = z_indices - z0
+        x = x_indices - x0
+        y = y_indices - y0
+        z = z_indices - z0
 
-            output_pt = (
-                array_pt[x0, y0, z0] * (1 - x) * (1 - y) * (1 - z)
-                + array_pt[x0, y0, z1] * x * (1 - y) * (1 - z)
-                + array_pt[x0, y1, z0] * (1 - x) * y * (1 - z)
-                + array_pt[x0, y1, z1] * x * y * (1 - z)
-                + array_pt[x1, y0, z0] * (1 - x) * (1 - y) * z
-                + array_pt[x1, y1, z0] * (1 - x) * y * z
-                + array_pt[x1, y0, z1] * x * (1 - y) * z
-                + array_pt[x1, y1, z1] * x * y * z
-            )
-            return output_pt
+        output_pt = (
+            array_pt[x0, y0, z0] * (1 - x) * (1 - y) * (1 - z)
+            + array_pt[x0, y0, z1] * x * (1 - y) * (1 - z)
+            + array_pt[x0, y1, z0] * (1 - x) * y * (1 - z)
+            + array_pt[x0, y1, z1] * x * y * (1 - z)
+            + array_pt[x1, y0, z0] * (1 - x) * (1 - y) * z
+            + array_pt[x1, y1, z0] * (1 - x) * y * z
+            + array_pt[x1, y0, z1] * x * (1 - y) * z
+            + array_pt[x1, y1, z1] * x * y * z
+        )
+        return output_pt

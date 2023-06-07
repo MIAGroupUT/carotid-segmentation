@@ -92,7 +92,7 @@ def build_dataset(
 
     transform_list = list()
     for serializer in serializer_list:
-        transform_list.append(serializer.monai_reader)
+        transform_list += serializer.monai_reader
 
     return CacheDataset(sample_list, transform=Compose(transform_list), progress=show_progress)
 
