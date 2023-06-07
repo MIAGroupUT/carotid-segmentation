@@ -1,6 +1,7 @@
 import warnings
 from typing import Dict, Any, Tuple, List, Union
 from carotid.utils.transforms import polar2cart, cart2polar
+from carotid.utils import read_json
 import pandas as pd
 from torch import nn
 import torch
@@ -18,16 +19,29 @@ class ContourTransform:
         self.side_list = ["left", "right"]
         self.delta_theta = 2 * np.pi * parameters["delta_theta"]
         self.single_center = parameters["single_center"]
+
         if self.single_center:
             self.interpolation_method = parameters["interpolation_method"]
         else:
             self.interpolation_method = "polynomial"
 
-        self.model_paths_list = [
-            path.join(self.model_dir, filename)
-            for filename in listdir(self.model_dir)
-            if filename.endswith(".pt")
-        ]
+        # Find model paths
+        if path.exists(path.join(self.model_dir, "parameters.json")):
+            self.model_paths_list = [
+                path.join(self.model_dir, split_dir, "model.pt")
+                for split_dir in listdir(self.model_dir)
+                if split_dir.startswith("split-") and path.exists(path.join(self.model_dir, split_dir, "model.pt"))
+            ]
+            self.version = 2
+        else:
+            self.model_paths_list = [
+                path.join(self.model_dir, filename)
+                for filename in listdir(self.model_dir)
+                if filename.endswith(".pt")
+            ]
+            self.version = 1
+
+        # Choose model architecture
         try:
             self.model = CONV3D(dropout=True).to(self.device)
             self.model.load_state_dict(
@@ -113,6 +127,7 @@ class ContourTransform:
                 n_angles=n_angles,
                 polar_ray=polar_ray,
                 cartesian_ray=cartesian_ray,
+                version=self.version,
             )
 
             lumen_cont = self.interpolate_contour(lumen_cloud, n_angles, self.delta_theta)
@@ -152,6 +167,7 @@ class ContourTransform:
             n_angles=n_angles,
             polar_ray=polar_ray,
             cartesian_ray=cartesian_ray,
+            version=self.version,
         )
         std_pred_pt = torch.std(batch_prediction_pt, dim=1).unsqueeze(-1)
         lumen_pt = torch.hstack((mean_lumen_pt[0], std_pred_pt[0, 0, :]))
@@ -166,6 +182,7 @@ class ContourTransform:
         n_angles: int,
         polar_ray: int,
         cartesian_ray: int,
+        version: int = 1
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Transforms a set of n_pred predictions corresponding to one single center in points in cartesian coordinates.
@@ -176,6 +193,8 @@ class ContourTransform:
             n_angles: number of angles to check the validity of the input.
             polar_ray: length of the polar ray.
             cartesian_ray: length of the cartesian ray.
+            version: Version number of the model. Version 2 considers that the first prediction is the actual
+                radius of the lumen, whereas the first is the distance between the lumen and the border of the image.
 
         Returns:
             lumen_cont: contour of the lumen in cartesian coordinates (n_pred, n_angles, 3)
@@ -189,9 +208,12 @@ class ContourTransform:
         wall_cont = torch.zeros_like(lumen_cont)
 
         # First coordinate of prediction is the distance between the border and the lumen
-        lumen_dists = (
-                (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
-        )
+        if version == 1:
+            lumen_dists = (
+                    (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
+            )
+        else:
+            lumen_dists = prediction_pt[:, 0, :] * cartesian_ray / polar_ray
         # Second coordinate of prediction is the wall width
         wall_dists = lumen_dists + prediction_pt[:, 1, :] * cartesian_ray / polar_ray
 
@@ -214,6 +236,7 @@ class ContourTransform:
         n_angles: int,
         polar_ray: int,
         cartesian_ray: int,
+        version: int = 1,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Maps N batch of polar predictions of the CNN to the cartesian space.
@@ -231,7 +254,7 @@ class ContourTransform:
         wall_cont = torch.zeros_like(lumen_cont)
         for batch_idx, (prediction_pt, center_pt) in enumerate(zip(batch_prediction_pt, batch_center_pt)):
             lumen_cont[batch_idx], wall_cont[batch_idx] = ContourTransform.pred2cartesian_single(
-                prediction_pt, center_pt, n_angles=n_angles, polar_ray=polar_ray, cartesian_ray=cartesian_ray
+                prediction_pt, center_pt, n_angles=n_angles, polar_ray=polar_ray, cartesian_ray=cartesian_ray, version=version,
             )
 
         lumen_cont = lumen_cont.reshape((batch_size * n_pred * n_angles, 3))
