@@ -390,9 +390,10 @@ class ContourSerializer(Serializer):
         out_df = sample[key]
         if "deviation" not in out_df:
             out_df["deviation"] = np.nan
+            out_df["norm_deviation"] = np.nan
 
         out_df.to_csv(
-            output_path, sep="\t", index=False, columns=["label", "object", "x", "y", "z", "deviation"]
+            output_path, sep="\t", index=False, columns=["label", "object", "x", "y", "z", "deviation", "norm_deviation"]
         )
         write_json(
             sample[f"{key}_meta_dict"],

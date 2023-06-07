@@ -64,7 +64,7 @@ class ContourTransform:
 
     def __call__(self, sample):
         for side in self.side_list:
-            contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x", "deviation"])
+            contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x", "deviation", "norm_deviation"])
             polar_list = sample[f"{side}_polar"]
             orig_shape = sample[f"{side}_polar_meta_dict"]["orig_shape"]
             affine = sample[f"{side}_polar_meta_dict"]["affine"]
@@ -85,10 +85,10 @@ class ContourTransform:
 
                 # Build DataFrames
                 lumen_slice_df = pd.DataFrame(
-                    data=lumen_cont.numpy(), columns=["z", "y", "x", "deviation"]
+                    data=lumen_cont.numpy(), columns=["z", "y", "x", "deviation", "norm_deviation"]
                 )
                 wall_slice_df = pd.DataFrame(
-                    data=wall_cont.numpy(), columns=["z", "y", "x", "deviation"]
+                    data=wall_cont.numpy(), columns=["z", "y", "x", "deviation", "norm_deviation"]
                 )
                 lumen_slice_df["object"] = "lumen"
                 wall_slice_df["object"] = "wall"
@@ -170,8 +170,8 @@ class ContourTransform:
             version=self.version,
         )
         std_pred_pt = torch.std(batch_prediction_pt, dim=1).unsqueeze(-1)
-        lumen_pt = torch.hstack((mean_lumen_pt[0], std_pred_pt[0, 0, :]))
-        wall_pt = torch.hstack((mean_wall_pt[0], std_pred_pt[0, 1, :]))
+        lumen_pt = torch.hstack((mean_lumen_pt[0], std_pred_pt[0, 0, :], std_pred_pt[0, 0, :] / mean_pred_pt[0, 0, :].unsqueeze(-1)))
+        wall_pt = torch.hstack((mean_wall_pt[0], std_pred_pt[0, 1, :], std_pred_pt[0, 1, :] / mean_pred_pt[0, 1, :].unsqueeze(-1)))
 
         return lumen_pt, wall_pt
 
@@ -375,8 +375,11 @@ class ContourTransform:
         interp_polar_pt[:, 1] = torch.from_numpy(rays)
         interp_polar_pt[:, 2] = torch.from_numpy(angles)
 
+        # Normalize deviation according to mean ray
+        local_norm_std = local_std_pt / interp_polar_pt[:, 1]
+
         output_pt = polar2cart(interp_polar_pt, center_pt)
-        output_pt = torch.hstack((output_pt, local_std_pt.reshape(-1, 1)))
+        output_pt = torch.hstack((output_pt, local_std_pt.reshape(-1, 1), local_norm_std.reshape(-1, 1)))
         return output_pt
 
 
