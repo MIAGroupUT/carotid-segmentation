@@ -3,6 +3,7 @@ from shapely import Polygon
 import numpy as np
 from scipy.spatial.distance import cdist
 from typing import Tuple
+from functools import reduce
 
 
 def compute_dice_scores(
@@ -41,7 +42,6 @@ def compute_point_distance(
         transform_df.reset_index(inplace=True)
     transform_df.set_index(["label", "object", "z"], inplace=True)
     transform_df.sort_index(inplace=True)
-    output_df = transform_df.copy()
 
     reference_df = in_reference_df.copy()
     if "label" not in reference_df.columns:
@@ -49,14 +49,15 @@ def compute_point_distance(
     reference_df.set_index(["label", "object", "z"], inplace=True)
     reference_df.sort_index(inplace=True)
 
-    for label_name, object_name, slice_idx in transform_df.index.unique():
-        try:
-            transform_contour_np = transform_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
-            reference_contour_np = reference_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
-            min_distances = np.min(cdist(transform_contour_np, reference_contour_np), axis=1)
-            output_df.loc[(label_name, object_name, slice_idx), "min_distance"] = min_distances
+    index_intersection = reduce(pd.Index.intersection, [d.index for d in [transform_df, reference_df]])
+    reference_df = reference_df.loc[index_intersection]
+    transform_df = transform_df.loc[index_intersection]
+    output_df = transform_df.copy()
 
-        except KeyError:
-            output_df.drop((label_name, object_name, slice_idx), inplace=True)
+    for label_name, object_name, slice_idx in transform_df.index.unique():
+        transform_contour_np = transform_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
+        reference_contour_np = reference_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
+        min_distances = np.min(cdist(transform_contour_np, reference_contour_np), axis=1)
+        output_df.loc[(label_name, object_name, slice_idx), "min_distance"] = min_distances
 
     return output_df.reset_index()
