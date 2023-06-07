@@ -33,14 +33,15 @@ def compute_dice_scores(
 
 
 def compute_point_distance(
-    transform_df: pd.DataFrame, in_reference_df: pd.DataFrame
+    in_transform_df: pd.DataFrame, in_reference_df: pd.DataFrame
 ) -> pd.DataFrame:
 
+    transform_df = in_transform_df.copy()
+    if "label" not in transform_df.columns:
+        transform_df.reset_index(inplace=True)
+    transform_df.set_index(["label", "object", "z"], inplace=True)
+    transform_df.sort_index(inplace=True)
     output_df = transform_df.copy()
-    if "label" not in output_df.columns:
-        output_df.reset_index(inplace=True)
-    output_df.set_index(["label", "object", "z"], inplace=True)
-    output_df.sort_index(inplace=True)
 
     reference_df = in_reference_df.copy()
     if "label" not in reference_df.columns:
