@@ -41,6 +41,7 @@ def prediction_loop(
     prediction_df.to_csv(
         path.join(output_path, f"group-{group}_prediction.tsv"),
         sep="\t",
+        index=False,
     )
     metrics_df = prediction_df[metrics_columns].mean().to_frame().transpose()
     metrics_df.to_csv(
