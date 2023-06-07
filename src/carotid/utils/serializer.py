@@ -288,7 +288,7 @@ class PolarSerializer(Serializer):
         for polar_dict in polar_list:
             label_name = polar_dict["label"]
             slice_idx = polar_dict["slice_idx"]
-            polar_np = polar_dict["polar_pt"].squeeze(0).numpy()
+            polar_np = polar_dict["polar_pt"].numpy()
             center_np = polar_dict["center_pt"].numpy()
             np.save(
                 path.join(
