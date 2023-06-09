@@ -37,6 +37,16 @@ theme:
 extra_javascript:
   - "https://code.jquery.com/jquery-3.3.1.min.js"
 
+# Customization
+extra:
+  feature:
+    tabs: true
+  social:
+    - icon: material/github
+      link: https://github.com/MIAGroupUT
+  version:
+    default: latest
+
 # Extensions
 markdown_extensions:
   - admonition
