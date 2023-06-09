@@ -15,7 +15,7 @@ def test_pipeline():
 
     apply_transform(
         raw_dir=path.join(test_dir, "..", "raw_dir"),
-        heatmap_model_dir=path.join(test_dir, "..",  "models", "heatmap_transform"),
+        heatmap_model_dir=path.join(test_dir, "..", "models", "heatmap_transform"),
         contour_model_dir=path.join(test_dir, "..", "models", "contour_transform"),
         output_dir=tmp_dir,
         config_path=path.join(test_dir, "pipeline", "test_args.toml"),
@@ -40,6 +40,7 @@ def test_pipeline():
     check_equal_parameters(ref_params, out_params)
 
     dice_df = pd.read_csv(path.join(tmp_dir, "compare_contour_dice.tsv"), sep="\t")
+    print(dice_df)
     assert (dice_df.dice_score > 0.99).all()
 
     shutil.rmtree(tmp_dir)
