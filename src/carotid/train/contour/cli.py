@@ -9,15 +9,13 @@ from carotid.utils import cli_param
 )
 @cli_param.argument.output_dir
 @cli_param.argument.raw_dir
-@click.argument(
-    "contour_dir",
-    type=click.Path(exists=True)
-)
+@click.argument("contour_dir", type=click.Path(exists=True))
 @click.option(
-    "--contour_tsv", "-ctsv",
+    "--contour_tsv",
+    "-ctsv",
     type=click.Path(exists=True),
     default=None,
-    help="Path to a TSV file specifying which contours should be used in the training and validation sets."
+    help="Path to a TSV file specifying which contours should be used in the training and validation sets.",
 )
 @cli_param.option.train_config_path
 @cli_param.option.config_path
@@ -41,7 +39,6 @@ def cli(
     RAW_DIR is the path to raw data folder.
 
     CONTOUR_DIR is the path to the data folder containing contour annotations.
-
     """
     from .pipeline import train
 

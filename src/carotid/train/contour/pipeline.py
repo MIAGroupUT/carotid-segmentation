@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold
 from carotid.utils import read_and_fill_default_toml, check_device, write_json
 from carotid.train.utils import prediction_loop
 from carotid.transform.contour.utils import CONV3D
-from carotid.train.contour.utils import AnnotatedPolarDataset
+from carotid.train.contour.utils import AnnotatedPolarDataset, compute_contour_df
 
 
 def train(
@@ -45,7 +45,7 @@ def train(
     if contour_tsv is not None:
         contour_df = pd.read_csv(contour_tsv, sep="\t")
     else:
-        raise NotImplementedError("contour_tsv is not an option yet.")
+        contour_df = compute_contour_df(raw_dir=raw_dir, contour_dir=contour_dir)
 
     # Generate splits
     participants = contour_df.participant_id.unique()

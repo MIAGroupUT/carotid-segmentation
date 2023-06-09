@@ -9,8 +9,26 @@ import scipy.spatial as scsp
 from carotid.utils.data import build_dataset
 
 
-class AnnotatedPolarDataset(monai.data.Dataset):
+def compute_contour_df(
+    raw_dir: str,
+    contour_dir: str,
+) -> pd.DataFrame:
+    contour_dataset = build_dataset(raw_dir=raw_dir, contour_dir=contour_dir)
+    contour_df = pd.DataFrame()
+    for sample in contour_dataset:
+        participant_id = sample["participant_id"]
+        for side in ["left", "right"]:
+            df = sample[f"{side}_contour"]
+            df = df[["label", "z"]].drop_duplicates()
+            df = df["participant_id"] = participant_id
+            df["side"] = side
+            contour_df = pd.concat((contour_df, df))
 
+    contour_df.reset_index(inplace=True, drop=True)
+    return contour_df
+
+
+class AnnotatedPolarDataset(monai.data.Dataset):
     def __init__(
         self,
         raw_dir: str,
@@ -93,8 +111,12 @@ class AnnotatedPolarDataset(monai.data.Dataset):
 
     def sample_center(self, contour_df: pd.DataFrame) -> torch.Tensor:
         lumen_df = contour_df[contour_df.object == "lumen"]
-        lumen_np = np.array([lumen_df.x.mean(), lumen_df.y.mean(), lumen_df.z.unique().item()])
-        max_rad = np.min(np.linalg.norm(lumen_np - lumen_df[["x", "y", "z"]].values, axis=1))
+        lumen_np = np.array(
+            [lumen_df.x.mean(), lumen_df.y.mean(), lumen_df.z.unique().item()]
+        )
+        max_rad = np.min(
+            np.linalg.norm(lumen_np - lumen_df[["x", "y", "z"]].values, axis=1)
+        )
         # TODO change the range of sampling for the center (half of the minimum radius may not be appropriate)
 
         if self.augmentation:
@@ -111,7 +133,6 @@ class AnnotatedPolarDataset(monai.data.Dataset):
 
 
 class PolarTransform:
-
     def __init__(self, polar_params: Dict[str, Any]):
         self.n_angles = polar_params["n_angles"]
         self.cartesian_ray = polar_params["cartesian_ray"]
@@ -121,8 +142,10 @@ class PolarTransform:
 
         # construct coordinates of rays
         theta = torch.linspace(0, 2 * torch.pi, self.n_angles + 1)[: self.n_angles]
-        radii = (
-            torch.linspace(- float(self.cartesian_ray) / 2, float(self.cartesian_ray) / 2, self.polar_ray)
+        radii = torch.linspace(
+            -float(self.cartesian_ray) / 2,
+            float(self.cartesian_ray) / 2,
+            self.polar_ray,
         )
         zz = torch.arange(
             -self.length // 2 + self.length % 2, self.length // 2 + 1, dtype=torch.float
@@ -130,19 +153,23 @@ class PolarTransform:
         R, Z, T = torch.meshgrid(radii, zz, theta, indexing="xy")
         xx = (R * torch.cos(T)).flatten()
         yy = (R * torch.sin(T)).flatten()
-        self.coords3d = torch.stack([xx, yy, Z.flatten()], dim=1)  # n_angles * length * polar_ray, 3
+        self.coords3d = torch.stack(
+            [xx, yy, Z.flatten()], dim=1
+        )  # n_angles * length * polar_ray, 3
 
         radii = torch.linspace(
-            - float(self.cartesian_ray) / 2,
+            -float(self.cartesian_ray) / 2,
             float(self.cartesian_ray) / 2,
-            self.annotation_resolution * self.polar_ray
+            self.annotation_resolution * self.polar_ray,
         )
         R, T = torch.meshgrid(radii, theta, indexing="xy")
-        xx = (R * torch.cos(T))
-        yy = (R * torch.sin(T))
+        xx = R * torch.cos(T)
+        yy = R * torch.sin(T)
         self.coords2d = torch.stack([xx, yy], dim=-1)  # polar_ray, n_angles, 2
 
-    def transform_image(self, image_pt: torch.Tensor, center_pt: torch.Tensor) -> torch.Tensor:
+    def transform_image(
+        self, image_pt: torch.Tensor, center_pt: torch.Tensor
+    ) -> torch.Tensor:
         coords = self.coords3d + center_pt
         polar_pt = self.fast_trilinear_interpolation(
             image_pt, coords[:, 0], coords[:, 1], coords[:, 2]
@@ -150,7 +177,7 @@ class PolarTransform:
 
         polar_pt = torch.cat(
             [
-                polar_pt[:, :, self.n_angles // 2 + 1:],
+                polar_pt[:, :, self.n_angles // 2 + 1 :],
                 polar_pt,
                 polar_pt[:, :, : self.n_angles // 2],
             ],
@@ -159,13 +186,19 @@ class PolarTransform:
 
         return polar_pt
 
-    def transform_annotation(self, contour_df: pd.DataFrame, center_pt: torch.Tensor) -> pd.DataFrame:
+    def transform_annotation(
+        self, contour_df: pd.DataFrame, center_pt: torch.Tensor
+    ) -> pd.DataFrame:
 
         theta = torch.linspace(0, 2 * torch.pi, self.n_angles + 1)[: self.n_angles]
         lumen_np = contour_df[contour_df.object == "lumen"][["x", "y"]].values
         wall_np = contour_df[contour_df.object == "wall"][["x", "y"]].values
 
-        output_df = pd.DataFrame(index=theta.numpy(), columns=["lumen_radius", "wall_width"], dtype=np.float32)
+        output_df = pd.DataFrame(
+            index=theta.numpy(),
+            columns=["lumen_radius", "wall_width"],
+            dtype=np.float32,
+        )
         for angle_idx, angle_val in enumerate(theta):
             coords = self.coords2d[angle_idx] + center_pt[:2]
             distmat_lumen = scsp.distance.cdist(
@@ -178,8 +211,12 @@ class PolarTransform:
             )
             ij_min_wall = np.unravel_index(distmat_wall.argmin(), distmat_wall.shape)
 
-            output_df.loc[angle_val.item(), "lumen_radius"] = self.polar_ray // 2 - ij_min_lumen[0] / self.annotation_resolution
-            output_df.loc[angle_val.item(), "wall_width"] = (ij_min_lumen[0] - ij_min_wall[0]) / self.annotation_resolution
+            output_df.loc[angle_val.item(), "lumen_radius"] = (
+                self.polar_ray // 2 - ij_min_lumen[0] / self.annotation_resolution
+            )
+            output_df.loc[angle_val.item(), "wall_width"] = (
+                ij_min_lumen[0] - ij_min_wall[0]
+            ) / self.annotation_resolution
 
         return output_df
 
