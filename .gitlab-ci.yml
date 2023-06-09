@@ -3,7 +3,7 @@ stages:
   - docs
 
 src-test:
-  image: python:3.9.7
+  image: arm64v8/python:3.9.7
   stage: src-test
   before_script:
     - pip install --upgrade pip
