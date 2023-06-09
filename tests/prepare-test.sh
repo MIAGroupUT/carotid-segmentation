@@ -3,7 +3,7 @@ if [ -d "tests/transform/tmp" ]; then
 fi
 
 if [ ! -d "tests/raw_dir" ]; then
-    curl https://surfdrive.surf.nl/files/index.php/s/NTNCTzP4N4ffLiQ/download -o test.tar -L
+    curl https://surfdrive.surf.nl/files/index.php/s/VUldNyZt6F8LoeW/download -o test.tar -L
     unzip test.tar
     rm test.tar
 
