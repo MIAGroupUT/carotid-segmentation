@@ -5,8 +5,8 @@ site_name: Carotid Segmentation Documentation
 site_description: >-
   Open-source deep learning software for carotid segmentation
 # Repository
-# repo_name: team/repo
-# repo_url: https://github.com/team/repo
+repo_name:  MIAGroupUT/carotid-segmentation
+repo_url: https://github.com/MIAGroupUT/carotid-segmentation
 
 # Copyright
 # copyright: XXX
