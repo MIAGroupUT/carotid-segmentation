@@ -5,6 +5,8 @@ of the MICCAI Grand Challenge [Carotid Artery Vessel Wall Segmentation Challenge
 This algorithm computes the contours of the lumens and walls of the internal and external carotids 
 on both sides of the neck from 3D black-blood MRI.
 
+Documentation can be found on [ReadTheDocs](https://carotidsegmentation.readthedocs.io/en/latest/).
+
 ![Illustration of the pipeline](docs/images/global_illustration.png)
 
 
