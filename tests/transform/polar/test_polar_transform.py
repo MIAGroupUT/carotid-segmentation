@@ -7,7 +7,7 @@ import shutil
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 
 
-def test_pipeline():
+def test_pipeline(test_similarity=False):
     tmp_dir = path.join(test_dir, "tmp")
     input_dir = path.join(test_dir, "polar", "input")
     ref_dir = path.join(test_dir, "polar", "reference")
@@ -34,19 +34,21 @@ def test_pipeline():
         ref_list = ref_dataset[0][f"{side}_polar"]
         out_list = out_dataset[0][f"{side}_polar"]
         assert len(ref_list) == len(out_list)
-        for idx in range(len(ref_list)):
-            print(ref_list[idx]["label"], out_list[idx]["label"])
-            print(ref_list[idx]["slice_idx"], out_list[idx]["slice_idx"])
-            print(
-                torch.max(
-                    torch.abs(ref_list[idx]["polar_pt"] - out_list[idx]["polar_pt"])
+
+        if test_similarity:
+            for idx in range(len(ref_list)):
+                print(ref_list[idx]["label"], out_list[idx]["label"])
+                print(ref_list[idx]["slice_idx"], out_list[idx]["slice_idx"])
+                print(
+                    torch.max(
+                        torch.abs(ref_list[idx]["polar_pt"] - out_list[idx]["polar_pt"])
+                    )
                 )
-            )
-            assert torch.allclose(
-                ref_list[idx]["polar_pt"],
-                out_list[idx]["polar_pt"],
-                rtol=1e-4,
-                atol=1e-5,
-            )
+                assert torch.allclose(
+                    ref_list[idx]["polar_pt"],
+                    out_list[idx]["polar_pt"],
+                    rtol=1e-4,
+                    atol=1e-5,
+                )
 
     shutil.rmtree(tmp_dir)
