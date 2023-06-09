@@ -6,6 +6,7 @@ src-test:
   image: python:3.9.7
   stage: src-test
   before_script:
+    - pip install --upgrade pip
     - pip install -e ./src
     - make prepare-test
   script:
