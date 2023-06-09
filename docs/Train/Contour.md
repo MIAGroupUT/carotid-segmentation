@@ -78,7 +78,13 @@ Output structure for participant `participant_id`:
 where:
 
 - `parameters.json` is a JSON file summarizing the parameters used to perform the polar transform and the training parameters.
-- `group-<subset>_metrics.tsv` is 
-- `group-<subset>_prediction.tsv` is a TSV file
-- `model.pt`
-- `training.tsv`
+- `group-<subset>_metrics.tsv` is a TSV file including the `MSE` (mean squared error), `L1` (mean absolute error) and `SmoothL1` 
+([smooth L1 loss](https://pytorch.org/docs/stable/generated/torch.nn.SmoothL1Loss.html)) across the whole `subset`.
+- `group-<subset>_prediction.tsv` is a TSV file including the `MSE`, `L1` and `SmoothL1` for each contour of the `subset`.
+- `model.pt` is a file containing a dictionary corresponding to the values obtained for the best model:
+  - `model`: model weights,
+  - `class`: the class of the model,
+  - `epoch`: the epoch at which the model was selected,
+  - `validation_loss`: the value of the validation loss,
+  - `training_loss`: the value of the training loss (with augmentation).
+- `training.tsv` is a TSV file including the value of the training and the validation loss for each epoch.

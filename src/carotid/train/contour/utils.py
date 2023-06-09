@@ -1,10 +1,8 @@
-import monai
 from typing import Dict, Any, Tuple
-
 import numpy as np
 import pandas as pd
 import torch
-
+from torch.utils.data import Dataset
 from carotid.transform.polar.utils import PolarTransform
 from carotid.utils.data import build_dataset
 
@@ -28,7 +26,7 @@ def compute_contour_df(
     return contour_df
 
 
-class AnnotatedPolarDataset(monai.data.Dataset):
+class AnnotatedPolarDataset(Dataset):
     def __init__(
         self,
         raw_dir: str,
