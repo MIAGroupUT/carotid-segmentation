@@ -87,7 +87,24 @@ You can also compare the results obtained with annotations using the comparison 
 carotid compare <transform_name> [OPTIONS] [ARGUMENTS]
 ```
 
-More information about each command is available in the documentation. 
+More information about each command is available in the documentation.
+
+## Citation
+
+If you use this repo in a scientific article please add the following citation:
+```
+@article{alblasDeepLearningBasedCarotid2021,
+  title = {Deep {{Learning-Based Carotid Artery Vessel Wall Segmentation}} in {{Black-Blood MRI Using Anatomical Priors}}},
+  author = {Alblas, Dieuwertje and Brune, Christoph and Wolterink, Jelmer M.},
+  year = {2021},
+  journal = {arXiv:2112.01137 [cs, eess]},
+  eprint = {2112.01137},
+  primaryclass = {cs, eess},
+  urldate = {2022-02-16},
+  archiveprefix = {arxiv},
+  note = {Comment: SPIE Medical Imaging 2022}
+}
+```
 
 ## Test
 

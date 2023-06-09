@@ -15,6 +15,12 @@ and batch dimension.
 <p style="text-align: center;"><b>Example of polar image extracted. The center is highlighted in blue, and 
 an example of ray drawn in the cartesian space is highlighted in orange.</b></p>
 
+!!! warning "PyTorch version"
+    This step gives different results depending on the PyTorch version used.
+    The results in the original paper were obtained with PyTorch 1, and the current
+    version of the repo is using Pytorch 2, however the results obtained with the full pipeline
+    are still comparable (Dice score > 0.95 for all contours).
+
 ## Prerequisites
 
 This step relies on the outputs of `transform centerline` and raw images.

@@ -1,8 +1,5 @@
 # Carotid segmentation
 
-![coverage](https://gitlab.utwente.nl/mathematics-of-imaging-and-ai/postdocs/elina-thibeau-sutre/carotid-segmentation/badges/main/coverage.svg)
-![pipeline status](https://gitlab.utwente.nl/mathematics-of-imaging-and-ai/postdocs/elina-thibeau-sutre/carotid-segmentation/badges/main/pipeline.svg)
-
 This repo contains the source code of the winning algorithm 
 of the MICCAI Grand Challenge [Carotid Artery Vessel Wall Segmentation Challenge](https://vessel-wall-segmentation.grand-challenge.org/).
 This algorithm computes the contours of the lumens and walls of the internal and external carotids 
