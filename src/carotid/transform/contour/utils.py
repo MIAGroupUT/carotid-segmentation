@@ -29,7 +29,8 @@ class ContourTransform:
             self.model_paths_list = [
                 path.join(self.model_dir, split_dir, "model.pt")
                 for split_dir in listdir(self.model_dir)
-                if split_dir.startswith("split-") and path.exists(path.join(self.model_dir, split_dir, "model.pt"))
+                if split_dir.startswith("split-")
+                and path.exists(path.join(self.model_dir, split_dir, "model.pt"))
             ]
             self.version = 2
         else:
@@ -49,7 +50,9 @@ class ContourTransform:
                 )
             else:
                 self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                    torch.load(self.model_paths_list[0], map_location=self.device)[
+                        "model"
+                    ]
                 )
 
         except RuntimeError:
@@ -60,11 +63,15 @@ class ContourTransform:
                 )
             else:
                 self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                    torch.load(self.model_paths_list[0], map_location=self.device)[
+                        "model"
+                    ]
                 )
             if self.dropout:
-                warnings.warn("Dropout resampling was activated but the models do not contain "
-                              "dropout layers. The dropout resampling is deactivated.")
+                warnings.warn(
+                    "Dropout resampling was activated but the models do not contain "
+                    "dropout layers. The dropout resampling is deactivated."
+                )
                 self.dropout = False
 
         if not self.dropout:
@@ -74,7 +81,17 @@ class ContourTransform:
 
     def __call__(self, sample):
         for side in self.side_list:
-            contour_df = pd.DataFrame(columns=["label", "object", "z", "y", "x", "deviation", "norm_deviation"])
+            contour_df = pd.DataFrame(
+                columns=[
+                    "label",
+                    "object",
+                    "z",
+                    "y",
+                    "x",
+                    "deviation",
+                    "norm_deviation",
+                ]
+            )
             polar_list = sample[f"{side}_polar"]
             orig_shape = sample[f"{side}_polar_meta_dict"]["orig_shape"]
             affine = sample[f"{side}_polar_meta_dict"]["affine"]
@@ -95,10 +112,12 @@ class ContourTransform:
 
                 # Build DataFrames
                 lumen_slice_df = pd.DataFrame(
-                    data=lumen_cont.numpy(), columns=["z", "y", "x", "deviation", "norm_deviation"]
+                    data=lumen_cont.numpy(),
+                    columns=["z", "y", "x", "deviation", "norm_deviation"],
                 )
                 wall_slice_df = pd.DataFrame(
-                    data=wall_cont.numpy(), columns=["z", "y", "x", "deviation", "norm_deviation"]
+                    data=wall_cont.numpy(),
+                    columns=["z", "y", "x", "deviation", "norm_deviation"],
                 )
                 lumen_slice_df["object"] = "lumen"
                 wall_slice_df["object"] = "wall"
@@ -140,7 +159,9 @@ class ContourTransform:
                 version=self.version,
             )
 
-            lumen_cont = self.interpolate_contour(lumen_cloud, n_angles, self.delta_theta)
+            lumen_cont = self.interpolate_contour(
+                lumen_cloud, n_angles, self.delta_theta
+            )
             wall_cont = self.interpolate_contour(wall_cloud, n_angles, self.delta_theta)
         else:
             lumen_cont, wall_cont = self.mean_distance_per_angle(
@@ -180,8 +201,20 @@ class ContourTransform:
             version=self.version,
         )
         std_pred_pt = torch.std(batch_prediction_pt, dim=1).unsqueeze(-1)
-        lumen_pt = torch.hstack((mean_lumen_pt[0], std_pred_pt[0, 0, :], std_pred_pt[0, 0, :] / mean_pred_pt[0, 0, :].unsqueeze(-1)))
-        wall_pt = torch.hstack((mean_wall_pt[0], std_pred_pt[0, 1, :], std_pred_pt[0, 1, :] / mean_pred_pt[0, 1, :].unsqueeze(-1)))
+        lumen_pt = torch.hstack(
+            (
+                mean_lumen_pt[0],
+                std_pred_pt[0, 0, :],
+                std_pred_pt[0, 0, :] / mean_pred_pt[0, 0, :].unsqueeze(-1),
+            )
+        )
+        wall_pt = torch.hstack(
+            (
+                mean_wall_pt[0],
+                std_pred_pt[0, 1, :],
+                std_pred_pt[0, 1, :] / mean_pred_pt[0, 1, :].unsqueeze(-1),
+            )
+        )
 
         return lumen_pt, wall_pt
 
@@ -192,7 +225,7 @@ class ContourTransform:
         n_angles: int,
         polar_ray: int,
         cartesian_ray: int,
-        version: int = 1
+        version: int = 1,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Transforms a set of n_pred predictions corresponding to one single center in points in cartesian coordinates.
@@ -220,7 +253,7 @@ class ContourTransform:
         # First coordinate of prediction is the distance between the border and the lumen
         if version == 1:
             lumen_dists = (
-                    (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
+                (polar_ray / 2 - prediction_pt[:, 0, :]) * cartesian_ray / polar_ray
             )
         else:
             lumen_dists = prediction_pt[:, 0, :] * cartesian_ray / polar_ray
@@ -262,9 +295,19 @@ class ContourTransform:
 
         lumen_cont = torch.zeros((batch_size, n_pred, n_angles, 3))
         wall_cont = torch.zeros_like(lumen_cont)
-        for batch_idx, (prediction_pt, center_pt) in enumerate(zip(batch_prediction_pt, batch_center_pt)):
-            lumen_cont[batch_idx], wall_cont[batch_idx] = ContourTransform.pred2cartesian_single(
-                prediction_pt, center_pt, n_angles=n_angles, polar_ray=polar_ray, cartesian_ray=cartesian_ray, version=version,
+        for batch_idx, (prediction_pt, center_pt) in enumerate(
+            zip(batch_prediction_pt, batch_center_pt)
+        ):
+            (
+                lumen_cont[batch_idx],
+                wall_cont[batch_idx],
+            ) = ContourTransform.pred2cartesian_single(
+                prediction_pt,
+                center_pt,
+                n_angles=n_angles,
+                polar_ray=polar_ray,
+                cartesian_ray=cartesian_ray,
+                version=version,
             )
 
         lumen_cont = lumen_cont.reshape((batch_size * n_pred * n_angles, 3))
@@ -285,7 +328,13 @@ class ContourTransform:
         """
         batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
         batch_prediction_pt = torch.zeros(
-            (len(self.model_paths_list), batch_size, self.n_repeats, 2, dn_angles // 2 + 1)
+            (
+                len(self.model_paths_list),
+                batch_size,
+                self.n_repeats,
+                2,
+                dn_angles // 2 + 1,
+            )
         )
 
         for model_index, model_path in tqdm(
@@ -293,18 +342,22 @@ class ContourTransform:
         ):
             if self.version == 1:
                 self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)
+                    torch.load(model_path, map_location=self.device)
                 )
             else:
                 self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)["model"]
+                    torch.load(model_path, map_location=self.device)["model"]
                 )
             self.model.set_mode("dropout" if self.dropout else "eval")
 
             with torch.no_grad():
-                batch_prediction_pt[model_index] = self.sample_single_models(batch_polar_pt)
+                batch_prediction_pt[model_index] = self.sample_single_models(
+                    batch_polar_pt
+                )
 
-        batch_prediction_pt = batch_prediction_pt.transpose(0, 1).reshape(batch_size, -1, 2, dn_angles // 2 + 1)
+        batch_prediction_pt = batch_prediction_pt.transpose(0, 1).reshape(
+            batch_size, -1, 2, dn_angles // 2 + 1
+        )
 
         return batch_prediction_pt
 
@@ -323,12 +376,18 @@ class ContourTransform:
         repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
 
         with torch.no_grad():
-            batch_prediction_pt = self.model(repeat_polar_pt.to(self.device)).cpu().reshape(self.n_repeats, batch_size, 2, dn_angles // 2 + 1)
+            batch_prediction_pt = (
+                self.model(repeat_polar_pt.to(self.device))
+                .cpu()
+                .reshape(self.n_repeats, batch_size, 2, dn_angles // 2 + 1)
+            )
 
         return batch_prediction_pt.transpose(0, 1)
 
     @staticmethod
-    def interpolate_contour(contour_pt: torch.Tensor, n_angles: int, delta_theta: float) -> torch.Tensor:
+    def interpolate_contour(
+        contour_pt: torch.Tensor, n_angles: int, delta_theta: float
+    ) -> torch.Tensor:
         """
         Takes a set of points in one unique slice in cartesian coordinates and smooth it to extract one
         contour point per angle. A new center is estimated (barycenter of all points)
@@ -373,17 +432,19 @@ class ContourTransform:
             local_indices = (polar_pt[:, 2] < max_angle) & (polar_pt[:, 2] > min_angle)
             if angle < polar_pt[:, 2].min():
                 local_indices = local_indices | (
-                        (polar_pt[:, 2] < max_angle + 2 * np.pi) & (polar_pt[:, 2] > min_angle + 2 * np.pi)
+                    (polar_pt[:, 2] < max_angle + 2 * np.pi)
+                    & (polar_pt[:, 2] > min_angle + 2 * np.pi)
                 )
             elif angle > polar_pt[:, 2].max():
                 local_indices = local_indices | (
-                        (polar_pt[:, 2] < max_angle - 2 * np.pi) & (polar_pt[:, 2] > min_angle - 2 * np.pi)
+                    (polar_pt[:, 2] < max_angle - 2 * np.pi)
+                    & (polar_pt[:, 2] > min_angle - 2 * np.pi)
                 )
 
             x_local = x_train[local_indices]
             y_local = polar_pt[:, 1][local_indices].numpy()
             estimated_local = model.predict(x_local)[:, 0]
-            local_std = np.sum((y_local - estimated_local)**2) / len(y_local)
+            local_std = np.sum((y_local - estimated_local) ** 2) / len(y_local)
             local_std_pt[idx_angle] = local_std
 
         interp_polar_pt = torch.zeros(n_angles, 3)
@@ -396,7 +457,9 @@ class ContourTransform:
         local_norm_std = local_std_pt / interp_polar_pt[:, 1]
 
         output_pt = polar2cart(interp_polar_pt, center_pt)
-        output_pt = torch.hstack((output_pt, local_std_pt.reshape(-1, 1), local_norm_std.reshape(-1, 1)))
+        output_pt = torch.hstack(
+            (output_pt, local_std_pt.reshape(-1, 1), local_norm_std.reshape(-1, 1))
+        )
         return output_pt
 
 

@@ -34,11 +34,6 @@ def test_pipeline():
     out_params = read_json(path.join(tmp_dir, "parameters.json"))
     check_equal_parameters(ref_params, out_params)
 
-    # Compare parameters
-    ref_params = read_json(path.join(ref_dir, "parameters.json"))
-    out_params = read_json(path.join(tmp_dir, "parameters.json"))
-    check_equal_parameters(ref_params, out_params)
-
     dice_df = pd.read_csv(path.join(tmp_dir, "compare_contour_dice.tsv"), sep="\t")
     print(dice_df)
     assert (dice_df.dice_score > 0.99).all()
