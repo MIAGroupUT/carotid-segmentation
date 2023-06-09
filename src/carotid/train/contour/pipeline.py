@@ -34,8 +34,12 @@ def train(
     )["contour_transform"]
     polar_config_dict = read_and_fill_default_toml(polar_config_dict)["polar_transform"]
     write_json(
-        {"polar_transform": polar_config_dict, "train_params": train_config_dict},
-        path.join(output_dir, "parameters.json")
+        {
+            "polar_transform": polar_config_dict,
+            "train_params": train_config_dict,
+            "data": {"raw_dir": raw_dir, "contour_dir": contour_dir},
+        },
+        path.join(output_dir, "parameters.json"),
     )
 
     if contour_tsv is not None:
@@ -46,29 +50,49 @@ def train(
     # Generate splits
     participants = contour_df.participant_id.unique()
 
-    splits = KFold(n_splits=train_config_dict["n_splits"], random_state=train_config_dict["random_seed"], shuffle=True)
-    for split_idx, (train_participants_idx, valid_participants_idx) in enumerate(splits.split(participants, participants)):
+    splits = KFold(
+        n_splits=train_config_dict["n_splits"],
+        random_state=train_config_dict["random_seed"],
+        shuffle=True,
+    )
+    for split_idx, (train_participants_idx, valid_participants_idx) in enumerate(
+        splits.split(participants, participants)
+    ):
         split_dir = path.join(output_dir, f"split-{split_idx}")
         makedirs(split_dir, exist_ok=True)
 
         # Create train and validation loaders
-        train_df = contour_df[contour_df.participant_id.isin(participants[train_participants_idx])].reset_index(drop=True)
-        valid_df = contour_df[contour_df.participant_id.isin(participants[valid_participants_idx])].reset_index(drop=True)
+        train_df = contour_df[
+            contour_df.participant_id.isin(participants[train_participants_idx])
+        ].reset_index(drop=True)
+        valid_df = contour_df[
+            contour_df.participant_id.isin(participants[valid_participants_idx])
+        ].reset_index(drop=True)
 
-        train_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, train_df, polar_config_dict, augmentation=True)
-        valid_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, valid_df, polar_config_dict, augmentation=False)
+        train_dataset = AnnotatedPolarDataset(
+            raw_dir, contour_dir, train_df, polar_config_dict, augmentation=True
+        )
+        valid_dataset = AnnotatedPolarDataset(
+            raw_dir, contour_dir, valid_df, polar_config_dict, augmentation=False
+        )
 
-        train_loader = DataLoader(train_dataset, batch_size=train_config_dict["batch_size"], shuffle=True)
-        valid_loader = DataLoader(valid_dataset, batch_size=train_config_dict["batch_size"], shuffle=False)
+        train_loader = DataLoader(
+            train_dataset, batch_size=train_config_dict["batch_size"], shuffle=True
+        )
+        valid_loader = DataLoader(
+            valid_dataset, batch_size=train_config_dict["batch_size"], shuffle=False
+        )
 
         # Write log
         training_tsv = path.join(split_dir, "training.tsv")
         training_df = pd.DataFrame(columns=["epoch", "train_loss", "valid_loss"])
-        training_df.to_csv(training_tsv, sep='\t', index=False)
+        training_df.to_csv(training_tsv, sep="\t", index=False)
 
         # Create model
         model = CONV3D(dropout=train_config_dict["dropout"]).to(device)
-        optimizer = torch.optim.Adam(model.parameters(), lr=train_config_dict["learning_rate"])
+        optimizer = torch.optim.Adam(
+            model.parameters(), lr=train_config_dict["learning_rate"]
+        )
         loss_fn = torch.nn.SmoothL1Loss()
         best_validation_loss = torch.inf
 
@@ -128,8 +152,12 @@ def train(
         model.load_state_dict(
             torch.load(path.join(split_dir, "model.pt"), map_location=device)["model"]
         )
-        train_dataset = AnnotatedPolarDataset(raw_dir, contour_dir, train_df, polar_config_dict, augmentation=False)
-        train_loader = DataLoader(train_dataset, batch_size=train_config_dict["batch_size"], shuffle=False)
+        train_dataset = AnnotatedPolarDataset(
+            raw_dir, contour_dir, train_df, polar_config_dict, augmentation=False
+        )
+        train_loader = DataLoader(
+            train_dataset, batch_size=train_config_dict["batch_size"], shuffle=False
+        )
 
         prediction_loop(
             split_dir,
