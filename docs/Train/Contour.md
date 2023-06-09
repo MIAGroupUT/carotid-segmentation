@@ -1,6 +1,23 @@
 # `contour` - Train a CNN to reproduce contours 
 
-CV performed deterministically at the level of the participants.
+This command allows to train a series of CNNs to find the lumen and wall radii in polar maps.
+Polar maps and the corresponding annotations are extracted on-the-fly by contours using the following procedure:
+
+1. A new center is sampled in the disk centered on the center of the lumen with a radius of half of
+the minimal radius of the lumen.
+2. A polar image and its corresponding annotations (lumen radii and wall width for each angle value) are generated
+using the parameters given to characterize the transform.
+3. A network is initialized per split in the k-fold cross-validation. This network takes as input the polar
+images and learns to reproduce the corresponding annotation.
+
+![Illustration of contour train](../images/contour_train.png)
+<p style="text-align: center;"><b>Illustration of the training procedure of the networks.</b></p>
+
+The data set provided is split between training and validation sets using a k-fold cross-validation at the
+level of the participant. For each fold a new network is trained from scratch.
+
+The model at the end of the training corresponds to the model which obtained the 
+lowest validation loss at the end of an epoch during training.
 
 ## Prerequisites
 

@@ -65,3 +65,5 @@ nav:
   - Compare:
       - Centerlines: Compare/Centerline.md
       - Contours: Compare/Contour.md
+  - Train:
+      - Contours: Train/Contour.md
