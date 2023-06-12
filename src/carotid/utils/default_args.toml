@@ -22,5 +22,6 @@ n_repeats = 20
 delta_theta = 0.0625  # Fraction of the circle
 single_center = false
 interpolation_method = "polynomial"
+split_list = []
 
 [segmentation_transform]

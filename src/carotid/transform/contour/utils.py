@@ -18,6 +18,7 @@ class ContourTransform:
         self.side_list = ["left", "right"]
         self.delta_theta = 2 * np.pi * parameters["delta_theta"]
         self.single_center = parameters["single_center"]
+        self.split_list = parameters["split_list"]
 
         if self.single_center:
             self.interpolation_method = parameters["interpolation_method"]
@@ -26,9 +27,12 @@ class ContourTransform:
 
         # Find model paths
         if path.exists(path.join(self.model_dir, "parameters.json")):
+            if self.split_list is None or len(self.split_list) == 0:
+                self.split_list = listdir(self.model_dir)
+
             self.model_paths_list = [
                 path.join(self.model_dir, split_dir, "model.pt")
-                for split_dir in listdir(self.model_dir)
+                for split_dir in self.split_list
                 if split_dir.startswith("split-")
                 and path.exists(path.join(self.model_dir, split_dir, "model.pt"))
             ]
