@@ -47,22 +47,29 @@ class CenterlineExtractor:
         # Change external to common if below internal carotid
         if min_external_z < min_internal_z:
             for z in range(min_external_z, min_internal_z):
-                print(z)
                 idx = label_df[label_df.z == z].index.item()
                 label_df.loc[idx, "label"] = "internal"
 
         return label_df
 
-    def compute_uncertainty(self, label_df: pd.DataFrame, heatmap_dict: Dict[str, torch.Tensor]) -> pd.DataFrame:
+    def compute_uncertainty(
+        self, label_df: pd.DataFrame, heatmap_dict: Dict[str, torch.Tensor]
+    ) -> pd.DataFrame:
 
         for idx in label_df.index.values:
             label_name = label_df.loc[idx, "label"]
             label_idx = self.label_list.index(label_name)
             x, y, z = label_df.loc[idx, ["x", "y", "z"]].astype(int)
-            label_df.loc[idx, "mean_value"] = heatmap_dict["mean"][label_idx, x, y, z].item()
-            label_df.loc[idx, "std_value"] = heatmap_dict["std"][label_idx, x, y, z].item()
+            label_df.loc[idx, "mean_value"] = heatmap_dict["mean"][
+                label_idx, x, y, z
+            ].item()
+            label_df.loc[idx, "std_value"] = heatmap_dict["std"][
+                label_idx, x, y, z
+            ].item()
             batch_max_indices = heatmap_dict["max_indices"][:, label_idx, z]
-            batch_distances = torch.linalg.norm(batch_max_indices - torch.Tensor([x, y]), dim=1)
+            batch_distances = torch.linalg.norm(
+                batch_max_indices - torch.Tensor([x, y]), dim=1
+            )
             label_df.loc[idx, "max_distances"] = torch.mean(batch_distances).item()
 
         return label_df
@@ -76,7 +83,8 @@ class OnePassExtractor(CenterlineExtractor):
     def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
 
         seedpoints = {
-            side: self.get_seedpoints(sample[f"{side}_heatmap"]["mean"]) for side in self.side_list
+            side: self.get_seedpoints(sample[f"{side}_heatmap"]["mean"])
+            for side in self.side_list
         }
 
         for side in self.side_list:
@@ -92,7 +100,9 @@ class OnePassExtractor(CenterlineExtractor):
                 centerline_df = pd.concat([centerline_df, label_df])
             centerline_df = self.remove_common_external_centers(centerline_df)
             centerline_df.dropna(inplace=True)
-            centerline_df = self.compute_uncertainty(centerline_df, sample[f"{side}_heatmap"])
+            centerline_df = self.compute_uncertainty(
+                centerline_df, sample[f"{side}_heatmap"]
+            )
             sample[f"{side}_centerline"] = centerline_df
 
         return sample
@@ -117,9 +127,11 @@ class OnePassExtractor(CenterlineExtractor):
             # only determine seed points where the given carotid exceed threshold
             (valid_slice_indices,) = torch.where(mask_pt[label_idx].any(1).any(0))
             if len(valid_slice_indices) == 0:
-                raise NoValidSlice(f"No valid slices were found for the {label_name} carotid.\n"
-                                   f"Please try to lower the threshold "
-                                   f"(current value: {self.parameters['threshold']}).")
+                raise NoValidSlice(
+                    f"No valid slices were found for the {label_name} carotid.\n"
+                    f"Please try to lower the threshold "
+                    f"(current value: {self.parameters['threshold']})."
+                )
             min_slice = valid_slice_indices[0].item()
             max_slice = valid_slice_indices[-1].item()
             steps = torch.arange(min_slice, max_slice, self.parameters["step_size"])
