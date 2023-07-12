@@ -1,10 +1,4 @@
-# Deep learning models
-
-## U-Nets for heatmap estimation
-
-## CNNs for lumen and wall distances regression
-
-## Getting pre-trained models
+# Getting pre-trained models
 
 - On Mac / Linux:
 
