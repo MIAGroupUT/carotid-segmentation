@@ -3,6 +3,7 @@ from monai.config import KeysCollection
 from monai.utils.enums import TraceKeys, PytorchPadMode
 from monai.data.meta_tensor import MetaTensor, get_track_meta
 import torch
+import numpy as np
 from copy import deepcopy
 from torch import Tensor
 from typing import Tuple
@@ -148,7 +149,7 @@ class BuildEmptyHeatmapd(monai.transforms.Transform):
         self,
         image_key: str = "image",
         meta_key_postfix: str = "meta_dict",
-        n_channels: int = 2
+        n_channels: int = 2,
     ):
         self.image_key = image_key
         self.meta_key_postfix = meta_key_postfix
@@ -275,3 +276,43 @@ def unravel_index(
 
     coord = unravel_indices(indices, shape)
     return tuple(coord)
+
+
+class CropBackground(monai.transforms.Transform):
+    """
+    Crop padded images from anterior to posterior.
+    Cropping is done based on the first axial slice, and removes rows with value == 0.
+
+    Images must have shape (channels, H, L, W)
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, image):
+
+        mask_ant_post = np.all(np.equal(image[0], 0), axis=(0, 2))
+        pad_ant, pad_post = self.compute_pad_values(mask_ant_post)
+
+        len_y = image.shape[2]
+        out = image[:, :, pad_ant : len_y - pad_post, :]
+
+        return out, (pad_ant, pad_post)
+
+    @staticmethod
+    def compute_pad_values(mask: np.ndarray) -> Tuple[int, int]:
+        pad_np = np.diff(
+            np.where(np.concatenate(([mask[0]], mask[:-1] != mask[1:], [True])))[0]
+        )[::2]
+        if len(pad_np) > 0:
+            if len(pad_np) >= 2:
+                pad_ant, pad_post = (pad_np[0], pad_np[-1])
+            else:
+                if mask[0]:
+                    pad_ant, pad_post = pad_np[0], 0
+                else:
+                    pad_ant, pad_post = 0, pad_np[0]
+        else:
+            pad_ant, pad_post = 0, 0
+
+        return pad_ant, pad_post

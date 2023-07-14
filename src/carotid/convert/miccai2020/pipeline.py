@@ -3,17 +3,19 @@ from shutil import copy
 from glob import glob
 import pandas as pd
 import xml.etree.ElementTree as ET
-from .utils import get_contour, find_annotated_slices
+from carotid.convert.utils import get_contour, find_annotated_slices
 from carotid.utils import build_dataset, ContourSerializer, write_json
 
 
 def convert(
     original_dir: str,
-    output_dir: str,
+    raw_dir: str,
+    annotation_dir: str,
 ):
 
     dataset = build_dataset(raw_dir=original_dir)
     rescaling_parameters = {
+        "rescale": True,
         "lower_percentile_rescaler": 5,
         "upper_percentile_rescaler": 95,
     }
@@ -25,19 +27,22 @@ def convert(
         "ECAR": {"label": "external", "side": "right"},
     }
 
-    serializer = ContourSerializer(output_dir)
+    serializer = ContourSerializer(annotation_dir)
     columns = ["label", "object", "x", "y", "z"]
-    makedirs(output_dir, exist_ok=True)
-    write_json(rescaling_parameters, path.join(output_dir, "parameters.json"))
+    makedirs(raw_dir, exist_ok=True)
+    write_json(rescaling_parameters, path.join(raw_dir, "parameters.json"))
 
     for sample in dataset:
         participant_id = sample["participant_id"]
+        cascade_participant_id = participant_id.split("_")[1]
+        formatted_participant_id = f"sub-MICCAI2020{cascade_participant_id}"
+        sample["participant_id"] = formatted_participant_id
         participant_path = path.join(original_dir, participant_id)
 
-        makedirs(path.join(output_dir, participant_id))
+        makedirs(path.join(raw_dir, formatted_participant_id))
         dcm_paths = glob(path.join(participant_path, "*.dcm"))
         for dcm_path in dcm_paths:
-            copy(dcm_path, path.join(output_dir, participant_id))
+            copy(dcm_path, path.join(raw_dir, formatted_participant_id))
 
         image_pt = sample["image"]
         spatial_dict = {
@@ -52,7 +57,6 @@ def convert(
 
         for vessel_type, vessel_dict in keys_dict.items():
             side = vessel_dict["side"]
-            cascade_participant_id = participant_id.split("_")[1]
             qvs_path = path.join(
                 participant_path,
                 f"CASCADE-{vessel_type}",

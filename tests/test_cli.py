@@ -84,3 +84,22 @@ def test_train_lv(cli_args_train_lv):
     print(f"Testing input cli {task}")
     result = runner.invoke(cli, f"train {task} -h")
     assert result.exit_code == 0
+
+
+@pytest.fixture(
+    params=[
+        "miccai2020",
+        "miccai2022",
+    ]
+)
+def cli_args_convert_lv(request):
+    task = request.param
+    return task
+
+
+def test_convert_lv(cli_args_convert_lv):
+    runner = CliRunner()
+    task = cli_args_transform_lv
+    print(f"Testing input cli {task}")
+    result = runner.invoke(cli, f"convert {task} -h")
+    assert result.exit_code == 0

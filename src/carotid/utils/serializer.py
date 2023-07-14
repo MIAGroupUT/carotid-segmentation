@@ -462,18 +462,20 @@ class RawReader:
         """
         Returns list of transforms used to load, rescale and reshape MRI volume.
         """
-        transforms = [
-            LoadImaged(keys=["image"], ensure_channel_first=True),
-            ScaleIntensityRangePercentilesd(
-                keys=["image"],
-                lower=self.parameters["lower_percentile_rescaler"],
-                upper=self.parameters["upper_percentile_rescaler"],
-                b_min=0,
-                b_max=1,
-                clip=True,
-            ),
-            Orientationd(keys=["image"], axcodes="RAS"),
-        ]
+
+        transforms = [LoadImaged(keys=["image"], ensure_channel_first=True)]
+        if self.parameters["rescale"]:
+            transforms.append(
+                ScaleIntensityRangePercentilesd(
+                    keys=["image"],
+                    lower=self.parameters["lower_percentile_rescaler"],
+                    upper=self.parameters["upper_percentile_rescaler"],
+                    b_min=0,
+                    b_max=1,
+                    clip=True,
+                )
+            )
+        transforms.append(Orientationd(keys=["image"], axcodes="RAS"))
 
         return transforms
 
@@ -523,6 +525,7 @@ class RawReader:
         if path.exists(path.join(raw_dir, "parameters.json")):
             raw_parameters = read_json(path.join(raw_dir, "parameters.json"))
             mandatory_args = {
+                "rescale",
                 "lower_percentile_rescaler",
                 "upper_percentile_rescaler",
             }
@@ -535,8 +538,7 @@ class RawReader:
                     f"of the raw directory."
                 )
         else:
-            utils_dir = path.dirname(path.realpath(__file__))
-            raw_parameters = toml.load(path.join(utils_dir, "default_raw.toml"))
+            raw_parameters = {"rescale": False}
 
         # Find data type
         file_list = listdir(raw_dir)

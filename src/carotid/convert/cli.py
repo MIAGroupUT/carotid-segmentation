@@ -1,6 +1,7 @@
 import click
 from carotid.utils.cli_param.decorators import OrderedGroup
 from carotid.convert.miccai2020.cli import cli as miccai2020cli
+from carotid.convert.miccai2022.cli import cli as miccai2022cli
 
 
 CONTEXT_SETTINGS = dict(
@@ -23,3 +24,4 @@ def cli():
 
 
 cli.add_command(miccai2020cli)
+cli.add_command(miccai2022cli)

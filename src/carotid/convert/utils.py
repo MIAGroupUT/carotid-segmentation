@@ -23,7 +23,11 @@ def find_annotated_slices(qvs_root: Element) -> List[int]:
 
 
 def get_contour(
-    qvs_root: Element, slice_idx: int, contour_type: str, image_size: int = 720
+    qvs_root: Element,
+    slice_idx: int,
+    contour_type: str,
+    image_size: int = 720,
+    check_integrity: bool = True,
 ) -> Union[None, np.ndarray]:
     """
     Computes the list of the cartesian coordinates of a contour corresponding to a particular slice.
@@ -33,6 +37,7 @@ def get_contour(
         slice_idx: index corresponding to the slice whose contour is extracted.
         contour_type: type of contour. Must be chosen in ["Lumen", "Outer Wall"].
         image_size: last dimension of the image. Used to rescale the coordinates.
+        check_integrity: check if slice number corresponds to contour in QVS file.
 
     Returns:
         Array of size (N, 2) corresponding to the list of N coordinates.
@@ -48,7 +53,8 @@ def get_contour(
     qvasimg = qvs_root.findall("QVAS_Image")
 
     # Check that slice_index corresponds to slice_index - 1 in QVS
-    assert int(qvasimg[slice_idx - 1].get("ImageName").split("I")[-1]) == slice_idx
+    if check_integrity:
+        assert int(qvasimg[slice_idx - 1].get("ImageName").split("I")[-1]) == slice_idx
 
     qvascontour_list = qvasimg[slice_idx - 1].findall("QVAS_Contour")
     for qvascontour in qvascontour_list:

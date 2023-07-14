@@ -33,13 +33,13 @@ Make sure that your data set is correctly structured (see the [data section](../
 
 The task can be run with the following command line:
 ```
-carotid train contour OUTPUT_DIR RAW_DIR CONTOUR_DIR
+carotid train contour OUTPUT_DIR RAW_DIR ANNOTATION_DIR
 ```
 where:
 
 - `OUTPUT_DIR` (str) is the path to the directory containing the trained models and corresponding logs.
 - `RAW_DIR` (str) is the path to the directory containing the raw data.
-- `CONTOUR_DIR` (str) is the path to the directory containing the contour annotations.
+- `ANNOTATION_DIR` (str) is the path to the directory containing the contour annotations.
 
 Options:
 

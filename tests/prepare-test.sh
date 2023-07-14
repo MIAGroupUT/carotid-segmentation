@@ -44,6 +44,19 @@ if [ ! -d "tests/raw_dir" ]; then
       cp -r v3/train/$transform/* tests/train/$transform
     done
 
+    # Copy convert data
+    for transform in miccai2020 miccai2022
+    do
+      if [ -d "tests/convert/$transform/reference" ]; then
+          rm -r tests/convert/$transform/reference
+      fi
+
+      if [ -d "tests/convert/$transform/input" ]; then
+          rm -r tests/convert/$transform/input
+      fi
+      cp -r v3/convert/$transform/* tests/convert/$transform
+    done
+
     rm -r v3
 else
     echo "Data was already downloaded. To force a new download remove tests/raw_dir"

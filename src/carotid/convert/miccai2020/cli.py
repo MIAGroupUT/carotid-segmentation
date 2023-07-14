@@ -8,10 +8,12 @@ from carotid.utils import cli_param
     context_settings={"show_default": True},
 )
 @cli_param.argument.original_dir
-@cli_param.argument.output_dir
+@cli_param.argument.out_raw_dir
+@cli_param.argument.annotation_dir
 def cli(
     original_dir,
-    output_dir,
+    raw_dir,
+    annotation_dir,
 ) -> None:
     """
     Converts the data set of the MICCAI grand challenge 2020.
@@ -19,11 +21,14 @@ def cli(
 
     ORIGINAL_DIR is the path to the data as downloaded from the grand challenge website.
 
-    OUTPUT_DIR is the path to the directory containing the formatted data set.
+    RAW_DIR is the path to the directory containing the formatted raw data.
+
+    ANNOTATION_DIR is the path to the directory containing the formatted annotations.
     """
     from .pipeline import convert
 
     convert(
         original_dir=original_dir,
-        output_dir=output_dir,
+        raw_dir=raw_dir,
+        annotation_dir=annotation_dir,
     )

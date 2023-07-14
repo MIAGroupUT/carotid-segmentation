@@ -1,6 +1,6 @@
 from os import path
 from carotid.utils import build_dataset
-from carotid.convert.miccai2020.pipeline import convert
+from carotid.convert.miccai2022.pipeline import convert
 import shutil
 
 test_dir = path.dirname(path.dirname(path.realpath(__file__)))
@@ -9,9 +9,9 @@ test_dir = path.dirname(path.dirname(path.realpath(__file__)))
 def test_pipeline():
     tmp_raw_dir = path.join(test_dir, "tmp", "raw")
     tmp_annotation_dir = path.join(test_dir, "tmp", "annotation")
-    input_dir = path.join(test_dir, "miccai2020", "input")
-    ref_raw_dir = path.join(test_dir, "miccai2020", "reference", "raw")
-    ref_annotation_dir = path.join(test_dir, "miccai2020", "reference", "annotation")
+    input_dir = path.join(test_dir, "miccai2022", "input")
+    ref_raw_dir = path.join(test_dir, "miccai2022", "reference", "raw")
+    ref_annotation_dir = path.join(test_dir, "miccai2022", "reference", "annotation")
 
     convert(
         original_dir=input_dir,
@@ -34,8 +34,6 @@ def test_pipeline():
     ref_sample = ref_dataset[0]
     out_sample = out_dataset[0]
 
-    print(ref_sample["image"].shape)
-    print(out_sample["image"].shape)
     assert (ref_sample["image"] == out_sample["image"]).all()
 
     for side in ["left", "right"]:
