@@ -11,12 +11,16 @@ from monai.transforms import (
     LoadImage,
     ScaleIntensityRangePercentilesd,
     Orientationd,
-    Compose,
 )
 from monai.config import KeysCollection
 from monai.data import ITKWriter
 from typing import Dict, Any, Union, Optional, List, Set
-from .errors import MissingProcessedObjException, MissingRawArgException, TransformAlreadyRun, InvalidArgException
+from .errors import (
+    MissingProcessedObjException,
+    MissingRawArgException,
+    TransformAlreadyRun,
+    InvalidArgException,
+)
 
 utils_dir = path.dirname(path.realpath(__file__))
 
@@ -73,11 +77,18 @@ def read_and_fill_default_toml(
                 config_parameters[transform_name][param] = value
 
     # Check arguments validity
-    if "contour_transform" in config_parameters and "interpolation_method" in config_parameters["contour_transform"]:
-        interpolation_method = config_parameters["contour_transform"]["interpolation_method"]
+    if (
+        "contour_transform" in config_parameters
+        and "interpolation_method" in config_parameters["contour_transform"]
+    ):
+        interpolation_method = config_parameters["contour_transform"][
+            "interpolation_method"
+        ]
         if interpolation_method not in ["polynomial", "mean"]:
-            raise InvalidArgException(f"Interpolation method {interpolation_method} should be in "
-                                      f"['polynomial', 'mean'].")
+            raise InvalidArgException(
+                f"Interpolation method {interpolation_method} should be in "
+                f"['polynomial', 'mean']."
+            )
 
     return config_parameters
 
@@ -105,8 +116,10 @@ class LoadHeatmapDird(MapTransform):
                 "mean": self.itk_loader(path.join(dir_path, "mean.mha"))[0],
                 "std": self.itk_loader(path.join(dir_path, "std.mha"))[0],
                 "max_indices": torch.from_numpy(
-                    np.load(path.join(dir_path, "max_indices.npy"), allow_pickle=True).astype(int)
-                )
+                    np.load(
+                        path.join(dir_path, "max_indices.npy"), allow_pickle=True
+                    ).astype(int)
+                ),
             }
         return d
 
@@ -337,10 +350,7 @@ class HeatmapSerializer(Serializer):
         self.itk_writer.write(path.join(output_path, "std.mha"), compression=True)
 
         # Write max indices
-        np.save(
-            path.join(output_path, "max_indices.npy"),
-            sample[key]["max_indices"]
-        )
+        np.save(path.join(output_path, "max_indices.npy"), sample[key]["max_indices"])
 
 
 class CenterlineSerializer(Serializer):
@@ -354,9 +364,9 @@ class CenterlineSerializer(Serializer):
             dir_path=dir_path,
             transform_name="centerline",
             file_ext="tsv",
-            monai_reader=[LoadCSVd(
-                keys=["left_centerline", "right_centerline"], sep="\t"
-            )],
+            monai_reader=[
+                LoadCSVd(keys=["left_centerline", "right_centerline"], sep="\t")
+            ],
         )
 
     def _write(self, sample: Dict[str, Any], key: str, output_path: str):
@@ -380,7 +390,9 @@ class ContourSerializer(Serializer):
             file_ext="tsv",
             monai_reader=[
                 LoadMetaJSONd(
-                    keys=["left_contour", "right_contour"], parent_dir=True, json_name="spatial_metadata.json"
+                    keys=["left_contour", "right_contour"],
+                    parent_dir=True,
+                    json_name="spatial_metadata.json",
                 ),
                 LoadCSVd(keys=["left_contour", "right_contour"], sep="\t"),
             ],
@@ -393,7 +405,10 @@ class ContourSerializer(Serializer):
             out_df["norm_deviation"] = np.nan
 
         out_df.to_csv(
-            output_path, sep="\t", index=False, columns=["label", "object", "x", "y", "z", "deviation", "norm_deviation"]
+            output_path,
+            sep="\t",
+            index=False,
+            columns=["label", "object", "x", "y", "z", "deviation", "norm_deviation"],
         )
         write_json(
             sample[f"{key}_meta_dict"],
@@ -416,11 +431,13 @@ class SegmentationSerializer(Serializer):
             dir_path=dir_path,
             transform_name="segmentation",
             file_ext="mha",
-            monai_reader=[LoadImaged(
-                keys=["left_segmentation", "right_segmentation"],
-                reader="itkreader",
-                ensure_channel_first=True,
-            )],
+            monai_reader=[
+                LoadImaged(
+                    keys=["left_segmentation", "right_segmentation"],
+                    reader="itkreader",
+                    ensure_channel_first=True,
+                )
+            ],
         )
         self.object_list = ["lumen", "wall"]
         self.writer = ITKWriter()

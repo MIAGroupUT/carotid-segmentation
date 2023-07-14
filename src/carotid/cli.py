@@ -1,5 +1,6 @@
 import click
 from carotid.utils.cli_param.decorators import OrderedGroup
+from carotid.convert.cli import cli as convert_cli
 from carotid.transform.cli import cli as transform_cli
 from carotid.compare.cli import cli as compare_cli
 from carotid.train.cli import cli as train_cli
@@ -20,6 +21,7 @@ def cli():
     pass
 
 
+cli.add_command(convert_cli)
 cli.add_command(transform_cli)
 cli.add_command(compare_cli)
 cli.add_command(train_cli)

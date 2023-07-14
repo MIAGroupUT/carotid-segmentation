@@ -15,6 +15,7 @@ tests/****/*.toml
 .coverage*
 coverage*
 reports/*
+build/tests/***
 
 # Ignore build
 CarotidSegmentation*.tar.gz

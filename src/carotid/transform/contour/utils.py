@@ -1,3 +1,4 @@
+import sys
 import warnings
 from typing import Dict, Any, Tuple, List, Union
 from carotid.utils.transforms import polar2cart, cart2polar
@@ -342,7 +343,10 @@ class ContourTransform:
         )
 
         for model_index, model_path in tqdm(
-            enumerate(self.model_paths_list), desc="Predicting contours", leave=False
+            enumerate(self.model_paths_list),
+            desc="Predicting contours",
+            leave=False,
+            file=sys.stdout,
         ):
             if self.version == 1:
                 self.model.load_state_dict(

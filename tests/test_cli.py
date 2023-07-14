@@ -7,6 +7,7 @@ from carotid.cli import cli
 # Test for the first level at the command line
 @pytest.fixture(
     params=[
+        "convert",
         "transform",
         "compare",
         "train",
