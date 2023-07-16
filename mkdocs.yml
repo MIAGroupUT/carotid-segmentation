@@ -65,6 +65,9 @@ nav:
       - Data structure: Environment/Data.md
       - Deep learning models: Environment/Models.md
       - Config file: Environment/Configuration.md
+  - Convert:
+      - MICCAI2020: Convert/MICCAI2020.md
+      - MICCAI2022: Convert/MICCAI2022.md
   - Transforms:
       - Heatmaps: Transforms/Heatmap.md
       - Centerlines: Transforms/Centerline.md

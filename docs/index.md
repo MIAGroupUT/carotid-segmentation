@@ -67,8 +67,10 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
+  convert    Convert raw data sets to the format used by the library.
   transform  Transform 3D black-blood MRI in different steps of the carotid segmentation algorithm.
   compare    Compare the outputs of two different settings of the same transform.
+  train      Train network to perform the tasks used by the pipeline.
 ```
 
 

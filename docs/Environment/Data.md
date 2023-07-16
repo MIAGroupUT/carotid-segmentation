@@ -6,6 +6,9 @@ The models provided by this package were trained to segment carotids from 3D bla
     Training data is distributed by the Grand Challenge platform.
     You can request access via this [link](https://vessel-wall-segmentation.grand-challenge.org/).
 
+Converters were added to format the two data sets of the MICCAI challenges of 
+[2020](../Convert/MICCAI2020.md) and [2022](../Convert/MICCAI2022.md).
+
 The raw data can be provided as DICOM, MHD or MHA files. Structure of the raw directory for DICOM files:
 
 ```console

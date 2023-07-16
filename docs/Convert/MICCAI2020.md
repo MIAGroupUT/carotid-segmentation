@@ -10,7 +10,7 @@ one of the two external carotids is missing).
 Note that the common carotid is labelled as internal.
 
 ## Prerequisites
-You can download the data on the [grand challenge website](https://vessel-wall-segmentation-2022.grand-challenge.org/data/). 
+You can download the data on the [grand challenge website](https://vessel-wall-segmentation.grand-challenge.org/Data). 
 Detailed explanations on the acquisition protocols are given on [Zenodo](https://zenodo.org/record/4575301).
 
 ## Running the task
