@@ -1,6 +1,7 @@
 # Convert MICCAI 2022 grand challenge data set
 
 This converter outputs two folders:
+
 - a folder containing cropped raw data (MHA files),
 - a folder containing the contour annotations.
 
@@ -29,5 +30,6 @@ where:
 
 `RAW_DIR` contains one MHA file per participant. The images are cropped to remove anterior and posterior
 background. The JSON file `parameters.json` gives the parameters used to rescale the intensities in this data set.
+
 `ANNOTATION_DIR` contains one folder per participant, formatted like the output
 of [carotid transform contour](../Transforms/Contour.md#outputs).
