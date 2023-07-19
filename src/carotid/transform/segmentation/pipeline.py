@@ -9,6 +9,9 @@ from carotid.utils import (
     SegmentationSerializer,
 )
 from typing import List
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
 
@@ -51,7 +54,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Segmentation transform {participant_id}...")
+        logger.info(f"Segmentation transform {participant_id}...")
 
         predicted_sample = segmentation_transform(sample)
         serializer.write(predicted_sample)

@@ -1,4 +1,3 @@
-import sys
 import warnings
 from typing import Dict, Any, Tuple, List, Union
 from carotid.utils.transforms import polar2cart, cart2polar
@@ -7,7 +6,10 @@ from torch import nn
 import torch
 import numpy as np
 from os import path, listdir
-from tqdm import tqdm
+from logging import getLogger
+
+
+logger = getLogger("carotid")
 
 
 class ContourTransform:
@@ -342,12 +344,8 @@ class ContourTransform:
             )
         )
 
-        for model_index, model_path in tqdm(
-            enumerate(self.model_paths_list),
-            desc="Predicting contours",
-            leave=False,
-            file=sys.stdout,
-        ):
+        for model_index, model_path in enumerate(self.model_paths_list):
+            logger.debug(f"Applying model at path {model_path}")
             if self.version == 1:
                 self.model.load_state_dict(
                     torch.load(model_path, map_location=self.device)

@@ -9,6 +9,9 @@ from carotid.utils import (
     PolarSerializer,
 )
 from typing import List
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
 
@@ -50,7 +53,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Polar transform {participant_id}...")
+        logger.info(f"Polar transform {participant_id}...")
 
         predicted_sample = polar_transform(sample)
         serializer.write(predicted_sample)

@@ -5,6 +5,9 @@ import xml.etree.ElementTree as ET
 from carotid.utils import build_dataset, ContourSerializer, write_json
 from carotid.utils.transforms import CropBackground
 from carotid.convert.utils import find_annotated_slices, get_contour
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 
 def convert(
@@ -109,7 +112,7 @@ def convert(
                         )
 
                     except Exception:
-                        print(
+                        logger.warning(
                             f"Participant {participant_id}, internal slice {slice_idx} could not be processed"
                         )
 

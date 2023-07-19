@@ -9,6 +9,9 @@ from carotid.utils import (
     CenterlineSerializer,
 )
 from typing import List
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
 
@@ -48,7 +51,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Centerline transform {participant_id}...")
+        logger.info(f"Centerline transform {participant_id}...")
 
         centerline_dict = centerline_extractor(sample)
         serializer.write(centerline_dict)

@@ -40,4 +40,4 @@ case $1 in
     ;;
 esac
 
-# rm -r $SCRIPTPATH/tests/tmp
+rm -r $TESTPATH/output/tmp

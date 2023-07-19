@@ -34,5 +34,11 @@ force = click.option(
     "--force",
     "-f",
     is_flag=True,
-    help="Force to run the transform even if it was already performed in output_dir."
+    help="Force to run the transform even if it was already performed in output_dir.",
+)
+verbose = click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    help="Each occurrence increases the level of verbosity. Default only outputs warnings and errors.",
 )

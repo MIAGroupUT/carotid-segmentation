@@ -10,8 +10,12 @@ from carotid.utils import (
     ContourSerializer,
 )
 from typing import List
+from logging import getLogger
 
 transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
+
+
+logger = getLogger("carotid")
 
 
 def apply_transform(
@@ -55,9 +59,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Contour transform {participant_id}...")
+        logger.info(f"Contour transform {participant_id}...")
 
         predicted_sample = contour_transform(sample)
         serializer.write(predicted_sample)
-
-

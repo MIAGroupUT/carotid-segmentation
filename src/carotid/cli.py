@@ -4,6 +4,7 @@ from carotid.convert.cli import cli as convert_cli
 from carotid.transform.cli import cli as transform_cli
 from carotid.compare.cli import cli as compare_cli
 from carotid.train.cli import cli as train_cli
+from carotid.utils import cli_param, setup_logging
 
 
 CONTEXT_SETTINGS = dict(
@@ -16,9 +17,10 @@ CONTEXT_SETTINGS = dict(
 
 @click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True, cls=OrderedGroup)
 @click.version_option()
-def cli():
+@cli_param.option.verbose
+def cli(verbose):
     """carotid-segmentation command line."""
-    pass
+    setup_logging(verbose)
 
 
 cli.add_command(convert_cli)

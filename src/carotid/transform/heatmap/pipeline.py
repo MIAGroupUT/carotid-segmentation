@@ -9,6 +9,9 @@ from carotid.utils import (
     HeatmapSerializer,
 )
 from typing import List
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 transform_name = f"{path.basename(path.dirname(path.realpath(__file__)))}_transform"
 
@@ -36,7 +39,9 @@ def apply_transform(
     heatmap_parameters["raw_dir"] = raw_dir
     heatmap_parameters["model_dir"] = model_dir
     heatmap_parameters["device"] = device.type
-    write_json({transform_name: heatmap_parameters}, path.join(output_dir, "parameters.json"))
+    write_json(
+        {transform_name: heatmap_parameters}, path.join(output_dir, "parameters.json")
+    )
 
     unet_predictor = UNetPredictor(parameters=heatmap_parameters)
     dataset = build_dataset(
@@ -47,7 +52,7 @@ def apply_transform(
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Heatmap transform {participant_id}...")
+        logger.info(f"Heatmap transform {participant_id}...")
 
         predicted_sample = unet_predictor(sample)
         serializer.write(predicted_sample)

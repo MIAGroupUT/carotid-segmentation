@@ -5,6 +5,9 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 from carotid.convert.utils import get_contour, find_annotated_slices
 from carotid.utils import build_dataset, ContourSerializer, write_json
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 
 def convert(
@@ -102,7 +105,7 @@ def convert(
                         )
 
                     except Exception:
-                        print(
+                        logger.warning(
                             f"Participant {participant_id}, {vessel_type} slice {slice_idx} could not be processed"
                         )
 

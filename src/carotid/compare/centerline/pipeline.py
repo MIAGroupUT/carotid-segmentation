@@ -2,6 +2,10 @@ from carotid.utils import build_dataset
 from os import path
 import numpy as np
 import pandas as pd
+from logging import getLogger
+
+
+logger = getLogger("carotid")
 
 
 def compare(transform1_dir: str, transform2_dir: str, output_path: str):
@@ -28,6 +32,7 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
     output_df = pd.DataFrame(columns=cols)
 
     for participant_id in common_id_set:
+        logger.info(f"Compare centerlines of {participant_id}")
         sample1 = dataset1[dataset1_id_list.index(participant_id)]
         sample2 = dataset2[dataset2_id_list.index(participant_id)]
 
@@ -45,7 +50,10 @@ def compare(transform1_dir: str, transform2_dir: str, output_path: str):
                     center1 = centerline1_df.loc[(label_name, slice_idx), ["x", "y"]]
                     center2 = centerline2_df.loc[(label_name, slice_idx), ["x", "y"]]
                     distance = np.linalg.norm(center1 - center2)
-                    row_df = pd.DataFrame([[participant_id, side, label_name, slice_idx, distance]], columns=cols)
+                    row_df = pd.DataFrame(
+                        [[participant_id, side, label_name, slice_idx, distance]],
+                        columns=cols,
+                    )
                     output_df = pd.concat((output_df, row_df))
 
                 except KeyError:

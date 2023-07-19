@@ -19,6 +19,9 @@ from carotid.utils import (
     SegmentationSerializer,
 )
 from typing import List
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 pipeline_dir = path.dirname(path.realpath(__file__))
 list_transforms = [
@@ -65,13 +68,20 @@ def apply_transform(
     write_json(pipeline_parameters, path.join(output_dir, "parameters.json"))
 
     # Transforms
-    unet_predictor = UNetPredictor(parameters=pipeline_parameters["heatmap_transform"])
-    centerline_extractor = OnePassExtractor(
+    transform_dict = dict()
+    transform_dict["heatmap_transform"] = UNetPredictor(
+        parameters=pipeline_parameters["heatmap_transform"]
+    )
+    transform_dict["centerline_transform"] = OnePassExtractor(
         parameters=pipeline_parameters["centerline_transform"]
     )
-    polar_transform = PolarTransform(parameters=pipeline_parameters["polar_transform"])
-    contour_transform = ContourTransform(parameters=pipeline_parameters["contour_transform"])
-    segmentation_transform = SegmentationTransform(
+    transform_dict["polar_transform"] = PolarTransform(
+        parameters=pipeline_parameters["polar_transform"]
+    )
+    transform_dict["contour_transform"] = ContourTransform(
+        parameters=pipeline_parameters["contour_transform"]
+    )
+    transform_dict["segmentation_transform"] = SegmentationTransform(
         parameters=pipeline_parameters["segmentation_transform"]
     )
 
@@ -79,23 +89,25 @@ def apply_transform(
         raw_dir=raw_dir,
         participant_list=participant_list,
     )
-    serializers_list = [SegmentationSerializer(dir_path=output_dir)]
+
+    serializers_dict = {
+        "segmentation_transform": SegmentationSerializer(dir_path=output_dir)
+    }
     if write_heatmap:
-        serializers_list.append(HeatmapSerializer(dir_path=output_dir))
+        serializers_dict["heatmap_transform"] = HeatmapSerializer(dir_path=output_dir)
     if write_centerline:
-        serializers_list.append(CenterlineSerializer(dir_path=output_dir))
+        serializers_dict["centerline_transform"] = CenterlineSerializer(
+            dir_path=output_dir
+        )
     if write_polar:
-        serializers_list.append(PolarSerializer(dir_path=output_dir))
+        serializers_dict["polar_transform"] = PolarSerializer(dir_path=output_dir)
     if write_contours:
-        serializers_list.append(ContourSerializer(dir_path=output_dir))
+        serializers_dict["contour_transform"] = ContourSerializer(dir_path=output_dir)
 
     for sample in dataset:
         participant_id = sample["participant_id"]
-        print(f"Pipeline transform {participant_id}...")
-        sample = unet_predictor(sample)
-        sample = centerline_extractor(sample)
-        sample = polar_transform(sample)
-        sample = contour_transform(sample)
-        sample = segmentation_transform(sample)
-        for serializer in serializers_list:
-            serializer.write(sample)
+        logger.info(f"Pipeline transform {participant_id}...")
+        for transform_name in list_transforms:
+            sample = transform_dict[transform_name](sample)
+            if transform_name in serializers_dict.keys():
+                serializers_dict[transform_name].write(sample)

@@ -1,4 +1,7 @@
 import torch
+from logging import getLogger
+
+logger = getLogger("carotid")
 
 
 class DeviceError(ValueError):
@@ -8,7 +11,7 @@ class DeviceError(ValueError):
 def check_device(device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"Device {device} was automatically chosen.")
+        logger.info(f"Device {device} was automatically chosen.")
     else:
         device = torch.device(device)
 
