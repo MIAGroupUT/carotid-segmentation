@@ -26,6 +26,11 @@ and internal (red) centerlines of the carotids are extracted, then patches are l
 the centerlines to estimate the contours of the lumen and wall.</b></figcaption>
 </figure>
 
+!!! note "grand challenge demo"
+    You can visualize the segmentation produced by the algorithm on the 
+    [grand-challenge platform](https://grand-challenge.org/algorithms/carotid-artery-vessel-wall-segmentation/).
+    The example image is from the training set of the MICCAI grand challenge.
+
 ## Installation
 
 You will need a Python environment to run `carotid-segmentation`. We advise you to use Miniconda. 

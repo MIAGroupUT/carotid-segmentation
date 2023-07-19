@@ -36,7 +36,7 @@ The path to raw images is found on the JSON file listing all parameters.
 
 The task can be run with the following command line:
 ```
-carotid transform polar OUTPUT_DIR
+carotid [-v] transform polar OUTPUT_DIR
 ```
 where:
 
@@ -51,6 +51,10 @@ Default will assume that `transform centerline` was run in the output directory.
 Default will perform the pipeline on all participants with a raw image.
 - `--force` is a flag that forces the application of the transform in the chosen output directory,
 even if the transform was already performed in this folder.
+
+!!! note "verbosity"
+    To increase the verbosity of the algorithm, add `-v` right between `carotid` and `transform`.
+    Debug outputs can be obtained with `-vv`.
 
 ## Default parameters
 

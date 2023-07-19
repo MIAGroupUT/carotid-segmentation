@@ -25,7 +25,7 @@ You need to prepare two directories:
 
 The task can be run with the following command line:
 ```
-carotid transform pipeline RAW_DIR HEATMAP_MODEL_DIR CONTOUR_MODEL_DIR OUTPUT_DIR
+carotid [-v] transform pipeline RAW_DIR HEATMAP_MODEL_DIR CONTOUR_MODEL_DIR OUTPUT_DIR
 ```
 where:
 
@@ -44,6 +44,10 @@ Default will perform the pipeline on all participants with a raw image.
 Default will try to find `cuda`, and use `cpu` if it is not available.
 - `--force` is a flag that forces the application of the transform in the chosen output directory,
 even if the transform was already performed in this folder.
+
+!!! note "verbosity"
+    To increase the verbosity of the algorithm, add `-v` right between `carotid` and `transform`.
+    Debug outputs can be obtained with `-vv`.
 
 !!! warning "Force the transform"
     If the `force` flag is given this will erase the directory located at `OUTPUT_DIR`.

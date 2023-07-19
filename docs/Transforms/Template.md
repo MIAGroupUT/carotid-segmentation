@@ -7,7 +7,7 @@ You need to execute ...
 
 The task can be run with the following command line:
 ```
-carotid
+carotid [-v]
 ```
 where:
 
@@ -16,6 +16,10 @@ where:
 Options:
 
 - `--config_path` (str) is the path to a config file defining the values of the parameters.
+
+!!! note "verbosity"
+    To increase the verbosity of the algorithm, add `-v` right between `carotid` and `transform`.
+    Debug outputs can be obtained with `-vv`.
 
 ## Default parameters
 

@@ -44,7 +44,7 @@ You also need to provide one (or several models) for contour regression stored i
 
 The task can be run with the following command line:
 ```
-carotid transform contour OUTPUT_DIR CONTOUR_MODEL_DIR
+carotid [-v] transform contour OUTPUT_DIR CONTOUR_MODEL_DIR
 ```
 where:
 
@@ -62,6 +62,10 @@ Default will perform the pipeline on all participants with a raw image.
 Default will try to find `cuda`, and use `cpu` if it is not available.
 - `--force` is a flag that forces the application of the transform in the chosen output directory,
 even if the transform was already performed in this folder.
+
+!!! note "verbosity"
+    To increase the verbosity of the algorithm, add `-v` right between `carotid` and `transform`.
+    Debug outputs can be obtained with `-vv`.
 
 ## Default parameters
 

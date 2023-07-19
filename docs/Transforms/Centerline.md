@@ -30,7 +30,7 @@ This step relies on the outputs of `transform heatmap`.
 
 The task can be run with the following command line:
 ```
-carotid transform centerline OUTPUT_DIR
+carotid [-v] transform centerline OUTPUT_DIR
 ```
 where:
 
@@ -45,6 +45,10 @@ Default will assume that `transform heatmap` was run in the output directory.
 Default will perform the pipeline on all participants with a raw image.
 - `--force` is a flag that forces the application of the transform in the chosen output directory,
 even if the transform was already performed in this folder.
+
+!!! note "verbosity"
+    To increase the verbosity of the algorithm, add `-v` right between `carotid` and `transform`.
+    Debug outputs can be obtained with `-vv`.
 
 ## Default parameters
 
