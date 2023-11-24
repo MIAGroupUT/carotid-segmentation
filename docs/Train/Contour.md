@@ -64,6 +64,8 @@ of the command `carotid transform polar`. Please refer to the
 
 The parameters corresponding to the training procedure are the following:
 
+- `dimension` (int) is the dimension of the model and of the polar maps, if 2 the z dimension will not be
+considered. Default: `3`.
 - `dropout` (bool) if `True`, the architecture will contain dropout layers to be used during the inference
 for uncertainty quantification. Default: `True`.
 - `n_splits` (int) is the number of folds of the K-fold cross-validation procedure performed. This also corresponds

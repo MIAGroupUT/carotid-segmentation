@@ -34,6 +34,7 @@ class AnnotatedPolarDataset(Dataset):
         contour_df: pd.DataFrame,
         polar_params: Dict[str, Any],
         augmentation: bool = True,
+        dimension: int = 3,
     ):
         """
         Builds a Dataset of annotated polar images.
@@ -44,6 +45,7 @@ class AnnotatedPolarDataset(Dataset):
             contour_df: DataFrame containing the list of all the contours which should be used.
             polar_params: parameters of the polar transform.
             augmentation: if True, different centers will be sampled.
+            dimension: dimension of the output polar maps
         """
         super().__init__()
         self.raw_dir = raw_dir
@@ -53,6 +55,7 @@ class AnnotatedPolarDataset(Dataset):
         self.polar_params = polar_params
         self.augmentation = augmentation
         self.polar_transform = PolarTransform(polar_params)
+        self.dimension = dimension
 
         participant_list = contour_df.participant_id.unique()
         self.cache_dataset = build_dataset(
@@ -103,6 +106,9 @@ class AnnotatedPolarDataset(Dataset):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         center_pt = self.sample_center(contour_df)
         polar_pt = self.polar_transform.transform_image(raw_image_pt, center_pt)
+        if self.dimension == 2:
+            polar_pt = polar_pt[self.polar_params["length"] // 2]
+
         annotation_df = self.polar_transform.transform_annotation(contour_df, center_pt)
         annotation_pt = torch.from_numpy(annotation_df.values)
 

@@ -49,37 +49,30 @@ class ContourTransform:
             self.version = 1
 
         # Choose model architecture
-        try:
-            self.model = CONV3D(dropout=True).to(self.device)
-            if self.version == 1:
-                self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)
-                )
-            else:
-                self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)[
-                        "model"
-                    ]
-                )
+        if self.version == 1:
+            trained_weights = torch.load(
+                self.model_paths_list[0], map_location=self.device
+            )
+        else:
+            trained_weights = torch.load(
+                self.model_paths_list[0], map_location=self.device
+            )["model"]
 
-        except RuntimeError:
-            self.model = CONV3D(dropout=False).to(self.device)
-            if self.version == 1:
-                self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)
-                )
-            else:
-                self.model.load_state_dict(
-                    torch.load(self.model_paths_list[0], map_location=self.device)[
-                        "model"
-                    ]
-                )
-            if self.dropout:
-                warnings.warn(
-                    "Dropout resampling was activated but the models do not contain "
-                    "dropout layers. The dropout resampling is deactivated."
-                )
-                self.dropout = False
+        # Dropout model has more layers
+        model_dropout = "model.27.bias" in trained_weights.keys()
+        model_dimension = len(trained_weights["model.0.weight"].shape) - 2
+        self.dimension = model_dimension
+
+        if self.dropout and not model_dropout:
+            warnings.warn(
+                "Dropout resampling was activated but the models do not contain "
+                "dropout layers. The dropout resampling is deactivated."
+            )
+            self.dropout = False
+
+        self.model = ContourNet(dropout=model_dropout, dimension=model_dimension).to(
+            self.device
+        )
 
         if not self.dropout:
             self.n_repeats = 1
@@ -110,6 +103,11 @@ class ContourTransform:
                 else:
                     batch_polar_pt = polar_dict["polar_pt"]
                     batch_center_pt = polar_dict["center_pt"]
+
+                # Remove z dimension if 2D
+                if self.dimension == 2:
+                    length = batch_polar_pt.shape[2]
+                    batch_polar_pt = batch_polar_pt[:, :, length // 2]
 
                 lumen_cont, wall_cont = self._transform(
                     batch_polar_pt,
@@ -333,7 +331,7 @@ class ContourTransform:
         Returns:
             batch of prediction of size (batch_size, n_models * n_repeats, 2, n_angles)
         """
-        batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
+        batch_size, dn_angles = batch_polar_pt.shape[0], batch_polar_pt.shape[-2]
         batch_prediction_pt = torch.zeros(
             (
                 len(self.model_paths_list),
@@ -378,8 +376,11 @@ class ContourTransform:
             batch of prediction of size (batch_size, n_repeats, 2, n_angles)
         """
         self.model.set_mode("dropout" if self.dropout else "eval")
-        batch_size, _, _, dn_angles, _ = batch_polar_pt.shape
-        repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
+        batch_size, dn_angles = batch_polar_pt.shape[0], batch_polar_pt.shape[-2]
+        if self.dimension == 3:
+            repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1, 1)
+        else:
+            repeat_polar_pt = batch_polar_pt.repeat(self.n_repeats, 1, 1, 1)
 
         with torch.no_grad():
             batch_prediction_pt = (
@@ -469,14 +470,20 @@ class ContourTransform:
         return output_pt
 
 
-class CONV3D(nn.Module):
-    def __init__(self, hidden_size: int = 16, dropout: bool = False):
-        super(CONV3D, self).__init__()
+class ContourNet(nn.Module):
+    def __init__(
+        self, hidden_size: int = 16, dropout: bool = False, dimension: int = 3
+    ):
+        super(ContourNet, self).__init__()
         self.dropout_value = 0.2
+        self.dimension = dimension
+
+        self.conv_layer = nn.Conv3d if self.dimension == 3 else nn.Conv2d
+        self.norm_layer = nn.BatchNorm3d if self.dimension == 3 else nn.BatchNorm2d
 
         model = [
-            nn.Conv3d(1, hidden_size, kernel_size=3),
-            nn.BatchNorm3d(hidden_size),
+            self.conv_layer(1, hidden_size, kernel_size=3),
+            self.norm_layer(hidden_size),
             nn.ReLU(),
         ]
         max_pow_z = 2
@@ -486,7 +493,7 @@ class CONV3D(nn.Module):
             model += self.compute_module_list(
                 in_channels=dr * hidden_size,
                 out_channels=(dr + 1) * hidden_size,
-                kernel_size=(3, 3, 3),
+                kernel_size=3,
                 dilation=2**dr,
                 dropout=dropout,
             )
@@ -495,7 +502,7 @@ class CONV3D(nn.Module):
             model += self.compute_module_list(
                 in_channels=dr * hidden_size,
                 out_channels=(dr + 1) * hidden_size,
-                kernel_size=(1, 3, 3),
+                kernel_size=(1, 3, 3) if dimension == 3 else 3,
                 dilation=2**dr,
                 dropout=dropout,
             )
@@ -505,19 +512,19 @@ class CONV3D(nn.Module):
             model += self.compute_module_list(
                 in_channels=dr * hidden_size,
                 out_channels=(dr + 1) * hidden_size,
-                kernel_size=(1, 1, 3),
-                dilation=(1, 1, 2**dr),
+                kernel_size=(1, 1, 3) if dimension == 3 else (1, 3),
+                dilation=(1, 1, 2**dr) if dimension == 3 else (1, 2**dr),
                 dropout=dropout,
             )
 
         model += self.compute_module_list(
             in_channels=max_pow * hidden_size,
             out_channels=max_pow * hidden_size,
-            kernel_size=(1, 1, 1),
+            kernel_size=1,
             dilation=1,
             dropout=dropout,
         )
-        model.append(nn.Conv3d(max_pow * hidden_size, 2, kernel_size=(1, 1, 1)))
+        model.append(self.conv_layer(max_pow * hidden_size, 2, kernel_size=1))
 
         self.model = nn.Sequential(*model)
 
@@ -529,12 +536,13 @@ class CONV3D(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Tuple[int, int, int],
+        kernel_size: Union[Tuple[int, int, int], int],
         dilation: Union[Tuple[int, int, int], int],
         dropout: float,
     ) -> List[nn.Module]:
+
         module_list = [
-            nn.Conv3d(
+            self.conv_layer(
                 in_channels=in_channels,
                 out_channels=out_channels,
                 kernel_size=kernel_size,
@@ -543,7 +551,7 @@ class CONV3D(nn.Module):
         ]
         if dropout:
             module_list.append(nn.Dropout(p=self.dropout_value))
-        module_list += [nn.BatchNorm3d(out_channels), nn.ReLU()]
+        module_list += [self.norm_layer(out_channels), nn.ReLU()]
 
         return module_list
 
