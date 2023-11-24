@@ -20,6 +20,7 @@ def compute_dice_scores(
         - dice score for the wall.
     """
     # Lumen score
+    print(lumen1_np.shape, lumen2_np.shape)
     lumen1_poly = Polygon(lumen1_np).convex_hull
     lumen2_poly = Polygon(lumen2_np).convex_hull
     lumen_inter_poly = lumen1_poly.intersection(lumen2_poly)
