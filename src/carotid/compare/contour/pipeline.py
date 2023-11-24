@@ -50,7 +50,6 @@ def compare(
             reference_contour_df.sort_index(inplace=True)
 
             for label_name, slice_idx in transform_contour_df.index.unique():
-                print(participant_id, side, label_name, slice_idx)
                 try:
                     transform_lumen_np = transform_contour_df[
                         transform_contour_df.object == "lumen"
