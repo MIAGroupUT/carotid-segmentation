@@ -50,20 +50,46 @@ def compare(
             reference_contour_df.sort_index(inplace=True)
 
             for label_name, slice_idx in transform_contour_df.index.unique():
+                print(participant_id, side, label_name, slice_idx)
                 try:
-                    transform_lumen_np = transform_contour_df[transform_contour_df.object == "lumen"].loc[(label_name, slice_idx), ["x", "y"]]
-                    reference_lumen_np = reference_contour_df[reference_contour_df.object == "lumen"].loc[(label_name, slice_idx), ["x", "y"]]
-                    transform_wall_np = transform_contour_df[transform_contour_df.object == "wall"].loc[(label_name, slice_idx), ["x", "y"]]
-                    reference_wall_np = reference_contour_df[reference_contour_df.object == "wall"].loc[(label_name, slice_idx), ["x", "y"]]
+                    transform_lumen_np = transform_contour_df[
+                        transform_contour_df.object == "lumen"
+                    ].loc[(label_name, slice_idx), ["x", "y"]]
+                    reference_lumen_np = reference_contour_df[
+                        reference_contour_df.object == "lumen"
+                    ].loc[(label_name, slice_idx), ["x", "y"]]
+                    transform_wall_np = transform_contour_df[
+                        transform_contour_df.object == "wall"
+                    ].loc[(label_name, slice_idx), ["x", "y"]]
+                    reference_wall_np = reference_contour_df[
+                        reference_contour_df.object == "wall"
+                    ].loc[(label_name, slice_idx), ["x", "y"]]
                     lumen_score, wall_score = compute_dice_scores(
-                        transform_lumen_np, reference_lumen_np, transform_wall_np, reference_wall_np
+                        transform_lumen_np,
+                        reference_lumen_np,
+                        transform_wall_np,
+                        reference_wall_np,
                     )
                     row_df = pd.DataFrame(
                         [
-                            [participant_id, side, label_name, "lumen", slice_idx, lumen_score],
-                            [participant_id, side, label_name, "wall", slice_idx, wall_score]
+                            [
+                                participant_id,
+                                side,
+                                label_name,
+                                "lumen",
+                                slice_idx,
+                                lumen_score,
+                            ],
+                            [
+                                participant_id,
+                                side,
+                                label_name,
+                                "wall",
+                                slice_idx,
+                                wall_score,
+                            ],
                         ],
-                        columns=cols
+                        columns=cols,
                     )
                     dice_df = pd.concat((dice_df, row_df))
 

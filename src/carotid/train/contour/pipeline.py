@@ -9,7 +9,7 @@ from sklearn.model_selection import KFold
 
 from carotid.utils import read_and_fill_default_toml, check_device, write_json
 from carotid.train.utils import prediction_loop
-from carotid.transform.contour.utils import CONV3D
+from carotid.transform.contour.utils import ContourNet
 from carotid.train.contour.utils import AnnotatedPolarDataset, compute_contour_df
 
 
@@ -70,10 +70,20 @@ def train(
         ].reset_index(drop=True)
 
         train_dataset = AnnotatedPolarDataset(
-            raw_dir, contour_dir, train_df, polar_config_dict, augmentation=True
+            raw_dir,
+            contour_dir,
+            train_df,
+            polar_config_dict,
+            augmentation=True,
+            dimension=train_config_dict["dimension"],
         )
         valid_dataset = AnnotatedPolarDataset(
-            raw_dir, contour_dir, valid_df, polar_config_dict, augmentation=False
+            raw_dir,
+            contour_dir,
+            valid_df,
+            polar_config_dict,
+            augmentation=False,
+            dimension=train_config_dict["dimension"],
         )
 
         train_loader = DataLoader(
@@ -89,7 +99,10 @@ def train(
         training_df.to_csv(training_tsv, sep="\t", index=False)
 
         # Create model
-        model = CONV3D(dropout=train_config_dict["dropout"]).to(device)
+        model = ContourNet(
+            dropout=train_config_dict["dropout"],
+            dimension=train_config_dict["dimension"],
+        ).to(device)
         optimizer = torch.optim.Adam(
             model.parameters(), lr=train_config_dict["learning_rate"]
         )
@@ -148,12 +161,21 @@ def train(
                 )
                 best_validation_loss = validation_loss
 
-        model = CONV3D(dropout=train_config_dict["dropout"]).to(device)
+        # TODO deal with dimension in polar transform
+        model = ContourNet(
+            dropout=train_config_dict["dropout"],
+            dimension=train_config_dict["dimension"],  # TODO doc
+        ).to(device)
         model.load_state_dict(
             torch.load(path.join(split_dir, "model.pt"), map_location=device)["model"]
         )
         train_dataset = AnnotatedPolarDataset(
-            raw_dir, contour_dir, train_df, polar_config_dict, augmentation=False
+            raw_dir,
+            contour_dir,
+            train_df,
+            polar_config_dict,
+            augmentation=False,
+            dimension=train_config_dict["dimension"],
         )
         train_loader = DataLoader(
             train_dataset, batch_size=train_config_dict["batch_size"], shuffle=False

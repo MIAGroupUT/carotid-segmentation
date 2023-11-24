@@ -1,4 +1,5 @@
 [contour_transform]
+dimension = 3
 dropout = true
 n_splits = 5
 random_seed = 42

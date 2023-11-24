@@ -7,7 +7,10 @@ from functools import reduce
 
 
 def compute_dice_scores(
-    lumen1_np: np.ndarray, lumen2_np: np.ndarray, wall1_np: np.ndarray, wall2_np: np.ndarray,
+    lumen1_np: np.ndarray,
+    lumen2_np: np.ndarray,
+    wall1_np: np.ndarray,
+    wall2_np: np.ndarray,
 ) -> Tuple[float, float]:
     """
     Compute Dice scores for the lumen and wall contours.
@@ -17,6 +20,7 @@ def compute_dice_scores(
         - dice score for the wall.
     """
     # Lumen score
+    print(lumen1_np.shape, lumen2_np.shape)
     lumen1_poly = Polygon(lumen1_np).convex_hull
     lumen2_poly = Polygon(lumen2_np).convex_hull
     lumen_inter_poly = lumen1_poly.intersection(lumen2_poly)
@@ -49,15 +53,25 @@ def compute_point_distance(
     reference_df.set_index(["label", "object", "z"], inplace=True)
     reference_df.sort_index(inplace=True)
 
-    index_intersection = reduce(pd.Index.intersection, [d.index for d in [transform_df, reference_df]])
+    index_intersection = reduce(
+        pd.Index.intersection, [d.index for d in [transform_df, reference_df]]
+    )
     reference_df = reference_df.loc[index_intersection]
     transform_df = transform_df.loc[index_intersection]
     output_df = transform_df.copy()
 
     for label_name, object_name, slice_idx in transform_df.index.unique():
-        transform_contour_np = transform_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
-        reference_contour_np = reference_df.loc[(label_name, object_name, slice_idx), ["x", "y"]].values.astype(float)
-        min_distances = np.min(cdist(transform_contour_np, reference_contour_np), axis=1)
-        output_df.loc[(label_name, object_name, slice_idx), "min_distance"] = min_distances
+        transform_contour_np = transform_df.loc[
+            (label_name, object_name, slice_idx), ["x", "y"]
+        ].values.astype(float)
+        reference_contour_np = reference_df.loc[
+            (label_name, object_name, slice_idx), ["x", "y"]
+        ].values.astype(float)
+        min_distances = np.min(
+            cdist(transform_contour_np, reference_contour_np), axis=1
+        )
+        output_df.loc[
+            (label_name, object_name, slice_idx), "min_distance"
+        ] = min_distances
 
     return output_df.reset_index()

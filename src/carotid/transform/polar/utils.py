@@ -21,8 +21,8 @@ class PolarTransform:
         self.length = parameters["length"]
         self.multiple_centers = parameters["multiple_centers"]
         self.annotation_resolution = parameters["annotation_resolution"]
-        self.label_list = ["internal", "external"]
         self.side_list = ["left", "right"]
+        self.dimension = 3 if "dimension" not in parameters else parameters["dimension"]
 
         # construct coordinates of rays
         theta = torch.linspace(0, 2 * torch.pi, self.n_angles + 1)[: self.n_angles]
@@ -34,6 +34,8 @@ class PolarTransform:
         zz = torch.arange(
             -self.length // 2 + self.length % 2, self.length // 2 + 1, dtype=torch.float
         )
+
+        # Build 3D coordinates
         R, Z, T = torch.meshgrid(radii, zz, theta, indexing="xy")
         xx = (R * torch.cos(T)).flatten()
         yy = (R * torch.sin(T)).flatten()
@@ -49,7 +51,7 @@ class PolarTransform:
         R, T = torch.meshgrid(radii, theta, indexing="xy")
         xx = R * torch.cos(T)
         yy = R * torch.sin(T)
-        self.coords2d = torch.stack([xx, yy], dim=-1)  # polar_ray, n_angles, 2
+        self.coords_annotation = torch.stack([xx, yy], dim=-1)  # polar_ray, n_angles, 2
 
     def __call__(self, sample: Dict[str, Any]):
         image_pt = sample["image"][0]
@@ -199,7 +201,7 @@ class PolarTransform:
             dtype=np.float32,
         )
         for angle_idx, angle_val in enumerate(theta):
-            coords = self.coords2d[angle_idx] + center_pt[:2]
+            coords = self.coords_annotation[angle_idx] + center_pt[:2]
             distmat_lumen = scsp.distance.cdist(
                 coords[: (self.annotation_resolution * self.polar_ray // 2)], lumen_np
             )
