@@ -42,7 +42,7 @@ make get-models
 
 - On Windows:
 
-Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/DanUvHpx6BXM7dY/download)
+Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/ywbP34RlUyuMIZU/download)
 Unzip the tar file and copy the different folders in the `models` folder at the root of the repo.
 
 The final architecture of your repo should be the following:
