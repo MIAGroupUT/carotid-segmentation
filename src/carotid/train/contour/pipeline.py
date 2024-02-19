@@ -1,5 +1,4 @@
 import shutil
-
 from monai.data import DataLoader
 from os import path, makedirs
 import pandas as pd
