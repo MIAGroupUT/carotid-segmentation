@@ -18,7 +18,7 @@ def compute_contour_df(
         for side in ["left", "right"]:
             df = sample[f"{side}_contour"]
             df = df[["label", "z"]].drop_duplicates()
-            df = df["participant_id"] = participant_id
+            df["participant_id"] = participant_id
             df["side"] = side
             contour_df = pd.concat((contour_df, df))
 

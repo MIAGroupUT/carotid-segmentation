@@ -1,5 +1,6 @@
 import click
 from carotid.train.contour.cli import cli as contour_cli
+from carotid.train.heatmap.cli import cli as heatmap_cli
 from carotid.utils.cli_param.decorators import OrderedGroup
 
 
@@ -11,10 +12,16 @@ CONTEXT_SETTINGS = dict(
 )
 
 
-@click.group(context_settings=CONTEXT_SETTINGS, no_args_is_help=True, cls=OrderedGroup, name="train")
+@click.group(
+    context_settings=CONTEXT_SETTINGS,
+    no_args_is_help=True,
+    cls=OrderedGroup,
+    name="train",
+)
 def cli():
     """Train network to perform the tasks used by the pipeline."""
     pass
 
 
+cli.add_command(heatmap_cli)
 cli.add_command(contour_cli)
