@@ -42,7 +42,7 @@ make get-models
 
 - On Windows:
 
-Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/DanUvHpx6BXM7dY/download)
+Models can be downloaded with [this link](https://surfdrive.surf.nl/files/index.php/s/ywbP34RlUyuMIZU/download)
 Unzip the tar file and copy the different folders in the `models` folder at the root of the repo.
 
 The final architecture of your repo should be the following:
@@ -116,7 +116,7 @@ make prepare-test
 ```
 - On Windows:
 
-Download test data using this [link](https://surfdrive.surf.nl/files/index.php/s/e13O5s7PPTsJNli/download).
+Download test data using this [link](https://surfdrive.surf.nl/files/index.php/s/CoazEglbyGXS23G/download).
 Unzip the downloaded tar file and move the directories in the `tests` folder.
 Create a `models` directory in the `tests` folder and copy one of each of the model contained in your root
 `models` folder (you can also put all the models, but the tests take a longer time).
