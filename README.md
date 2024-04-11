@@ -22,7 +22,7 @@ conda activate carotid-segmentation
 The package was not published on PyPi (yet), hence the repo must be cloned to install it:
 
 ```console
-git clone git@gitlab.utwente.nl:mathematics-of-imaging-and-ai/postdocs/elina-thibeau-sutre/carotid-segmentation.git
+git clone git@github.com:MIAGroupUT/carotid-segmentation.git
 cd carotid-segmentation
 pip install [-e] ./src
 ```
